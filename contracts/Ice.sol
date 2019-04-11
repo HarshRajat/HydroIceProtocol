@@ -12,7 +12,7 @@ import "./interfaces/IdentityRegistryInterface.sol";
  * @dev This contract is the base of the Hydro-Glacier dApp
  */
 
-contract Glacier is SnowflakeResolver
+contract Ice is SnowflakeResolver
 {   
     using SafeMath for uint;
 
