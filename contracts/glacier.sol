@@ -7,13 +7,11 @@ import "./interfaces/SnowflakeInterface.sol";
 import "./interfaces/IdentityRegistryInterface.sol";
 
 /**
- * @title Snowflake Glacier
- * @notice Create interest-bearing escrow through Snowflake
- * @dev This contract is the base of the Hydro-Glacier dApp
+ * @title Ice Protocol
+ * @notice Create Protocol Less File Storage, Grouping, Stamping and hassle free Encryption / Decryption using Snowflake 
+ * @dev This Contract forms File Storage / Stamping / Encryption part of Hydro Protocols
  */
-
-contract Ice is SnowflakeResolver
-{   
+contract Ice is SnowflakeResolver {   
     using SafeMath for uint;
 
     /* Constants based on the following,
