@@ -1,5 +1,6 @@
 pragma solidity >=0.4.0 <0.6.0;
 
+import "./Formula.sol";
 import "./SnowflakeResolver.sol";
 import "./zeppelin/math/SafeMath.sol";
 import "./interfaces/HydroInterface.sol";
@@ -7,11 +8,13 @@ import "./interfaces/SnowflakeInterface.sol";
 import "./interfaces/IdentityRegistryInterface.sol";
 
 /**
- * @title Ice Protocol
- * @notice Create Protocol Less File Storage, Grouping, Stamping and hassle free Encryption / Decryption using Snowflake 
- * @dev This Contract forms File Storage / Stamping / Encryption part of Hydro Protocols
+ * @title Snowflake Glacier
+ * @notice Create interest-bearing escrow through Snowflake
+ * @dev This contract is the base of the Hydro-Glacier dApp
  */
-contract Ice is SnowflakeResolver {   
+
+contract Glacier is SnowflakeResolver, Formula 
+{   
     using SafeMath for uint;
 
     /* Constants based on the following,

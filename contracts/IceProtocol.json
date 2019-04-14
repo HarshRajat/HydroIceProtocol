@@ -40,14 +40,19 @@
 		},
 		"gasEstimates": null,
 		"methodIdentifiers": {
-			"addFile(string,uint8,uint8,string,uint8)": "33a68451",
+			"addFileToGroup(string,uint8,uint8,uint8)": "4df7d8c2",
+			"addFileWithGroup(string,uint8,uint8,string)": "096ab8d6",
+			"association(uint256,uint256)": "dbb0c808",
 			"callOnAddition()": "71790251",
 			"callOnRemoval()": "8f06492d",
+			"createGroup(string)": "dc2ddcae",
+			"globalAssociationIndex()": "3b0e05a0",
 			"isOwner()": "8f32d59b",
 			"isSigned(address,bytes32,uint8,bytes32,bytes32)": "8677ebe8",
 			"onAddition(uint256,uint256,bytes)": "90bfaf40",
 			"onRemoval(uint256,bytes)": "9182621a",
 			"owner()": "8da5cb5b",
+			"renameGroup(uint16,string)": "ef34c885",
 			"renounceOwnership()": "715018a6",
 			"setSnowflakeAddress(address)": "c979b05a",
 			"snowflakeAddress()": "f9f451b8",
@@ -73,15 +78,51 @@
 					"type": "uint8"
 				},
 				{
-					"name": "group",
+					"name": "groupName",
 					"type": "string"
+				}
+			],
+			"name": "addFileWithGroup",
+			"outputs": [],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [],
+			"name": "globalAssociationIndex",
+			"outputs": [
+				{
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "hash",
+					"type": "string"
+				},
+				{
+					"name": "protocol",
+					"type": "uint8"
+				},
+				{
+					"name": "status",
+					"type": "uint8"
 				},
 				{
 					"name": "groupID",
 					"type": "uint8"
 				}
 			],
-			"name": "addFile",
+			"name": "addFileToGroup",
 			"outputs": [],
 			"payable": false,
 			"stateMutability": "nonpayable",
@@ -274,6 +315,65 @@
 				}
 			],
 			"name": "setSnowflakeAddress",
+			"outputs": [],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": true,
+			"inputs": [
+				{
+					"name": "",
+					"type": "uint256"
+				},
+				{
+					"name": "",
+					"type": "uint256"
+				}
+			],
+			"name": "association",
+			"outputs": [
+				{
+					"name": "EIN",
+					"type": "uint256"
+				},
+				{
+					"name": "fileRecord",
+					"type": "uint256"
+				}
+			],
+			"payable": false,
+			"stateMutability": "view",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "groupName",
+					"type": "string"
+				}
+			],
+			"name": "createGroup",
+			"outputs": [],
+			"payable": false,
+			"stateMutability": "nonpayable",
+			"type": "function"
+		},
+		{
+			"constant": false,
+			"inputs": [
+				{
+					"name": "groupIndex",
+					"type": "uint16"
+				},
+				{
+					"name": "groupName",
+					"type": "string"
+				}
+			],
+			"name": "renameGroup",
 			"outputs": [],
 			"payable": false,
 			"stateMutability": "nonpayable",
