@@ -24,27 +24,42 @@ contract IceProtocol is SnowflakeResolver {
     * associationIndex starts at 0 and will always increment
     * given an associationIndex, any file can be retrieved.
     */
-    mapping (uint256 => mapping(uint256 => Association)) public association;
-    uint256 public globalAssociationIndex; // store the index of association to retrieve files
+    mapping (uint256 => mapping(uint256 => Association)) private association;
+    uint256 private globalAssociationIndex; // store the index of association to retrieve files
     
     /* for each user (EIN), look up the file they have
      * stored on a given index.
     */ 
-    mapping (uint256 => mapping(uint256 => File)) files;
-    mapping (uint256 => uint256) fileIndex; // store the maximum file index reached to provide looping functionality
+    mapping (uint256 => mapping(uint256 => File)) private files;
+    mapping (uint256 => mapping(uint256 => uint256)) private fileOrder; // Store descending order of files
+    mapping (uint256 => uint256) private fileIndex; // store the maximum file index reached to provide looping functionality
     
     /* for each user (EIN), look up the group they have
      * stored on a given index. Default group 0 indicates
      * root folder
     */ 
-    mapping (uint256 => mapping(uint16 => Group)) groups;
-    mapping (uint256 => uint16) groupIndex; // store the maximum group index reached to provide looping functionality
+    mapping (uint256 => mapping(uint16 => Group)) private groups;
+    mapping (uint256 => uint16) private groupIndex; // store the maximum group index reached to provide looping functionality
     
     /* for each user (EIN), look up the incoming transfer request
      * stored on a given index.
     */ 
-    mapping (uint256 => mapping(uint256 => Association)) transfers;
-    mapping (uint256 => uint256) transferIndex;
+    mapping (uint256 => mapping(uint256 => Association)) private transfers;
+    mapping (uint256 => mapping(uint256 => uint256)) private transferOrder; // Store descending order of transfers
+    mapping (uint256 => uint256) private transferIndex; // store the maximum file index reached to provide looping functionality
+    
+    /* for each user (EIN), look up the incoming sharing files
+     * stored on a given index.
+    */ 
+    mapping (uint256 => mapping(uint256 => Association)) private sharings;
+    mapping (uint256 => mapping(uint256 => uint256)) private sharingOrder; // Store descending order of sharing
+    mapping (uint256 => uint256) private shareIndex; // store the maximum file index reached to provide looping functionality
+    
+    /* for each user (EIN), have a whitelist and blacklist
+     * association which can handle certain functions automatically.
+    */
+    mapping (uint256 => mapping(uint256 => bool)) private whitelist;
+    mapping (uint256 => mapping(uint256 => bool)) private blacklist;
     
     /* ***************
     * DEFINE STRUCTURES
@@ -77,16 +92,77 @@ contract IceProtocol is SnowflakeResolver {
         mapping (address => string) encryptedHash; // Maps Individual address to the stored hash 
         
         uint256[] transferHistory; // To maintain histroy of transfer of all EIN
-        uint256 transferInitiated; // To record EIN of the user to whom trasnfer is inititated
+        uint256 transfereeEIN; // To record EIN of the user to whom trasnfer is inititated
         bool markedForTransfer; // Mark the file as transferred
         
         bool requiresStamping; // Whether the file requires stamping 
         
         bool disabled; // Mark the file as disabled if no longer needed
-    }   
+    }
+    
+    modifier _onlyFileExists(uint256 _fileIndex) {
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+         
+        // Check if the group file exists or not
+        uint256 currentFileIndex = fileIndex[ein];
+        require ((_fileIndex <= currentFileIndex), "File doesn't exist for the User / EIN");
+        _;
+    }
+    
+    modifier _onlyNonDisabledFile(uint256 _fileIndex) {
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+         
+        // Check if the group file exists or not
+        File memory currentFile = files[ein][_fileIndex];
+        require ((currentFile.disabled == false), "Can't proceed, file is Disabled.");
+        _;
+    }
+    
+    modifier _onlyUnmarkedTransferFile(uint256 _fileIndex) {
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+         
+        // Check if the group file exists or not
+        File memory currentFile = files[ein][_fileIndex];
+        require ((currentFile.markedForTransfer == false), "Can't proceed, file is already marked for Transfer.");
+        _;
+    }
+    
+    
+    
+    modifier _onlyValidEIN(uint256 _ein) {
+        SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
+        IdentityRegistryInterface identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
+
+        require ((identityRegistry.identityExists(_ein) == true), "The EIN doesn't exists");
+        _;
+    }
+    
+    function initiateFileTransfer(uint256 _fileIndex, uint256 _transferreeEIN) public 
+    _onlyNonDisabledFile(_fileIndex) _onlyUnmarkedTransferFile(_fileIndex) _onlyValidEIN(_transferreeEIN) _onlyNonOwner(_transferreeEIN) {
+        
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+         
+        // Mark the file for transfer
+        File memory currentFile = files[ein][_fileIndex];
+        currentFile.markedForTransfer = true;
+        currentFile.transfereeEIN = _transferreeEIN;
+        
+        files[ein][_fileIndex] = currentFile;
+        
+        // Add file to 
+        
+        // Trigger Event
+        emit FileTransferInitiated(ein, _transferreeEIN, _fileIndex);
+    }
+    
+    function acceptFileTransfer(uint256 transferEIN, )
     
     /* To connect Files in linear grouping,
-    * sort of like a folder
+    * sort of like a folder, 0 or default grooupID is root
     */
     struct Group {
         uint16 groudID; // the id of the Group
@@ -117,10 +193,39 @@ contract IceProtocol is SnowflakeResolver {
         bool indexed groupStatus
     );
     
+    // When Transfer is initiated from owner
+    event FileTransferInitiated(
+        uint indexed EIN,
+        uint indexed transfereeEIN,
+        uint indexed fileID
+    );
+    
+    // When whitelist is updated
+    event AddedToWhitelist(
+        uint indexed EIN,
+        uint indexed recipientEIN
+    );
+    
+    event RemovedFromWhitelist(
+        uint indexed EIN,
+        uint indexed recipientEIN
+    );
+    
+    // When blacklist is updated
+    event AddedToBlacklist(
+        uint indexed EIN,
+        uint indexed recipientEIN
+    );
+    
+    event RemovedFromBlacklist(
+        uint indexed EIN,
+        uint indexed recipientEIN
+    );
+    
     /* ***************
-    * DEFINE CONSTRUCTORS AND FUNCTIONS
+    * DEFINE CONSTRUCTORS AND RELATED FUNCTIONS
     *************** */
-    // 1. SNOWFLAKE CONSTRUCTOR / FUNCTIONS
+    // SNOWFLAKE CONSTRUCTOR / FUNCTIONS
     constructor (address snowflakeAddress) public 
     SnowflakeResolver("Ice", "Document Management / Stamping on Snowflake", 
     snowflakeAddress, false, false) { 
@@ -128,7 +233,7 @@ contract IceProtocol is SnowflakeResolver {
     }
     
     // Function to return snowflake identity (EIN)
-    function returnEIN() internal returns (uint256) {
+    function ownerEIN() internal returns (uint256) {
         SnowflakeInterface snowflake = SnowflakeInterface(snowflakeAddress);
         IdentityRegistryInterface identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
 
@@ -148,19 +253,37 @@ contract IceProtocol is SnowflakeResolver {
         return true;
     }
     
+    /* ***************
+    * DEFINE MODIFIERS
+    *************** */
     /**
-     * @dev Modifier to check that Group ID = 0 is not modified as this is root
+     * @dev Modifier to check that only owner of EIN can access this
      * @param _ein The EIN of the Passer
      */
      modifier _onlyOwner(uint _ein) {   
          // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN();
+        uint256 ein = ownerEIN();
         
          require ((ein == _ein), "Only the Owner of EIN can access this.");
          _;
      }
-    
-    // 2. FILE FUNCTIONS
+     
+     /**
+     * @dev Modifier to check that only non-owner of EIN can access this
+     * @param _ein The EIN of the Passer
+     */
+     modifier _onlyNonOwner(uint _ein) {   
+         // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN();
+        
+         require ((ein != _ein), "Only the Owner of EIN can access this.");
+         _;
+     }
+     
+    /* ***************
+    * DEFINE CONTRACT FUNCTIONS
+    *************** */
+    // 1. FILE FUNCTIONS
     /**
      * @dev Addd File metadata and Create a new Group
      * @param hash of the File
@@ -168,7 +291,7 @@ contract IceProtocol is SnowflakeResolver {
      */
     function addFileWithGroup(string memory hash, uint8 protocol, uint8 status, string memory groupName) public {
         // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN(); 
+        uint256 ein = ownerEIN(); 
     }
     
     /**
@@ -177,7 +300,7 @@ contract IceProtocol is SnowflakeResolver {
      * 
      */
     function addFileToGroup(string memory hash, uint8 protocol, uint8 status, uint8 groupID) public {
-        uint256 ein = returnEIN(); // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); // Returns EIN or Throws Error if not set
     }
     
     /**
@@ -189,17 +312,17 @@ contract IceProtocol is SnowflakeResolver {
      * @param groupName refers to the groupName
      */
     function _addFile(uint EIN, string memory hash, uint8 protocol, uint8 status, uint8 groupID, string memory groupName) private {
-        uint256 ein = returnEIN(); // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); // Returns EIN or Throws Error if not set
     }
     
-    // 3. GROUP FUNCTIONS
+    // 2. GROUP FUNCTIONS
     /**
      * @dev Create a new Group for the user
      * @param _groupName describes the name of the group
      */
     function createGroup(string memory _groupName) public {
         // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN(); 
+        uint256 ein = ownerEIN(); 
         
         // Check if this is unitialized, if so, initialize it, default value will bee 0
         uint16 nextGroupIndex = groupIndex[ein] + 1;
@@ -252,7 +375,7 @@ contract IceProtocol is SnowflakeResolver {
      */
     function renameGroup(uint16 _groupIndex, string memory _groupName) public _onlyNonRootGroup(_groupIndex) {
         // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN(); 
+        uint256 ein = ownerEIN(); 
         
         // Check if the group exists or not
         require ((_groupExists(ein, _groupIndex) == true), "Group doesn't exist for the User / EIN");
@@ -274,7 +397,7 @@ contract IceProtocol is SnowflakeResolver {
      */
     function toggleGroupStatus(uint16 _groupIndex, bool _status) public _onlyNonRootGroup(_groupIndex) {
         // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN(); 
+        uint256 ein = ownerEIN(); 
          
         // Check if the group exists or not
         uint16 currentGroupIndex = uint16(groupIndex[ein]);
@@ -289,5 +412,110 @@ contract IceProtocol is SnowflakeResolver {
         emit GroupStatusChanged(ein, _groupIndex, _status);
     }
     
-    // 4. TRANSFER FILE FUNCTIONS
+    // 3. TRANSFER FILE FUNCTIONS
+    
+    // 5. WHITELIST / BLACKLIST FUNCTIONS
+    /**
+     * @dev Check if a non-owner user(ein) is whitelisted
+     * @param _ein is the ein of the owner
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function isWhitelisted(uint256 _ein, uint256 _nonOwnerEIN) public
+    _onlyOwner(ein) _onlyNonOwner(ein)
+    Returns (bool) {
+        
+        return whitelist[_ein][_nonOwnerEIN];
+    }
+    
+    /**
+    * @dev Check if a non-owner user(ein) is blacklisted
+    * @param _ein is the ein of the owner
+    * @param _nonOwnerEIN is the ein of the recipient
+    */
+    function isBlacklisted(uint256 _ein, uint256 _nonOwnerEIN) public
+    _onlyOwner(ein) _onlyNonOwner(ein)
+    Returns (bool) {
+        
+        return blacklist[_ein][_nonOwnerEIN];
+    }
+    
+    /**
+    * @dev Add a non-owner user to whitelist
+    * @param _ein is the ein of the owner
+    * @param _nonOwnerEIN is the ein of the recipient
+    */
+    function addToWhitelist(uint256 _nonOwnerEIN) public
+    _onlyNonOwner(_nonOwnerEIN) _onlyValidEIN(_nonOwnerEIN) {
+        
+        //Check if user (EIN) is not on blacklist
+        require ((isBlacklisted(_nonOwnerEIN) == false), "EIN is blacklisted, remove EIN from blacklist first to proceed.");
+        
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+        
+        whitelist[ein][_nonOwnerEIN] = true;
+        
+        // Trigger Event
+        emit AddedToWhitelist(ein, _nonOwnerEIN);
+    }
+    
+    /**
+    * @dev Remove a non-owner user from whitelist
+    * @param _ein is the ein of the owner
+    * @param _nonOwnerEIN is the ein of the recipient
+    */
+    function removeFromWhitelist(uint256 _nonOwnerEIN) public
+    _onlyNonOwner(_nonOwnerEIN) _onlyValidEIN(_nonOwnerEIN) {
+        
+        //Check if user (EIN) is not on blacklist
+        require ((isBlacklisted(_nonOwnerEIN) == false), "EIN is blacklisted, remove EIN from blacklist first to proceed.");
+        
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+        
+        whitelist[ein][_nonOwnerEIN] = false;
+        
+        // Trigger Event
+        emit RemovedFromWhitelist(ein, _nonOwnerEIN);
+    }
+    
+    /**
+    * @dev Remove a non-owner user to blacklist
+    * @param _ein is the ein of the owner
+    * @param _nonOwnerEIN is the ein of the recipient
+    */
+    function addToWhitelist(uint256 _nonOwnerEIN) public
+    _onlyNonOwner(_nonOwnerEIN) _onlyValidEIN(_nonOwnerEIN) {
+        
+        //Check if user (EIN) is not on blacklist
+        require ((isWhitelisted(_nonOwnerEIN) == false), "EIN is whitelisted, remove EIN from blacklist first to proceed.");
+        
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+        
+        whitelist[ein][_nonOwnerEIN] = true;
+        
+        // Trigger Event
+        emit AddedToBlacklist(ein, _nonOwnerEIN);
+    }
+    
+    /**
+    * @dev Remove a non-owner user from blacklist
+    * @param _ein is the ein of the owner
+    * @param _nonOwnerEIN is the ein of the recipient
+    */
+    function RemovedFromBlacklist(uint256 _nonOwnerEIN) public
+    _onlyNonOwner(_nonOwnerEIN) _onlyValidEIN(_nonOwnerEIN) {
+        
+        //Check if user (EIN) is not on blacklist
+        require ((isWhitelisted(_nonOwnerEIN) == false), "EIN is whitelisted, remove EIN from blacklist first to proceed.");
+        
+        // Returns EIN or Throws Error if not set
+        uint256 ein = ownerEIN(); 
+        
+        whitelist[ein][_nonOwnerEIN] = false;
+        
+        // Trigger Event
+        emit RemovedFromBlacklist(ein, _nonOwnerEIN);
+    }
 }
