@@ -13,7 +13,7 @@ import "./zeppelin/math/SafeMath16.sol";
  * @notice Create Protocol Less File Storage, Grouping, Hassle free Encryption / Decryption and Stamping using Snowflake 
  * @dev This Contract forms File Storage / Stamping / Encryption part of Hydro Protocols
  */
-contract IceProtocol is SnowflakeResolver {   
+contract IceProtocol is SnowflakeResolver {
     using SafeMath for uint16;
     using SafeMath for uint256;
 
@@ -137,7 +137,7 @@ contract IceProtocol is SnowflakeResolver {
         
         return ein;
     }
-    
+
     function onAddition(uint /* ein */, uint /* allowance */, bytes memory /* extraData */) public senderIsSnowflake() returns (bool) {
         // implement function here, or set the _callOnAddition flag to false in the SnowflakeResolver constructor
         return true;
@@ -148,114 +148,17 @@ contract IceProtocol is SnowflakeResolver {
         return true;
     }
     
-    /**
-     * @dev Modifier to check that Group ID = 0 is not modified as this is root
-     * @param _ein The EIN of the Passer
-     */
-     modifier _onlyOwner(uint _ein) {   
-         // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN();
-        
-         require ((ein == _ein), "Only the Owner of EIN can access this.");
-         _;
-     }
-    
-    // 2. FILE FUNCTIONS
-    /**
-     * @dev Addd File metadata and Create a new Group
-     * @param hash of the File
-     *
-     */
-    function addFileWithGroup(string memory hash, uint8 protocol, uint8 status, string memory groupName) public {
-        // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN(); 
-    }
-    
-    /**
-     * @dev Add File metadata to an existing Group
-     * @param hash of the File
-     * 
-     */
-    function addFileToGroup(string memory hash, uint8 protocol, uint8 status, uint8 groupID) public {
-        uint256 ein = returnEIN(); // Returns EIN or Throws Error if not set
-    }
-    
-    /**
-     * @dev Add File entire functionality
-     * @param hash of the file
-     * @param protocol used to store the file
-     * @param status of the file (0 = Normal | 1 = Encrypted)
-     * @param groupID refers to the existing group
-     * @param groupName refers to the groupName
-     */
-    function _addFile(uint EIN, string memory hash, uint8 protocol, uint8 status, uint8 groupID, string memory groupName) private {
-        uint256 ein = returnEIN(); // Returns EIN or Throws Error if not set
-    }
-    
     // 3. GROUP FUNCTIONS
-    /**
-     * @dev Create a new Group for the user
-     * @param _groupName describes the name of the group
-     */
-    function createGroup(string memory _groupName) public {
-        // Returns EIN or Throws Error if not set
-        uint256 ein = returnEIN(); 
-        
-        // Check if this is unitialized, if so, initialize it, default value will bee 0
-        uint16 nextGroupIndex = groupIndex[ein] + 1;
-        require (nextGroupIndex >= groupIndex[ein], "Limit reached on number of groups, can't create more groups");
-        
-        // Create the new group
-        Group memory group = Group(
-            nextGroupIndex,
-            _groupName,
-            false
-        );
-        
-        // Assign it to User (EIN)
-        groups[ein][nextGroupIndex] = group;
-        groupIndex[ein] = nextGroupIndex;
-        
-        // Trigger Event
-        emit GroupCreated(ein, nextGroupIndex);
-    }
-    
-    /**
-     * @dev Modifier to check that Group ID = 0 is not modified as this is root
-     * @param _groupIndex The index of the group
-     */
-    modifier _onlyNonRootGroup(uint16 _groupIndex) {
-        require ((_groupIndex > 0), "Cannot modify root group.");
-        _;
-    }
-    
-    /**
-     * @dev Function to check if group exists
-     * @param _ein the EIN of the user
-     * @param _groupIndex the index of the group
-     */
-    function _groupExists(uint256 _ein, uint16 _groupIndex) internal view _onlyNonRootGroup(_groupIndex) returns (bool) {
-        // Check if the group exists or not
-        uint16 currentGroupIndex = uint16(groupIndex[_ein]);
-        
-        if (_groupIndex <= currentGroupIndex) {
-            return true;
-        }
-        
-        return false;
-    }
-    
     /**
      * @dev Rename an existing Group for the user / ein
      * @param _groupIndex describes the associated index of the group for the user / ein
      * @param _groupName describes the new name of the group
      */
-    function renameGroup(uint16 _groupIndex, string memory _groupName) public _onlyNonRootGroup(_groupIndex) {
+    function renameGroup(uint16 _groupIndex, string memory _groupName) public {
         // Returns EIN or Throws Error if not set
         uint256 ein = returnEIN(); 
         
         // Check if the group exists or not
-        require ((_groupExists(ein, _groupIndex) == true), "Group doesn't exist for the User / EIN");
         
         // Replace the group name
         Group memory group = groups[ein][_groupIndex];
@@ -267,23 +170,22 @@ contract IceProtocol is SnowflakeResolver {
         emit GroupRenamed(ein, _groupIndex);
     }
     
-    /**
+   /**
      * @dev Toggle an existing Group status (Activate | Deactivate) for the user / ein
      * @param _groupIndex describes the associated index of the group for the user / ein
      * @param _status describes the status of the group
      */
-    function toggleGroupStatus(uint16 _groupIndex, bool _status) public _onlyNonRootGroup(_groupIndex) {
+    function toggleGroupStatus(uint16 _groupIndex, bool _status) public {
         // Returns EIN or Throws Error if not set
         uint256 ein = returnEIN(); 
          
         // Check if the group exists or not
-        uint16 currentGroupIndex = uint16(groupIndex[ein]);
+        uint16 currentGroupIndex = groupIndex[ein];
         require ((_groupIndex <= currentGroupIndex), "Group doesn't exist for the User / EIN");
         
         Group memory group = groups[ein][_groupIndex];
         group.disabled = _status;
         
-        groups[ein][_groupIndex] = group;
         
         // Trigger Event
         emit GroupStatusChanged(ein, _groupIndex, _status);

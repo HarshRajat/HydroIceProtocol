@@ -210,24 +210,25 @@
       "type": "function"
     }
   ],
+  "metadata": "",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity ^0.5.0;\n\ninterface ClientRaindropInterface {\n    function hydroStakeUser() external returns (uint);\n    function hydroStakeDelegatedUser() external returns (uint);\n\n    function setSnowflakeAddress(address _snowflakeAddress) external;\n    function setStakes(uint _hydroStakeUser, uint _hydroStakeDelegatedUser) external;\n\n    function signUp(address _address, string calldata casedHydroId) external;\n\n    function hydroIDAvailable(string calldata uncasedHydroID) external view returns (bool available);\n    function hydroIDDestroyed(string calldata uncasedHydroID) external view returns (bool destroyed);\n    function hydroIDActive(string calldata uncasedHydroID) external view returns (bool active);\n\n    function getDetails(string calldata uncasedHydroID) external view\n        returns (uint ein, address _address, string memory casedHydroID);\n    function getDetails(uint ein) external view returns (address _address, string memory casedHydroID);\n    function getDetails(address _address) external view returns (uint ein, string memory casedHydroID);\n}\n",
-  "sourcePath": "/home/ricardo/Documents/hydrogen/hydro-glacier/contracts/interfaces/ClientRaindropInterface.sol",
+  "sourcePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/interfaces/ClientRaindropInterface.sol",
   "ast": {
-    "absolutePath": "/home/ricardo/Documents/hydrogen/hydro-glacier/contracts/interfaces/ClientRaindropInterface.sol",
+    "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/interfaces/ClientRaindropInterface.sol",
     "exportedSymbols": {
       "ClientRaindropInterface": [
-        880
+        5005
       ]
     },
-    "id": 881,
+    "id": 5006,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 800,
+        "id": 4925,
         "literals": [
           "solidity",
           "^",
@@ -235,7 +236,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:4"
+        "src": "0:23:5"
       },
       {
         "baseContracts": [],
@@ -243,9 +244,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 880,
+        "id": 5005,
         "linearizedBaseContracts": [
-          880
+          5005
         ],
         "name": "ClientRaindropInterface",
         "nodeType": "ContractDefinition",
@@ -253,29 +254,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 805,
+            "id": 4930,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroStakeUser",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 801,
+              "id": 4926,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "88:2:4"
+              "src": "88:2:5"
             },
             "returnParameters": {
-              "id": 804,
+              "id": 4929,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 803,
+                  "id": 4928,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 805,
-                  "src": "109:4:4",
+                  "scope": 4930,
+                  "src": "109:4:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -283,10 +284,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 802,
+                    "id": 4927,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "109:4:4",
+                    "src": "109:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -296,10 +297,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "108:6:4"
+              "src": "108:6:5"
             },
-            "scope": 880,
-            "src": "65:50:4",
+            "scope": 5005,
+            "src": "65:50:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -307,29 +308,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 810,
+            "id": 4935,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroStakeDelegatedUser",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 806,
+              "id": 4931,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "152:2:4"
+              "src": "152:2:5"
             },
             "returnParameters": {
-              "id": 809,
+              "id": 4934,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 808,
+                  "id": 4933,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 810,
-                  "src": "173:4:4",
+                  "scope": 4935,
+                  "src": "173:4:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -337,10 +338,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 807,
+                    "id": 4932,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "173:4:4",
+                    "src": "173:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -350,10 +351,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "172:6:4"
+              "src": "172:6:5"
             },
-            "scope": 880,
-            "src": "120:59:4",
+            "scope": 5005,
+            "src": "120:59:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -361,23 +362,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 815,
+            "id": 4940,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setSnowflakeAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 813,
+              "id": 4938,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 812,
+                  "id": 4937,
                   "name": "_snowflakeAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 815,
-                  "src": "214:25:4",
+                  "scope": 4940,
+                  "src": "214:25:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -385,10 +386,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 811,
+                    "id": 4936,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "214:7:4",
+                    "src": "214:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -399,16 +400,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "213:27:4"
+              "src": "213:27:5"
             },
             "returnParameters": {
-              "id": 814,
+              "id": 4939,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "249:0:4"
+              "src": "249:0:5"
             },
-            "scope": 880,
-            "src": "185:65:4",
+            "scope": 5005,
+            "src": "185:65:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -416,23 +417,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 822,
+            "id": 4947,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setStakes",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 820,
+              "id": 4945,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 817,
+                  "id": 4942,
                   "name": "_hydroStakeUser",
                   "nodeType": "VariableDeclaration",
-                  "scope": 822,
-                  "src": "274:20:4",
+                  "scope": 4947,
+                  "src": "274:20:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -440,10 +441,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 816,
+                    "id": 4941,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "274:4:4",
+                    "src": "274:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -454,11 +455,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 819,
+                  "id": 4944,
                   "name": "_hydroStakeDelegatedUser",
                   "nodeType": "VariableDeclaration",
-                  "scope": 822,
-                  "src": "296:29:4",
+                  "scope": 4947,
+                  "src": "296:29:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -466,10 +467,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 818,
+                    "id": 4943,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "296:4:4",
+                    "src": "296:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -479,16 +480,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "273:53:4"
+              "src": "273:53:5"
             },
             "returnParameters": {
-              "id": 821,
+              "id": 4946,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "335:0:4"
+              "src": "335:0:5"
             },
-            "scope": 880,
-            "src": "255:81:4",
+            "scope": 5005,
+            "src": "255:81:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -496,23 +497,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 829,
+            "id": 4954,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "signUp",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 827,
+              "id": 4952,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 824,
+                  "id": 4949,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 829,
-                  "src": "358:16:4",
+                  "scope": 4954,
+                  "src": "358:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -520,10 +521,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 823,
+                    "id": 4948,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "358:7:4",
+                    "src": "358:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -535,11 +536,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 826,
+                  "id": 4951,
                   "name": "casedHydroId",
                   "nodeType": "VariableDeclaration",
-                  "scope": 829,
-                  "src": "376:28:4",
+                  "scope": 4954,
+                  "src": "376:28:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -547,10 +548,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 825,
+                    "id": 4950,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "376:6:4",
+                    "src": "376:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -560,16 +561,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "357:48:4"
+              "src": "357:48:5"
             },
             "returnParameters": {
-              "id": 828,
+              "id": 4953,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "414:0:4"
+              "src": "414:0:5"
             },
-            "scope": 880,
-            "src": "342:73:4",
+            "scope": 5005,
+            "src": "342:73:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -577,23 +578,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 836,
+            "id": 4961,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroIDAvailable",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 832,
+              "id": 4957,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 831,
+                  "id": 4956,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 836,
-                  "src": "447:30:4",
+                  "scope": 4961,
+                  "src": "447:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -601,10 +602,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 830,
+                    "id": 4955,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "447:6:4",
+                    "src": "447:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -614,19 +615,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "446:32:4"
+              "src": "446:32:5"
             },
             "returnParameters": {
-              "id": 835,
+              "id": 4960,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 834,
+                  "id": 4959,
                   "name": "available",
                   "nodeType": "VariableDeclaration",
-                  "scope": 836,
-                  "src": "502:14:4",
+                  "scope": 4961,
+                  "src": "502:14:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -634,10 +635,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 833,
+                    "id": 4958,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "502:4:4",
+                    "src": "502:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -647,10 +648,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "501:16:4"
+              "src": "501:16:5"
             },
-            "scope": 880,
-            "src": "421:97:4",
+            "scope": 5005,
+            "src": "421:97:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -658,23 +659,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 843,
+            "id": 4968,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroIDDestroyed",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 839,
+              "id": 4964,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 838,
+                  "id": 4963,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 843,
-                  "src": "549:30:4",
+                  "scope": 4968,
+                  "src": "549:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -682,10 +683,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 837,
+                    "id": 4962,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "549:6:4",
+                    "src": "549:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -695,19 +696,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "548:32:4"
+              "src": "548:32:5"
             },
             "returnParameters": {
-              "id": 842,
+              "id": 4967,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 841,
+                  "id": 4966,
                   "name": "destroyed",
                   "nodeType": "VariableDeclaration",
-                  "scope": 843,
-                  "src": "604:14:4",
+                  "scope": 4968,
+                  "src": "604:14:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -715,10 +716,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 840,
+                    "id": 4965,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "604:4:4",
+                    "src": "604:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -728,10 +729,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "603:16:4"
+              "src": "603:16:5"
             },
-            "scope": 880,
-            "src": "523:97:4",
+            "scope": 5005,
+            "src": "523:97:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -739,23 +740,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 850,
+            "id": 4975,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroIDActive",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 846,
+              "id": 4971,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 845,
+                  "id": 4970,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 850,
-                  "src": "648:30:4",
+                  "scope": 4975,
+                  "src": "648:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -763,10 +764,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 844,
+                    "id": 4969,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "648:6:4",
+                    "src": "648:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -776,19 +777,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "647:32:4"
+              "src": "647:32:5"
             },
             "returnParameters": {
-              "id": 849,
+              "id": 4974,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 848,
+                  "id": 4973,
                   "name": "active",
                   "nodeType": "VariableDeclaration",
-                  "scope": 850,
-                  "src": "703:11:4",
+                  "scope": 4975,
+                  "src": "703:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -796,10 +797,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 847,
+                    "id": 4972,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "703:4:4",
+                    "src": "703:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -809,10 +810,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "702:13:4"
+              "src": "702:13:5"
             },
-            "scope": 880,
-            "src": "625:91:4",
+            "scope": 5005,
+            "src": "625:91:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -820,23 +821,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 861,
+            "id": 4986,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDetails",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 853,
+              "id": 4978,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 852,
+                  "id": 4977,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "742:30:4",
+                  "scope": 4986,
+                  "src": "742:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -844,10 +845,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 851,
+                    "id": 4976,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "742:6:4",
+                    "src": "742:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -857,19 +858,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "741:32:4"
+              "src": "741:32:5"
             },
             "returnParameters": {
-              "id": 860,
+              "id": 4985,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 855,
+                  "id": 4980,
                   "name": "ein",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "805:8:4",
+                  "scope": 4986,
+                  "src": "805:8:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -877,10 +878,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 854,
+                    "id": 4979,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "805:4:4",
+                    "src": "805:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -891,11 +892,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 857,
+                  "id": 4982,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "815:16:4",
+                  "scope": 4986,
+                  "src": "815:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -903,10 +904,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 856,
+                    "id": 4981,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "815:7:4",
+                    "src": "815:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -918,11 +919,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 859,
+                  "id": 4984,
                   "name": "casedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "833:26:4",
+                  "scope": 4986,
+                  "src": "833:26:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -930,10 +931,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 858,
+                    "id": 4983,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "833:6:4",
+                    "src": "833:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -943,10 +944,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "804:56:4"
+              "src": "804:56:5"
             },
-            "scope": 880,
-            "src": "722:139:4",
+            "scope": 5005,
+            "src": "722:139:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -954,23 +955,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 870,
+            "id": 4995,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDetails",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 864,
+              "id": 4989,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 863,
+                  "id": 4988,
                   "name": "ein",
                   "nodeType": "VariableDeclaration",
-                  "scope": 870,
-                  "src": "886:8:4",
+                  "scope": 4995,
+                  "src": "886:8:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -978,10 +979,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 862,
+                    "id": 4987,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "886:4:4",
+                    "src": "886:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -991,19 +992,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "885:10:4"
+              "src": "885:10:5"
             },
             "returnParameters": {
-              "id": 869,
+              "id": 4994,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 866,
+                  "id": 4991,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 870,
-                  "src": "919:16:4",
+                  "scope": 4995,
+                  "src": "919:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1011,10 +1012,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 865,
+                    "id": 4990,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "919:7:4",
+                    "src": "919:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1026,11 +1027,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 868,
+                  "id": 4993,
                   "name": "casedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 870,
-                  "src": "937:26:4",
+                  "scope": 4995,
+                  "src": "937:26:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1038,10 +1039,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 867,
+                    "id": 4992,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "937:6:4",
+                    "src": "937:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1051,10 +1052,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "918:46:4"
+              "src": "918:46:5"
             },
-            "scope": 880,
-            "src": "866:99:4",
+            "scope": 5005,
+            "src": "866:99:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1062,23 +1063,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 879,
+            "id": 5004,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDetails",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 873,
+              "id": 4998,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 872,
+                  "id": 4997,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 879,
-                  "src": "990:16:4",
+                  "scope": 5004,
+                  "src": "990:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1086,10 +1087,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 871,
+                    "id": 4996,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "990:7:4",
+                    "src": "990:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1100,19 +1101,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "989:18:4"
+              "src": "989:18:5"
             },
             "returnParameters": {
-              "id": 878,
+              "id": 5003,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 875,
+                  "id": 5000,
                   "name": "ein",
                   "nodeType": "VariableDeclaration",
-                  "scope": 879,
-                  "src": "1031:8:4",
+                  "scope": 5004,
+                  "src": "1031:8:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1120,10 +1121,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 874,
+                    "id": 4999,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1031:4:4",
+                    "src": "1031:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1134,11 +1135,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 877,
+                  "id": 5002,
                   "name": "casedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 879,
-                  "src": "1041:26:4",
+                  "scope": 5004,
+                  "src": "1041:26:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1146,10 +1147,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 876,
+                    "id": 5001,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1041:6:4",
+                    "src": "1041:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1159,33 +1160,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1030:38:4"
+              "src": "1030:38:5"
             },
-            "scope": 880,
-            "src": "970:99:4",
+            "scope": 5005,
+            "src": "970:99:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 881,
-        "src": "25:1046:4"
+        "scope": 5006,
+        "src": "25:1046:5"
       }
     ],
-    "src": "0:1072:4"
+    "src": "0:1072:5"
   },
   "legacyAST": {
-    "absolutePath": "/home/ricardo/Documents/hydrogen/hydro-glacier/contracts/interfaces/ClientRaindropInterface.sol",
+    "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/interfaces/ClientRaindropInterface.sol",
     "exportedSymbols": {
       "ClientRaindropInterface": [
-        880
+        5005
       ]
     },
-    "id": 881,
+    "id": 5006,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 800,
+        "id": 4925,
         "literals": [
           "solidity",
           "^",
@@ -1193,7 +1194,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:4"
+        "src": "0:23:5"
       },
       {
         "baseContracts": [],
@@ -1201,9 +1202,9 @@
         "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 880,
+        "id": 5005,
         "linearizedBaseContracts": [
-          880
+          5005
         ],
         "name": "ClientRaindropInterface",
         "nodeType": "ContractDefinition",
@@ -1211,29 +1212,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 805,
+            "id": 4930,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroStakeUser",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 801,
+              "id": 4926,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "88:2:4"
+              "src": "88:2:5"
             },
             "returnParameters": {
-              "id": 804,
+              "id": 4929,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 803,
+                  "id": 4928,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 805,
-                  "src": "109:4:4",
+                  "scope": 4930,
+                  "src": "109:4:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1241,10 +1242,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 802,
+                    "id": 4927,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "109:4:4",
+                    "src": "109:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1254,10 +1255,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "108:6:4"
+              "src": "108:6:5"
             },
-            "scope": 880,
-            "src": "65:50:4",
+            "scope": 5005,
+            "src": "65:50:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1265,29 +1266,29 @@
           {
             "body": null,
             "documentation": null,
-            "id": 810,
+            "id": 4935,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroStakeDelegatedUser",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 806,
+              "id": 4931,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "152:2:4"
+              "src": "152:2:5"
             },
             "returnParameters": {
-              "id": 809,
+              "id": 4934,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 808,
+                  "id": 4933,
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 810,
-                  "src": "173:4:4",
+                  "scope": 4935,
+                  "src": "173:4:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1295,10 +1296,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 807,
+                    "id": 4932,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "173:4:4",
+                    "src": "173:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1308,10 +1309,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "172:6:4"
+              "src": "172:6:5"
             },
-            "scope": 880,
-            "src": "120:59:4",
+            "scope": 5005,
+            "src": "120:59:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1319,23 +1320,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 815,
+            "id": 4940,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setSnowflakeAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 813,
+              "id": 4938,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 812,
+                  "id": 4937,
                   "name": "_snowflakeAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 815,
-                  "src": "214:25:4",
+                  "scope": 4940,
+                  "src": "214:25:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1343,10 +1344,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 811,
+                    "id": 4936,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "214:7:4",
+                    "src": "214:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1357,16 +1358,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "213:27:4"
+              "src": "213:27:5"
             },
             "returnParameters": {
-              "id": 814,
+              "id": 4939,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "249:0:4"
+              "src": "249:0:5"
             },
-            "scope": 880,
-            "src": "185:65:4",
+            "scope": 5005,
+            "src": "185:65:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1374,23 +1375,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 822,
+            "id": 4947,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setStakes",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 820,
+              "id": 4945,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 817,
+                  "id": 4942,
                   "name": "_hydroStakeUser",
                   "nodeType": "VariableDeclaration",
-                  "scope": 822,
-                  "src": "274:20:4",
+                  "scope": 4947,
+                  "src": "274:20:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1398,10 +1399,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 816,
+                    "id": 4941,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "274:4:4",
+                    "src": "274:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1412,11 +1413,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 819,
+                  "id": 4944,
                   "name": "_hydroStakeDelegatedUser",
                   "nodeType": "VariableDeclaration",
-                  "scope": 822,
-                  "src": "296:29:4",
+                  "scope": 4947,
+                  "src": "296:29:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1424,10 +1425,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 818,
+                    "id": 4943,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "296:4:4",
+                    "src": "296:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1437,16 +1438,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "273:53:4"
+              "src": "273:53:5"
             },
             "returnParameters": {
-              "id": 821,
+              "id": 4946,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "335:0:4"
+              "src": "335:0:5"
             },
-            "scope": 880,
-            "src": "255:81:4",
+            "scope": 5005,
+            "src": "255:81:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1454,23 +1455,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 829,
+            "id": 4954,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "signUp",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 827,
+              "id": 4952,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 824,
+                  "id": 4949,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 829,
-                  "src": "358:16:4",
+                  "scope": 4954,
+                  "src": "358:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1478,10 +1479,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 823,
+                    "id": 4948,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "358:7:4",
+                    "src": "358:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1493,11 +1494,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 826,
+                  "id": 4951,
                   "name": "casedHydroId",
                   "nodeType": "VariableDeclaration",
-                  "scope": 829,
-                  "src": "376:28:4",
+                  "scope": 4954,
+                  "src": "376:28:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1505,10 +1506,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 825,
+                    "id": 4950,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "376:6:4",
+                    "src": "376:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1518,16 +1519,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "357:48:4"
+              "src": "357:48:5"
             },
             "returnParameters": {
-              "id": 828,
+              "id": 4953,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "414:0:4"
+              "src": "414:0:5"
             },
-            "scope": 880,
-            "src": "342:73:4",
+            "scope": 5005,
+            "src": "342:73:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
@@ -1535,23 +1536,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 836,
+            "id": 4961,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroIDAvailable",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 832,
+              "id": 4957,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 831,
+                  "id": 4956,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 836,
-                  "src": "447:30:4",
+                  "scope": 4961,
+                  "src": "447:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1559,10 +1560,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 830,
+                    "id": 4955,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "447:6:4",
+                    "src": "447:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1572,19 +1573,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "446:32:4"
+              "src": "446:32:5"
             },
             "returnParameters": {
-              "id": 835,
+              "id": 4960,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 834,
+                  "id": 4959,
                   "name": "available",
                   "nodeType": "VariableDeclaration",
-                  "scope": 836,
-                  "src": "502:14:4",
+                  "scope": 4961,
+                  "src": "502:14:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1592,10 +1593,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 833,
+                    "id": 4958,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "502:4:4",
+                    "src": "502:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -1605,10 +1606,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "501:16:4"
+              "src": "501:16:5"
             },
-            "scope": 880,
-            "src": "421:97:4",
+            "scope": 5005,
+            "src": "421:97:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1616,23 +1617,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 843,
+            "id": 4968,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroIDDestroyed",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 839,
+              "id": 4964,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 838,
+                  "id": 4963,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 843,
-                  "src": "549:30:4",
+                  "scope": 4968,
+                  "src": "549:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1640,10 +1641,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 837,
+                    "id": 4962,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "549:6:4",
+                    "src": "549:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1653,19 +1654,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "548:32:4"
+              "src": "548:32:5"
             },
             "returnParameters": {
-              "id": 842,
+              "id": 4967,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 841,
+                  "id": 4966,
                   "name": "destroyed",
                   "nodeType": "VariableDeclaration",
-                  "scope": 843,
-                  "src": "604:14:4",
+                  "scope": 4968,
+                  "src": "604:14:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1673,10 +1674,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 840,
+                    "id": 4965,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "604:4:4",
+                    "src": "604:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -1686,10 +1687,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "603:16:4"
+              "src": "603:16:5"
             },
-            "scope": 880,
-            "src": "523:97:4",
+            "scope": 5005,
+            "src": "523:97:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1697,23 +1698,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 850,
+            "id": 4975,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "hydroIDActive",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 846,
+              "id": 4971,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 845,
+                  "id": 4970,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 850,
-                  "src": "648:30:4",
+                  "scope": 4975,
+                  "src": "648:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1721,10 +1722,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 844,
+                    "id": 4969,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "648:6:4",
+                    "src": "648:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1734,19 +1735,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "647:32:4"
+              "src": "647:32:5"
             },
             "returnParameters": {
-              "id": 849,
+              "id": 4974,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 848,
+                  "id": 4973,
                   "name": "active",
                   "nodeType": "VariableDeclaration",
-                  "scope": 850,
-                  "src": "703:11:4",
+                  "scope": 4975,
+                  "src": "703:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1754,10 +1755,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 847,
+                    "id": 4972,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "703:4:4",
+                    "src": "703:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -1767,10 +1768,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "702:13:4"
+              "src": "702:13:5"
             },
-            "scope": 880,
-            "src": "625:91:4",
+            "scope": 5005,
+            "src": "625:91:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1778,23 +1779,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 861,
+            "id": 4986,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDetails",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 853,
+              "id": 4978,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 852,
+                  "id": 4977,
                   "name": "uncasedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "742:30:4",
+                  "scope": 4986,
+                  "src": "742:30:5",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -1802,10 +1803,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 851,
+                    "id": 4976,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "742:6:4",
+                    "src": "742:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1815,19 +1816,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "741:32:4"
+              "src": "741:32:5"
             },
             "returnParameters": {
-              "id": 860,
+              "id": 4985,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 855,
+                  "id": 4980,
                   "name": "ein",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "805:8:4",
+                  "scope": 4986,
+                  "src": "805:8:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1835,10 +1836,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 854,
+                    "id": 4979,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "805:4:4",
+                    "src": "805:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1849,11 +1850,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 857,
+                  "id": 4982,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "815:16:4",
+                  "scope": 4986,
+                  "src": "815:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1861,10 +1862,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 856,
+                    "id": 4981,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "815:7:4",
+                    "src": "815:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1876,11 +1877,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 859,
+                  "id": 4984,
                   "name": "casedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 861,
-                  "src": "833:26:4",
+                  "scope": 4986,
+                  "src": "833:26:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1888,10 +1889,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 858,
+                    "id": 4983,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "833:6:4",
+                    "src": "833:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -1901,10 +1902,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "804:56:4"
+              "src": "804:56:5"
             },
-            "scope": 880,
-            "src": "722:139:4",
+            "scope": 5005,
+            "src": "722:139:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -1912,23 +1913,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 870,
+            "id": 4995,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDetails",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 864,
+              "id": 4989,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 863,
+                  "id": 4988,
                   "name": "ein",
                   "nodeType": "VariableDeclaration",
-                  "scope": 870,
-                  "src": "886:8:4",
+                  "scope": 4995,
+                  "src": "886:8:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1936,10 +1937,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 862,
+                    "id": 4987,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "886:4:4",
+                    "src": "886:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1949,19 +1950,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "885:10:4"
+              "src": "885:10:5"
             },
             "returnParameters": {
-              "id": 869,
+              "id": 4994,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 866,
+                  "id": 4991,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 870,
-                  "src": "919:16:4",
+                  "scope": 4995,
+                  "src": "919:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1969,10 +1970,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 865,
+                    "id": 4990,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "919:7:4",
+                    "src": "919:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1984,11 +1985,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 868,
+                  "id": 4993,
                   "name": "casedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 870,
-                  "src": "937:26:4",
+                  "scope": 4995,
+                  "src": "937:26:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1996,10 +1997,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 867,
+                    "id": 4992,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "937:6:4",
+                    "src": "937:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -2009,10 +2010,10 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "918:46:4"
+              "src": "918:46:5"
             },
-            "scope": 880,
-            "src": "866:99:4",
+            "scope": 5005,
+            "src": "866:99:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
@@ -2020,23 +2021,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 879,
+            "id": 5004,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getDetails",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 873,
+              "id": 4998,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 872,
+                  "id": 4997,
                   "name": "_address",
                   "nodeType": "VariableDeclaration",
-                  "scope": 879,
-                  "src": "990:16:4",
+                  "scope": 5004,
+                  "src": "990:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2044,10 +2045,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 871,
+                    "id": 4996,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "990:7:4",
+                    "src": "990:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2058,19 +2059,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "989:18:4"
+              "src": "989:18:5"
             },
             "returnParameters": {
-              "id": 878,
+              "id": 5003,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 875,
+                  "id": 5000,
                   "name": "ein",
                   "nodeType": "VariableDeclaration",
-                  "scope": 879,
-                  "src": "1031:8:4",
+                  "scope": 5004,
+                  "src": "1031:8:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2078,10 +2079,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 874,
+                    "id": 4999,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1031:4:4",
+                    "src": "1031:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2092,11 +2093,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 877,
+                  "id": 5002,
                   "name": "casedHydroID",
                   "nodeType": "VariableDeclaration",
-                  "scope": 879,
-                  "src": "1041:26:4",
+                  "scope": 5004,
+                  "src": "1041:26:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -2104,10 +2105,10 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 876,
+                    "id": 5001,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1041:6:4",
+                    "src": "1041:6:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_string_storage_ptr",
                       "typeString": "string"
@@ -2117,28 +2118,28 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1030:38:4"
+              "src": "1030:38:5"
             },
-            "scope": 880,
-            "src": "970:99:4",
+            "scope": 5005,
+            "src": "970:99:5",
             "stateMutability": "view",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 881,
-        "src": "25:1046:4"
+        "scope": 5006,
+        "src": "25:1046:5"
       }
     ],
-    "src": "0:1072:4"
+    "src": "0:1072:5"
   },
   "compiler": {
     "name": "solc",
     "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.3",
-  "updatedAt": "2019-03-18T19:38:31.731Z",
+  "schemaVersion": "3.0.6",
+  "updatedAt": "2019-04-16T08:29:58.993Z",
   "devdoc": {
     "methods": {}
   },
