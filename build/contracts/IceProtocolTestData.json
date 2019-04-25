@@ -1,0 +1,1170 @@
+{
+  "contractName": "IceProtocolTestData",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_groupIndex",
+          "type": "uint16"
+        }
+      ],
+      "name": "deleteGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "hash",
+          "type": "string"
+        },
+        {
+          "name": "protocol",
+          "type": "uint8"
+        },
+        {
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "name": "groupName",
+          "type": "string"
+        }
+      ],
+      "name": "addFileWithGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_ein",
+          "type": "uint256"
+        },
+        {
+          "name": "_seedGroupID",
+          "type": "uint16"
+        }
+      ],
+      "name": "getGroupOrder",
+      "outputs": [
+        {
+          "name": "prev",
+          "type": "uint256"
+        },
+        {
+          "name": "next",
+          "type": "uint256"
+        },
+        {
+          "name": "pointerID",
+          "type": "uint256"
+        },
+        {
+          "name": "active",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "identityRegistry",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_nonOwnerEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "addToWhitelist",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_transfererEIN",
+          "type": "uint256"
+        },
+        {
+          "name": "_fileIndex",
+          "type": "uint256"
+        },
+        {
+          "name": "_transfereeEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "acceptFileTransfer",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "debugBuildGroupData",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "hash",
+          "type": "string"
+        },
+        {
+          "name": "protocol",
+          "type": "uint8"
+        },
+        {
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "name": "groupID",
+          "type": "uint8"
+        }
+      ],
+      "name": "addFileToGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_forEin",
+          "type": "uint256"
+        },
+        {
+          "name": "_queryingEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "isWhitelisted",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "whoEIN",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "callOnAddition",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "snowflakeDescription",
+      "outputs": [
+        {
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_transfererEIN",
+          "type": "uint256"
+        },
+        {
+          "name": "_fileIndex",
+          "type": "uint256"
+        },
+        {
+          "name": "_transfereeEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "initiateFileTransfer",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "snowflakeName",
+      "outputs": [
+        {
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_nonOwnerEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "addToBlacklist",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "callOnRemoval",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "isOwner",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "name": "onAddition",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "name": "onRemoval",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_ein",
+          "type": "uint256"
+        },
+        {
+          "name": "_limit",
+          "type": "uint16"
+        },
+        {
+          "name": "_seedOrder",
+          "type": "uint16"
+        }
+      ],
+      "name": "getDescendingGroupsID",
+      "outputs": [
+        {
+          "name": "groupIDs",
+          "type": "uint16[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_forEin",
+          "type": "uint256"
+        },
+        {
+          "name": "_queryingEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "isBlacklisted",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_ein",
+          "type": "uint256"
+        },
+        {
+          "name": "_groupIndex",
+          "type": "uint16"
+        }
+      ],
+      "name": "getGroup",
+      "outputs": [
+        {
+          "name": "groupID",
+          "type": "uint256"
+        },
+        {
+          "name": "groupName",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_snowflakeAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setSnowflakeAddress",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_groupName",
+          "type": "string"
+        }
+      ],
+      "name": "createGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_groupIndex",
+          "type": "uint16"
+        },
+        {
+          "name": "_groupName",
+          "type": "string"
+        }
+      ],
+      "name": "renameGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_nonOwnerEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "removeFromBlacklist",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_nonOwnerEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "removeFromWhitelist",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "snowflake",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "snowflakeAddress",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "groupID",
+          "type": "uint16"
+        }
+      ],
+      "name": "GroupCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "groupID",
+          "type": "uint16"
+        }
+      ],
+      "name": "GroupRenamed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "groupID",
+          "type": "uint16"
+        }
+      ],
+      "name": "GroupDeleted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "transfereeEIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "fileID",
+          "type": "uint256"
+        }
+      ],
+      "name": "FileTransferInitiated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "recipientEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "AddedToWhitelist",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "recipientEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "RemovedFromWhitelist",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "recipientEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "AddedToBlacklist",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "recipientEIN",
+          "type": "uint256"
+        }
+      ],
+      "name": "RemovedFromBlacklist",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "EIN",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "name": "notice",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "name": "statusType",
+          "type": "uint256"
+        }
+      ],
+      "name": "Notice",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "loadGroups",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "pragma solidity ^0.5.0;\n\nimport \"./IceProtocol.sol\";\n\n/**\n * @title Ice Protocol Test Data / Functions\n * @author Harsh Rajat\n * @notice Test Data Creation for IceProtocol\n * @dev Test Data Creation for IceProtocol\n */\n \ncontract IceProtocolTestData is IceProtocol {\n    // constructor\n    constructor () public {\n        \n    }\n    \n    function loadGroups() public {\n        \n    }\n}",
+  "sourcePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/IceProtocolTestData.sol",
+  "ast": {
+    "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/IceProtocolTestData.sol",
+    "exportedSymbols": {
+      "IceProtocolTestData": [
+        1811
+      ]
+    },
+    "id": 1812,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1799,
+        "literals": [
+          "solidity",
+          "^",
+          "0.5",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:1"
+      },
+      {
+        "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/IceProtocol.sol",
+        "file": "./IceProtocol.sol",
+        "id": 1800,
+        "nodeType": "ImportDirective",
+        "scope": 1812,
+        "sourceUnit": 1798,
+        "src": "25:27:1",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 1801,
+              "name": "IceProtocol",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 1797,
+              "src": "253:11:1",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_IceProtocol_$1797",
+                "typeString": "contract IceProtocol"
+              }
+            },
+            "id": 1802,
+            "nodeType": "InheritanceSpecifier",
+            "src": "253:11:1"
+          }
+        ],
+        "contractDependencies": [
+          1797,
+          5381,
+          6913
+        ],
+        "contractKind": "contract",
+        "documentation": "@title Ice Protocol Test Data / Functions\n@author Harsh Rajat\n@notice Test Data Creation for IceProtocol\n@dev Test Data Creation for IceProtocol",
+        "fullyImplemented": false,
+        "id": 1811,
+        "linearizedBaseContracts": [
+          1811,
+          1797,
+          5381,
+          6913
+        ],
+        "name": "IceProtocolTestData",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 1805,
+              "nodeType": "Block",
+              "src": "312:16:1",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 1806,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1803,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "302:2:1"
+            },
+            "returnParameters": {
+              "id": 1804,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "312:0:1"
+            },
+            "scope": 1811,
+            "src": "290:38:1",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 1809,
+              "nodeType": "Block",
+              "src": "367:16:1",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 1810,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "loadGroups",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1807,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "357:2:1"
+            },
+            "returnParameters": {
+              "id": 1808,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "367:0:1"
+            },
+            "scope": 1811,
+            "src": "338:45:1",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1812,
+        "src": "221:164:1"
+      }
+    ],
+    "src": "0:385:1"
+  },
+  "legacyAST": {
+    "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/IceProtocolTestData.sol",
+    "exportedSymbols": {
+      "IceProtocolTestData": [
+        1811
+      ]
+    },
+    "id": 1812,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1799,
+        "literals": [
+          "solidity",
+          "^",
+          "0.5",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:1"
+      },
+      {
+        "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/IceProtocol.sol",
+        "file": "./IceProtocol.sol",
+        "id": 1800,
+        "nodeType": "ImportDirective",
+        "scope": 1812,
+        "sourceUnit": 1798,
+        "src": "25:27:1",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 1801,
+              "name": "IceProtocol",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 1797,
+              "src": "253:11:1",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_IceProtocol_$1797",
+                "typeString": "contract IceProtocol"
+              }
+            },
+            "id": 1802,
+            "nodeType": "InheritanceSpecifier",
+            "src": "253:11:1"
+          }
+        ],
+        "contractDependencies": [
+          1797,
+          5381,
+          6913
+        ],
+        "contractKind": "contract",
+        "documentation": "@title Ice Protocol Test Data / Functions\n@author Harsh Rajat\n@notice Test Data Creation for IceProtocol\n@dev Test Data Creation for IceProtocol",
+        "fullyImplemented": false,
+        "id": 1811,
+        "linearizedBaseContracts": [
+          1811,
+          1797,
+          5381,
+          6913
+        ],
+        "name": "IceProtocolTestData",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 1805,
+              "nodeType": "Block",
+              "src": "312:16:1",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 1806,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1803,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "302:2:1"
+            },
+            "returnParameters": {
+              "id": 1804,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "312:0:1"
+            },
+            "scope": 1811,
+            "src": "290:38:1",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 1809,
+              "nodeType": "Block",
+              "src": "367:16:1",
+              "statements": []
+            },
+            "documentation": null,
+            "id": 1810,
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "loadGroups",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 1807,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "357:2:1"
+            },
+            "returnParameters": {
+              "id": 1808,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "367:0:1"
+            },
+            "scope": 1811,
+            "src": "338:45:1",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1812,
+        "src": "221:164:1"
+      }
+    ],
+    "src": "0:385:1"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.6",
+  "updatedAt": "2019-04-22T16:23:29.130Z",
+  "devdoc": {
+    "author": "Harsh Rajat",
+    "details": "Test Data Creation for IceProtocol",
+    "methods": {
+      "addFileToGroup(string,uint8,uint8,uint8)": {
+        "details": "Add File metadata to an existing Group",
+        "params": {
+          "hash": "of the File      "
+        }
+      },
+      "addFileWithGroup(string,uint8,uint8,string)": {
+        "details": "Addd File metadata and Create a new Group",
+        "params": {
+          "hash": "of the File     "
+        }
+      },
+      "addToBlacklist(uint256)": {
+        "details": "Remove a non-owner user to blacklist",
+        "params": {
+          "_nonOwnerEIN": "is the ein of the recipient"
+        }
+      },
+      "addToWhitelist(uint256)": {
+        "details": "Add a non-owner user to whitelist",
+        "params": {
+          "_nonOwnerEIN": "is the ein of the recipient"
+        }
+      },
+      "createGroup(string)": {
+        "details": "Create a new Group for the user",
+        "params": {
+          "_groupName": "describes the name of the group"
+        }
+      },
+      "deleteGroup(uint16)": {
+        "details": "Delete an existing group for the user / ein",
+        "params": {
+          "_groupIndex": "describes the associated index of the group for the user / ein"
+        }
+      },
+      "isBlacklisted(uint256,uint256)": {
+        "details": "Check if a user (EIN) is whitelisted for any other user (EIN)",
+        "params": {
+          "_forEin": "is the ein for which the blacklist is targetted",
+          "_queryingEIN": "is the ein of the recipient which is checked"
+        }
+      },
+      "isOwner()": {
+        "return": "true if `msg.sender` is the owner of the contract."
+      },
+      "isWhitelisted(uint256,uint256)": {
+        "details": "Check if a user (EIN) is whitelisted for any other user (EIN)",
+        "params": {
+          "_forEin": "is the ein for which the whitelist is targetted",
+          "_queryingEIN": "is the ein of the recipient which is checked"
+        }
+      },
+      "owner()": {
+        "return": "the address of the owner."
+      },
+      "removeFromBlacklist(uint256)": {
+        "details": "Remove a non-owner user from blacklist",
+        "params": {
+          "_nonOwnerEIN": "is the ein of the recipient"
+        }
+      },
+      "removeFromWhitelist(uint256)": {
+        "details": "Remove a non-owner user from whitelist",
+        "params": {
+          "_nonOwnerEIN": "is the ein of the recipient"
+        }
+      },
+      "renameGroup(uint16,string)": {
+        "details": "Rename an existing Group for the user / ein",
+        "params": {
+          "_groupIndex": "describes the associated index of the group for the user / ein",
+          "_groupName": "describes the new name of the group"
+        }
+      },
+      "renounceOwnership()": {
+        "details": "Allows the current owner to relinquish control of the contract."
+      },
+      "transferOwnership(address)": {
+        "details": "Allows the current owner to transfer control of the contract to a newOwner.",
+        "params": {
+          "newOwner": "The address to transfer ownership to."
+        }
+      }
+    },
+    "title": "Ice Protocol Test Data / Functions"
+  },
+  "userdoc": {
+    "methods": {
+      "renounceOwnership()": {
+        "notice": "Renouncing to ownership will leave the contract without an owner. It will not be possible to call the functions with the `onlyOwner` modifier anymore."
+      }
+    },
+    "notice": "Test Data Creation for IceProtocol"
+  }
+}
