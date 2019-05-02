@@ -8802,7 +8802,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.6",
-  "updatedAt": "2019-04-16T08:29:58.977Z",
+  "updatedAt": "2019-05-02T20:57:46.496Z",
   "devdoc": {
     "details": "This Contract forms File Storage / Stamping / Encryption part of Hydro Protocols",
     "methods": {
