@@ -501,8 +501,9 @@ contract Ice is SnowflakeResolver {
      * @param _name is the name of stored file
      */
     function changeFileName(uint256 _ein, uint256 _fileIndex, string memory _name) 
-    public 
-    _onlyOwner(_ein) {
+    public {
+        
+        _onlyOwner(_ein);
         files[_ein][_fileIndex].name = _name;
         
         // Trigger Event
@@ -517,10 +518,10 @@ contract Ice is SnowflakeResolver {
      */
     function moveFileToGroup(uint256 _ein, uint256 _fileIndex, uint256 _newGroupIndex) 
     public 
-    _onlyOwner(_ein) 
     _onlyUnlockedItem(_ein, _fileIndex) 
     _onlyEnforcedAtomityFiles(_ein) 
     _onlyEnforcedAtomityGroups(_ein) {
+    _onlyOwner(_ein);
         // Set Files & Group Atomicity
         userAtomicity[_ein].lockFiles = true;
         userAtomicity[_ein].lockGroups = true;
@@ -547,8 +548,9 @@ contract Ice is SnowflakeResolver {
      */
     function deleteFile(uint256 _ein, uint256 _fileIndex) 
     public 
-    _onlyOwner(_ein) 
     _onlyUnlockedItem(_ein, _fileIndex) {
+    _onlyOwner(_ein);
+    
         // Set Files & Group Atomicity
         userAtomicity[_ein].lockFiles = true;
         userAtomicity[_ein].lockGroups = true;
@@ -656,9 +658,9 @@ contract Ice is SnowflakeResolver {
      */
     function getGroup(uint256 _ein, uint256 _groupIndex)
     public view
-    _onlyOwner(_ein)
     returns (uint256 index, string memory name) {
         
+    _onlyOwner(_ein);
         // Check if the group exists or not
         require (
             (_groupExists(_ein, _groupIndex) == true), 
@@ -692,8 +694,8 @@ contract Ice is SnowflakeResolver {
      */
     function createGroup(uint256 _ein, string memory _groupName) 
     public 
-    _onlyOwner(_ein)
     _onlyEnforcedAtomityGroups(_ein) {
+    _onlyOwner(_ein);
         // Set Group Atomicity
         userAtomicity[_ein].lockGroups = true;
         
@@ -739,8 +741,9 @@ contract Ice is SnowflakeResolver {
      */
     function renameGroup(uint256 _ein, uint256 _groupIndex, string memory _groupName) 
     public 
-    _onlyOwner(_ein)
     _onlyNonReservedItem(_groupIndex) {
+        
+    _onlyOwner(_ein);
         // Check if the group exists or not
         require (
             (_groupExists(_ein, _groupIndex) == true), 
@@ -760,10 +763,10 @@ contract Ice is SnowflakeResolver {
      * @param _groupIndex describes the associated index of the group for the user / ein
      */
     function deleteGroup(uint256 _ein, uint256 _groupIndex) public 
-    _onlyOwner(_ein)
     _onlyZeroFilesGroup(_ein, _groupIndex)
     _onlyNonReservedItem(_groupIndex) 
     _onlyEnforcedAtomityGroups(_ein) {
+    _onlyOwner(_ein);
         // Set Group Atomicity
         userAtomicity[_ein].lockGroups = true;
          
@@ -802,11 +805,12 @@ contract Ice is SnowflakeResolver {
     function initiateFileTransfer(uint256 _transfererEIN, uint256 _fileIndex, uint256 _transfereeEIN) 
     public 
     _onlyValidEIN(_transfereeEIN)
-    _onlyOwner(_transfererEIN) 
     _onlyUniqueEIN(_transfererEIN, _transfereeEIN)
     _onlyEnforcedAtomityTransfers(_transfererEIN)
     _onlyEnforcedAtomityTransfers(_transfereeEIN)
     _onlyUnlockedItem(_transfererEIN, _fileIndex) {
+        
+    _onlyOwner(_transfererEIN) ;
         // Set Transfers Atomiticy
         userAtomicity[_transfererEIN].lockTransfers = true;
         userAtomicity[_transfereeEIN].lockTransfers = true;
@@ -891,11 +895,11 @@ contract Ice is SnowflakeResolver {
      */
     function acceptFileTransfer(uint256 _transfererEIN, uint256 _fileIndex, uint256 _transfereeEIN, uint256 _transferSpecificIndex, uint256 _groupIndex) 
     public 
-    _onlyOwner(_transfereeEIN)
     _onlyEnforcedAtomityTransfers(_transfererEIN)
     _onlyEnforcedAtomityTransfers(_transfereeEIN)
     _onlyFileNonOwner(_transfererEIN, _fileIndex) 
     _onlyMarkedForTransferee(_transfererEIN, _fileIndex, _transfererEIN) {
+    _onlyOwner(_transfereeEIN);
         // Set Transfers Atomiticy
         userAtomicity[_transfererEIN].lockTransfers = true;
         userAtomicity[_transfereeEIN].lockTransfers = true;
@@ -1017,9 +1021,9 @@ contract Ice is SnowflakeResolver {
      */
     function cancelFileTransfer(uint256 _transfererEIN, uint256 _fileIndex, uint256 _transfereeEIN) 
     public 
-    _onlyOwner(_transfererEIN)
     _onlyEnforcedAtomityTransfers(_transfererEIN)
     _onlyEnforcedAtomityTransfers(_transfereeEIN) {
+    _onlyOwner(_transfererEIN);
         // Set Transfers Atomiticy
         userAtomicity[_transfererEIN].lockTransfers = true;
         userAtomicity[_transfereeEIN].lockTransfers = true;
@@ -1049,8 +1053,8 @@ contract Ice is SnowflakeResolver {
      */
     function addToWhitelist(uint256 _nonOwnerEIN) 
     public
-    _onlyNonOwner(_nonOwnerEIN) 
     _onlyValidEIN(_nonOwnerEIN) {
+    _onlyNonOwner(_nonOwnerEIN);
         // Returns EIN or Throws Error if not set
         uint256 ein = identityRegistry.getEIN(msg.sender);
         
@@ -1072,9 +1076,9 @@ contract Ice is SnowflakeResolver {
      */
     function removeFromWhitelist(uint256 _nonOwnerEIN) 
     public
-    _onlyNonOwner(_nonOwnerEIN) 
     _onlyValidEIN(_nonOwnerEIN) {
         
+    _onlyNonOwner(_nonOwnerEIN);
         // Returns EIN or Throws Error if not set
         uint256 ein = identityRegistry.getEIN(msg.sender);
        
@@ -1096,8 +1100,8 @@ contract Ice is SnowflakeResolver {
      */
     function addToBlacklist(uint256 _nonOwnerEIN) 
     public
-    _onlyNonOwner(_nonOwnerEIN) 
     _onlyValidEIN(_nonOwnerEIN) {
+    _onlyNonOwner(_nonOwnerEIN);
         // Get EIN
         uint256 ein = identityRegistry.getEIN(msg.sender);
         
@@ -1119,8 +1123,8 @@ contract Ice is SnowflakeResolver {
      */
     function removeFromBlacklist(uint256 _nonOwnerEIN) 
     public
-    _onlyNonOwner(_nonOwnerEIN) 
     _onlyValidEIN(_nonOwnerEIN) {
+    _onlyNonOwner(_nonOwnerEIN);
         // Get EIN
         uint256 ein = identityRegistry.getEIN(msg.sender);
         
@@ -1332,24 +1336,24 @@ contract Ice is SnowflakeResolver {
      * @dev Modifier to check that only owner can have access
      * @param _ein The EIN of the file Owner
      */
-    modifier _onlyOwner(uint256 _ein) {  
+    function _onlyOwner(uint256 _ein) 
+    internal view {  
         require (
             (identityRegistry.getEIN(msg.sender) == _ein), 
             "Only Owner"
         );
-        _;
     }
     
     /**
      * @dev Modifier to check that only non-owner can have access
      * @param _ein The EIN of the file Owner
      */
-    modifier _onlyNonOwner(uint256 _ein) {  
+    function _onlyNonOwner(uint256 _ein) 
+    internal view {  
         require (
             (identityRegistry.getEIN(msg.sender) != _ein), 
             "Only Non-Owner"
         );
-         _;
     }
     
     /**
