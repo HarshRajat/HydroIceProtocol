@@ -1,0 +1,243 @@
+    // 7. TRANSFER FILE FUNCTIONS
+    /**
+     * @dev Function to intiate file transfer to another EIN(user)
+     * @param _fileIndex is the index of file for the original user's EIN
+     * @param _transfereeEIN is the recipient user's EIN
+     */
+    function initiateFileTransfer(uint _fileIndex, uint _transfereeEIN)
+    public {
+        // Get user EIN
+        uint ein = identityRegistry.getEIN(msg.sender);
+
+        // Check Restrictions
+        _isValidEIN(_transfereeEIN); // Check Valid EIN
+        _isUnqEIN(ein, _transfereeEIN); // Check EINs and Unique
+        _isUnstampedItem(files[ein][_fileIndex].record); // Check if the File is not stamped
+        _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].record); // Check if the Group is not stamped
+        _isNotBlacklist(_transfereeEIN, ein); // Check if The transfee hasn't blacklisted the file owner
+        _isTransfersOpLocked(ein); // Check if Transfers are not locked for current user
+        _isTransfersOpLocked(_transfereeEIN); // Check if the transfers are not locked for recipient user
+
+        // Set Transfers Atomiticy
+        atomicity[ein].lockTransfers = true;
+        atomicity[_transfereeEIN].lockTransfers = true;
+
+        // Check and change flow if white listed
+        if (whitelist[_transfereeEIN][ein] == true) {
+            // Directly transfer file, 0 is always root group
+            _doFileTransfer(ein, _fileIndex, _transfereeEIN, 0);
+        }
+        else {
+           // Request based file Transfers
+           _initiateRequestedFileTransfer(ein, _fileIndex, _transfereeEIN);
+        }
+
+        // Reset Transfers Atomiticy
+        atomicity[ein].lockTransfers = false;
+        atomicity[_transfereeEIN].lockTransfers = false;
+    }
+
+    /**
+     * @dev Private Function to initiate requested file transfer
+     * @param _transfererEIN is the owner EIN
+     * @param _fileIndex is the index where file is stored
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     */
+    function _initiateRequestedFileTransfer(uint _transfererEIN, uint _fileIndex, uint _transfereeEIN)
+    internal {
+         // Map it to transferee mapping of transfers
+        // Add to transfers of TransfereeEIN User, 0 is always reserved
+        uint currentTransferIndex = transferIndex[_transfereeEIN];
+        uint nextTransferIndex = currentTransferIndex + 1;
+
+        require (
+            (nextTransferIndex > currentTransferIndex),
+            "Limit reached on number of transfers, can't transfer more files to that EIN (User) till they clear it up."
+        );
+
+        // Mark the file for transfer
+        files[_transfererEIN][_fileIndex].markedForTransfer = true;
+        files[_transfererEIN][_fileIndex].transferEIN = _transfereeEIN;
+        files[_transfereeEIN][_fileIndex].transferIndex = nextTransferIndex;
+
+        // Get Item Association Index
+        uint globalIndex1;
+        uint globalIndex2;
+        (globalIndex1, globalIndex2) = _getGlobalItemViaRecord(files[_transfererEIN][_fileIndex].record);
+
+        // Check Item is file
+        require (
+            (globalItems[globalIndex1][globalIndex2].isFile == true),
+            "Non-Transferable"
+        );
+
+        // Create New Transfer
+        transfers[_transfereeEIN][nextTransferIndex] = globalItems[globalIndex1][globalIndex2];
+
+        // Update sort order and index
+        transferIndex[_transfereeEIN] = _addToSortOrder(transferOrder[_transfererEIN], currentTransferIndex, 0);
+
+        // Trigger Event
+        emit FileTransferInitiated(_transfererEIN, _transfereeEIN, _fileIndex);
+    }
+
+    /**
+     * @dev Function to accept file transfer from a user
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _fileIndex is the index where file is stored
+     * @param _transferSpecificIndex is the file mapping stored no the recipient transfers mapping
+     * @param _groupIndex is the index of the group where the file is suppose to be for the recipient
+     */
+    function acceptFileTransfer(uint _transfererEIN, uint _fileIndex, uint _transferSpecificIndex, uint _groupIndex)
+    public {
+        // Get user EIN | Transferee initiates this
+        uint ein = identityRegistry.getEIN(msg.sender);
+
+        // Check Restrictions
+        _isFileNonOwner(ein, _fileIndex); // Check if the File is not owner by recipient
+        _isMarkedForTransferee(_transfererEIN, _fileIndex, ein); // Check if the file is marked for transfer to the recipient
+        _isTransfersOpLocked(_transfererEIN); // Check that the transfers are not locked for the sender of the file
+        _isTransfersOpLocked(ein); // Check that the transfers are not locked for the recipient of the file
+
+        // Set Transfers Atomiticy
+        atomicity[_transfererEIN].lockTransfers = true;
+        atomicity[ein].lockTransfers = true;
+
+        // Check if the item is marked for transfer
+        require (
+            (files[_transfererEIN][_fileIndex].markedForTransfer == true),
+            "Can't proceed, item is not marked for Transfer."
+        );
+
+        // Do file transfer
+        _doFileTransfer(_transfererEIN, _fileIndex, ein, _groupIndex);
+
+        // Finally remove the file from Tranferee Mapping
+        _removeFileFromTransfereeMapping(ein, _transferSpecificIndex);
+
+        // Reset Transfers Atomiticy
+        atomicity[_transfererEIN].lockTransfers = false;
+        atomicity[ein].lockTransfers = false;
+    }
+
+    /**
+     * @dev Private Function to do file transfer from previous (current) owner to new owner
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _fileIndex is the index where file is stored
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     * @param _groupIndex is the index of the group where the file is suppose to be for the recipient
+     */
+    function _doFileTransfer(uint _transfererEIN, uint _fileIndex, uint _transfereeEIN, uint _groupIndex)
+    internal {
+        // Get Indexes
+        uint currentTransfererIndex = fileCount[_transfererEIN];
+        uint currentTransfereeIndex = fileCount[_transfereeEIN];
+
+        uint prevTransfererIndex = currentTransfererIndex - 1;
+        require (
+            (prevTransfererIndex >= 0),
+            "No file found in the transferer db"
+        );
+
+        uint nextTransfereeIndex =  currentTransfereeIndex + 1;
+        require (
+            (nextTransfereeIndex > currentTransfereeIndex),
+            "Trasnferee User has run out of transfer slots."
+        );
+
+        // Transfer the file to the transferee & Delete it for transferer
+        files[_transfereeEIN][nextTransfereeIndex] = files[_transfererEIN][_fileIndex];
+        _deleteFileAnyOwner(_transfererEIN, _fileIndex);
+
+        // Change file properties and transfer history
+        uint tc = files[_transfereeEIN][nextTransfereeIndex].transferCount;
+        tc = tc + 1;
+        require (
+            (tc > 0),
+            "Transfers Full"
+        );
+
+        files[_transfereeEIN][nextTransfereeIndex].fileOwner = _transfereeEIN;
+        files[_transfereeEIN][nextTransfereeIndex].transferHistory[tc] = _transfereeEIN;
+        files[_transfereeEIN][nextTransfereeIndex].markedForTransfer = false;
+        files[_transfereeEIN][nextTransfereeIndex].transferCount = tc;
+
+        // add to transferee sort order & Increment index
+        fileCount[_transfereeEIN] = _addToSortOrder(fileOrder[_transfereeEIN], currentTransfereeIndex, 0);
+
+        // Add File to transferee group
+        _addFileToGroup(_transfereeEIN, _groupIndex, fileCount[_transfereeEIN]);
+
+        // Get global association
+        uint globalIndex1;
+        uint globalIndex2;
+        (globalIndex1, globalIndex2) = _getGlobalItemViaRecord(files[_transfereeEIN][_fileIndex].record);
+
+        // Update global file association
+        globalItems[globalIndex1][globalIndex2].ownerInfo.EIN = _transfereeEIN;
+        globalItems[globalIndex1][globalIndex2].ownerInfo.index = nextTransfereeIndex;
+    }
+
+    /**
+     * @dev Private Function to remove file from Transfers mapping of Transferee after file is transferred to them
+     * @param _transfereeEIN is the new owner EIN
+     * @param _transferSpecificIndex is the index of the association mapping of transfers
+     */
+    function _removeFileFromTransfereeMapping(uint _transfereeEIN, uint _transferSpecificIndex)
+    internal {
+        // Get Cureent Transfer Index
+        uint currentTransferIndex = transferIndex[_transfereeEIN];
+
+        require (
+            (currentTransferIndex > 0),
+            "Index Not Found"
+        );
+
+        // Remove the file from transferer, ie swap mapping and stich sort order
+        transfers[_transfereeEIN][_transferSpecificIndex] = transfers[_transfereeEIN][currentTransferIndex];
+        transferIndex[_transfereeEIN] = _stichSortOrder(transferOrder[_transfereeEIN], _transferSpecificIndex, currentTransferIndex, 0);
+
+        // Retrive the swapped item record and change the transferIndex to remap correctly
+        Association memory item = transfers[_transfereeEIN][_transferSpecificIndex];
+
+        if (item.isFile == true) {
+            //Only File is supported
+            files[item.ownerInfo.EIN][item.ownerInfo.index].transferIndex = _transferSpecificIndex;
+        }
+    }
+
+    /**
+     * @dev Function to cancel file transfer inititated by the current owner
+     * @param _fileIndex is the index where file is stored
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     */
+    function cancelFileTransfer(uint _fileIndex, uint _transfereeEIN)
+    public {
+        // Get user EIN | Transferee initiates this
+        uint ein = identityRegistry.getEIN(msg.sender);
+
+        // Check Restrictions
+        _isTransfersOpLocked(ein);
+        _isTransfersOpLocked(_transfereeEIN);
+
+        // Set Transfers Atomiticy
+        atomicity[ein].lockTransfers = true;
+        atomicity[_transfereeEIN].lockTransfers = true;
+
+        // Check if the item is marked for transfer
+        require (
+            (files[ein][_fileIndex].markedForTransfer == true),
+            "Transfer Prohibited"
+        );
+
+        // Cancel file transfer
+        files[ein][_fileIndex].markedForTransfer = false;
+
+        // Remove file from  transferee
+        uint transferSpecificIndex = files[ein][_fileIndex].transferIndex;
+        _removeFileFromTransfereeMapping(_transfereeEIN, transferSpecificIndex);
+
+        // Reset Transfers Atomiticy
+        atomicity[ein].lockTransfers = false;
+        atomicity[_transfereeEIN].lockTransfers = false;
+    }
