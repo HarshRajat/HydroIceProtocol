@@ -232,14 +232,14 @@
     "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/SnowflakeVia.sol",
     "exportedSymbols": {
       "SnowflakeVia": [
-        6799
+        6176
       ]
     },
-    "id": 6800,
+    "id": 6177,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 6710,
+        "id": 6087,
         "literals": [
           "solidity",
           "^",
@@ -247,27 +247,27 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:7"
+        "src": "0:23:5"
       },
       {
         "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/zeppelin/ownership/Ownable.sol",
         "file": "./zeppelin/ownership/Ownable.sol",
-        "id": 6711,
+        "id": 6088,
         "nodeType": "ImportDirective",
-        "scope": 6800,
-        "sourceUnit": 8340,
-        "src": "25:42:7",
+        "scope": 6177,
+        "sourceUnit": 7867,
+        "src": "25:42:5",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
         "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/interfaces/SnowflakeViaInterface.sol",
         "file": "./interfaces/SnowflakeViaInterface.sol",
-        "id": 6712,
+        "id": 6089,
         "nodeType": "ImportDirective",
-        "scope": 6800,
-        "sourceUnit": 7719,
-        "src": "69:48:7",
+        "scope": 6177,
+        "sourceUnit": 7246,
+        "src": "69:48:5",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -277,42 +277,42 @@
             "arguments": null,
             "baseName": {
               "contractScope": null,
-              "id": 6713,
+              "id": 6090,
               "name": "Ownable",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8339,
-              "src": "144:7:7",
+              "referencedDeclaration": 7866,
+              "src": "144:7:5",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Ownable_$8339",
+                "typeIdentifier": "t_contract$_Ownable_$7866",
                 "typeString": "contract Ownable"
               }
             },
-            "id": 6714,
+            "id": 6091,
             "nodeType": "InheritanceSpecifier",
-            "src": "144:7:7"
+            "src": "144:7:5"
           }
         ],
         "contractDependencies": [
-          8339
+          7866
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 6799,
+        "id": 6176,
         "linearizedBaseContracts": [
-          6799,
-          8339
+          6176,
+          7866
         ],
         "name": "SnowflakeVia",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 6716,
+            "id": 6093,
             "name": "snowflakeAddress",
             "nodeType": "VariableDeclaration",
-            "scope": 6799,
-            "src": "158:31:7",
+            "scope": 6176,
+            "src": "158:31:5",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -320,10 +320,10 @@
               "typeString": "address"
             },
             "typeName": {
-              "id": 6715,
+              "id": 6092,
               "name": "address",
               "nodeType": "ElementaryTypeName",
-              "src": "158:7:7",
+              "src": "158:7:5",
               "stateMutability": "nonpayable",
               "typeDescriptions": {
                 "typeIdentifier": "t_address",
@@ -335,9 +335,9 @@
           },
           {
             "body": {
-              "id": 6725,
+              "id": 6102,
               "nodeType": "Block",
-              "src": "242:55:7",
+              "src": "242:55:5",
               "statements": [
                 {
                   "expression": {
@@ -345,12 +345,12 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 6722,
+                        "id": 6099,
                         "name": "_snowflakeAddress",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6718,
-                        "src": "272:17:7",
+                        "referencedDeclaration": 6095,
+                        "src": "272:17:5",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
@@ -364,18 +364,18 @@
                           "typeString": "address"
                         }
                       ],
-                      "id": 6721,
+                      "id": 6098,
                       "name": "setSnowflakeAddress",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6750,
-                      "src": "252:19:7",
+                      "referencedDeclaration": 6127,
+                      "src": "252:19:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_nonpayable$_t_address_$returns$__$",
                         "typeString": "function (address)"
                       }
                     },
-                    "id": 6723,
+                    "id": 6100,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -383,36 +383,36 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "252:38:7",
+                    "src": "252:38:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 6724,
+                  "id": 6101,
                   "nodeType": "ExpressionStatement",
-                  "src": "252:38:7"
+                  "src": "252:38:5"
                 }
               ]
             },
             "documentation": null,
-            "id": 6726,
+            "id": 6103,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6719,
+              "id": 6096,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6718,
+                  "id": 6095,
                   "name": "_snowflakeAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6726,
-                  "src": "208:25:7",
+                  "scope": 6103,
+                  "src": "208:25:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -420,10 +420,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6717,
+                    "id": 6094,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "208:7:7",
+                    "src": "208:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -434,25 +434,25 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "207:27:7"
+              "src": "207:27:5"
             },
             "returnParameters": {
-              "id": 6720,
+              "id": 6097,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "242:0:7"
+              "src": "242:0:5"
             },
-            "scope": 6799,
-            "src": "196:101:7",
+            "scope": 6176,
+            "src": "196:101:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           },
           {
             "body": {
-              "id": 6737,
+              "id": 6114,
               "nodeType": "Block",
-              "src": "332:104:7",
+              "src": "332:104:5",
               "statements": [
                 {
                   "expression": {
@@ -464,7 +464,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 6732,
+                        "id": 6109,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -473,18 +473,18 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 6729,
+                            "id": 6106,
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8354,
-                            "src": "350:3:7",
+                            "referencedDeclaration": 7881,
+                            "src": "350:3:5",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
                               "typeString": "msg"
                             }
                           },
-                          "id": 6730,
+                          "id": 6107,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -492,7 +492,7 @@
                           "memberName": "sender",
                           "nodeType": "MemberAccess",
                           "referencedDeclaration": null,
-                          "src": "350:10:7",
+                          "src": "350:10:5",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address_payable",
                             "typeString": "address payable"
@@ -502,18 +502,18 @@
                         "operator": "==",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 6731,
+                          "id": 6108,
                           "name": "snowflakeAddress",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 6716,
-                          "src": "364:16:7",
+                          "referencedDeclaration": 6093,
+                          "src": "364:16:5",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
                             "typeString": "address"
                           }
                         },
-                        "src": "350:30:7",
+                        "src": "350:30:5",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -522,14 +522,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "446964206e6f74206f726967696e6174652066726f6d20536e6f77666c616b652e",
-                        "id": 6733,
+                        "id": 6110,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "382:35:7",
+                        "src": "382:35:5",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_dfc5f2a25036e81fa4bbd142ef7f504af232c75ceba70bcb4c0f0a96d9f0b56a",
@@ -549,21 +549,21 @@
                           "typeString": "literal_string \"Did not originate from Snowflake.\""
                         }
                       ],
-                      "id": 6728,
+                      "id": 6105,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        8357,
-                        8358
+                        7884,
+                        7885
                       ],
-                      "referencedDeclaration": 8358,
-                      "src": "342:7:7",
+                      "referencedDeclaration": 7885,
+                      "src": "342:7:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 6734,
+                    "id": 6111,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -571,58 +571,58 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "342:76:7",
+                    "src": "342:76:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 6735,
+                  "id": 6112,
                   "nodeType": "ExpressionStatement",
-                  "src": "342:76:7"
+                  "src": "342:76:5"
                 },
                 {
-                  "id": 6736,
+                  "id": 6113,
                   "nodeType": "PlaceholderStatement",
-                  "src": "428:1:7"
+                  "src": "428:1:5"
                 }
               ]
             },
             "documentation": null,
-            "id": 6738,
+            "id": 6115,
             "name": "senderIsSnowflake",
             "nodeType": "ModifierDefinition",
             "parameters": {
-              "id": 6727,
+              "id": 6104,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "329:2:7"
+              "src": "329:2:5"
             },
-            "src": "303:133:7",
+            "src": "303:133:5",
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 6749,
+              "id": 6126,
               "nodeType": "Block",
-              "src": "628:53:7",
+              "src": "628:53:5",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 6747,
+                    "id": 6124,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 6745,
+                      "id": 6122,
                       "name": "snowflakeAddress",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6716,
-                      "src": "638:16:7",
+                      "referencedDeclaration": 6093,
+                      "src": "638:16:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
@@ -632,67 +632,67 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 6746,
+                      "id": 6123,
                       "name": "_snowflakeAddress",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6740,
-                      "src": "657:17:7",
+                      "referencedDeclaration": 6117,
+                      "src": "657:17:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "src": "638:36:7",
+                    "src": "638:36:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "id": 6748,
+                  "id": 6125,
                   "nodeType": "ExpressionStatement",
-                  "src": "638:36:7"
+                  "src": "638:36:5"
                 }
               ]
             },
             "documentation": null,
-            "id": 6750,
+            "id": 6127,
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
                 "arguments": null,
-                "id": 6743,
+                "id": 6120,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 6742,
+                  "id": 6119,
                   "name": "onlyOwner",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8273,
-                  "src": "618:9:7",
+                  "referencedDeclaration": 7800,
+                  "src": "618:9:5",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
                     "typeString": "modifier ()"
                   }
                 },
                 "nodeType": "ModifierInvocation",
-                "src": "618:9:7"
+                "src": "618:9:5"
               }
             ],
             "name": "setSnowflakeAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6741,
+              "id": 6118,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6740,
+                  "id": 6117,
                   "name": "_snowflakeAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6750,
-                  "src": "584:25:7",
+                  "scope": 6127,
+                  "src": "584:25:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -700,10 +700,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6739,
+                    "id": 6116,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "584:7:7",
+                    "src": "584:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -714,16 +714,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "583:27:7"
+              "src": "583:27:5"
             },
             "returnParameters": {
-              "id": 6744,
+              "id": 6121,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "628:0:7"
+              "src": "628:0:5"
             },
-            "scope": 6799,
-            "src": "555:126:7",
+            "scope": 6176,
+            "src": "555:126:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -731,23 +731,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6763,
+            "id": 6140,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6761,
+              "id": 6138,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6752,
+                  "id": 6129,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1083:16:7",
+                  "scope": 6140,
+                  "src": "1083:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -755,10 +755,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6751,
+                    "id": 6128,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1083:7:7",
+                    "src": "1083:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -770,11 +770,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6754,
+                  "id": 6131,
                   "name": "einFrom",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1101:12:7",
+                  "scope": 6140,
+                  "src": "1101:12:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -782,10 +782,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6753,
+                    "id": 6130,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1101:4:7",
+                    "src": "1101:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -796,11 +796,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6756,
+                  "id": 6133,
                   "name": "einTo",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1115:10:7",
+                  "scope": 6140,
+                  "src": "1115:10:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -808,10 +808,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6755,
+                    "id": 6132,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1115:4:7",
+                    "src": "1115:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -822,11 +822,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6758,
+                  "id": 6135,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1127:11:7",
+                  "scope": 6140,
+                  "src": "1127:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -834,10 +834,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6757,
+                    "id": 6134,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1127:4:7",
+                    "src": "1127:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -848,11 +848,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6760,
+                  "id": 6137,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1140:31:7",
+                  "scope": 6140,
+                  "src": "1140:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -860,10 +860,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6759,
+                    "id": 6136,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1140:5:7",
+                    "src": "1140:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -873,16 +873,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1082:90:7"
+              "src": "1082:90:5"
             },
             "returnParameters": {
-              "id": 6762,
+              "id": 6139,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1187:0:7"
+              "src": "1187:0:5"
             },
-            "scope": 6799,
-            "src": "1060:128:7",
+            "scope": 6176,
+            "src": "1060:128:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -890,23 +890,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6776,
+            "id": 6153,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6774,
+              "id": 6151,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6765,
+                  "id": 6142,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1225:16:7",
+                  "scope": 6153,
+                  "src": "1225:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -914,10 +914,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6764,
+                    "id": 6141,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1225:7:7",
+                    "src": "1225:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -929,11 +929,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6767,
+                  "id": 6144,
                   "name": "einFrom",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1243:12:7",
+                  "scope": 6153,
+                  "src": "1243:12:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -941,10 +941,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6766,
+                    "id": 6143,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1243:4:7",
+                    "src": "1243:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -955,11 +955,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6769,
+                  "id": 6146,
                   "name": "to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1257:18:7",
+                  "scope": 6153,
+                  "src": "1257:18:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -967,10 +967,10 @@
                     "typeString": "address payable"
                   },
                   "typeName": {
-                    "id": 6768,
+                    "id": 6145,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1257:15:7",
+                    "src": "1257:15:5",
                     "stateMutability": "payable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address_payable",
@@ -982,11 +982,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6771,
+                  "id": 6148,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1277:11:7",
+                  "scope": 6153,
+                  "src": "1277:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -994,10 +994,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6770,
+                    "id": 6147,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1277:4:7",
+                    "src": "1277:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1008,11 +1008,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6773,
+                  "id": 6150,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1290:31:7",
+                  "scope": 6153,
+                  "src": "1290:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1020,10 +1020,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6772,
+                    "id": 6149,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1290:5:7",
+                    "src": "1290:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -1033,16 +1033,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1215:112:7"
+              "src": "1215:112:5"
             },
             "returnParameters": {
-              "id": 6775,
+              "id": 6152,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1334:0:7"
+              "src": "1334:0:5"
             },
-            "scope": 6799,
-            "src": "1193:142:7",
+            "scope": 6176,
+            "src": "1193:142:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -1050,23 +1050,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6787,
+            "id": 6164,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6785,
+              "id": 6162,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6778,
+                  "id": 6155,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1363:16:7",
+                  "scope": 6164,
+                  "src": "1363:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1074,10 +1074,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6777,
+                    "id": 6154,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1363:7:7",
+                    "src": "1363:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1089,11 +1089,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6780,
+                  "id": 6157,
                   "name": "einTo",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1381:10:7",
+                  "scope": 6164,
+                  "src": "1381:10:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1101,10 +1101,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6779,
+                    "id": 6156,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1381:4:7",
+                    "src": "1381:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1115,11 +1115,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6782,
+                  "id": 6159,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1393:11:7",
+                  "scope": 6164,
+                  "src": "1393:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1127,10 +1127,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6781,
+                    "id": 6158,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1393:4:7",
+                    "src": "1393:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1141,11 +1141,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6784,
+                  "id": 6161,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1406:31:7",
+                  "scope": 6164,
+                  "src": "1406:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1153,10 +1153,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6783,
+                    "id": 6160,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1406:5:7",
+                    "src": "1406:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -1166,16 +1166,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1362:76:7"
+              "src": "1362:76:5"
             },
             "returnParameters": {
-              "id": 6786,
+              "id": 6163,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1445:0:7"
+              "src": "1445:0:5"
             },
-            "scope": 6799,
-            "src": "1340:106:7",
+            "scope": 6176,
+            "src": "1340:106:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -1183,23 +1183,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6798,
+            "id": 6175,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6796,
+              "id": 6173,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6789,
+                  "id": 6166,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1474:16:7",
+                  "scope": 6175,
+                  "src": "1474:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1207,10 +1207,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6788,
+                    "id": 6165,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1474:7:7",
+                    "src": "1474:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1222,11 +1222,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6791,
+                  "id": 6168,
                   "name": "to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1492:18:7",
+                  "scope": 6175,
+                  "src": "1492:18:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1234,10 +1234,10 @@
                     "typeString": "address payable"
                   },
                   "typeName": {
-                    "id": 6790,
+                    "id": 6167,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1492:15:7",
+                    "src": "1492:15:5",
                     "stateMutability": "payable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address_payable",
@@ -1249,11 +1249,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6793,
+                  "id": 6170,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1512:11:7",
+                  "scope": 6175,
+                  "src": "1512:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1261,10 +1261,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6792,
+                    "id": 6169,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1512:4:7",
+                    "src": "1512:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1275,11 +1275,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6795,
+                  "id": 6172,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1525:31:7",
+                  "scope": 6175,
+                  "src": "1525:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1287,10 +1287,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6794,
+                    "id": 6171,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1525:5:7",
+                    "src": "1525:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -1300,39 +1300,39 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1473:84:7"
+              "src": "1473:84:5"
             },
             "returnParameters": {
-              "id": 6797,
+              "id": 6174,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1564:0:7"
+              "src": "1564:0:5"
             },
-            "scope": 6799,
-            "src": "1451:114:7",
+            "scope": 6176,
+            "src": "1451:114:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 6800,
-        "src": "119:1448:7"
+        "scope": 6177,
+        "src": "119:1448:5"
       }
     ],
-    "src": "0:1568:7"
+    "src": "0:1568:5"
   },
   "legacyAST": {
     "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/SnowflakeVia.sol",
     "exportedSymbols": {
       "SnowflakeVia": [
-        6799
+        6176
       ]
     },
-    "id": 6800,
+    "id": 6177,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 6710,
+        "id": 6087,
         "literals": [
           "solidity",
           "^",
@@ -1340,27 +1340,27 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:7"
+        "src": "0:23:5"
       },
       {
         "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/zeppelin/ownership/Ownable.sol",
         "file": "./zeppelin/ownership/Ownable.sol",
-        "id": 6711,
+        "id": 6088,
         "nodeType": "ImportDirective",
-        "scope": 6800,
-        "sourceUnit": 8340,
-        "src": "25:42:7",
+        "scope": 6177,
+        "sourceUnit": 7867,
+        "src": "25:42:5",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
         "absolutePath": "/MAMPWeb/HydroIce/HydroIceContract/contracts/interfaces/SnowflakeViaInterface.sol",
         "file": "./interfaces/SnowflakeViaInterface.sol",
-        "id": 6712,
+        "id": 6089,
         "nodeType": "ImportDirective",
-        "scope": 6800,
-        "sourceUnit": 7719,
-        "src": "69:48:7",
+        "scope": 6177,
+        "sourceUnit": 7246,
+        "src": "69:48:5",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -1370,42 +1370,42 @@
             "arguments": null,
             "baseName": {
               "contractScope": null,
-              "id": 6713,
+              "id": 6090,
               "name": "Ownable",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 8339,
-              "src": "144:7:7",
+              "referencedDeclaration": 7866,
+              "src": "144:7:5",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_Ownable_$8339",
+                "typeIdentifier": "t_contract$_Ownable_$7866",
                 "typeString": "contract Ownable"
               }
             },
-            "id": 6714,
+            "id": 6091,
             "nodeType": "InheritanceSpecifier",
-            "src": "144:7:7"
+            "src": "144:7:5"
           }
         ],
         "contractDependencies": [
-          8339
+          7866
         ],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 6799,
+        "id": 6176,
         "linearizedBaseContracts": [
-          6799,
-          8339
+          6176,
+          7866
         ],
         "name": "SnowflakeVia",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 6716,
+            "id": 6093,
             "name": "snowflakeAddress",
             "nodeType": "VariableDeclaration",
-            "scope": 6799,
-            "src": "158:31:7",
+            "scope": 6176,
+            "src": "158:31:5",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -1413,10 +1413,10 @@
               "typeString": "address"
             },
             "typeName": {
-              "id": 6715,
+              "id": 6092,
               "name": "address",
               "nodeType": "ElementaryTypeName",
-              "src": "158:7:7",
+              "src": "158:7:5",
               "stateMutability": "nonpayable",
               "typeDescriptions": {
                 "typeIdentifier": "t_address",
@@ -1428,9 +1428,9 @@
           },
           {
             "body": {
-              "id": 6725,
+              "id": 6102,
               "nodeType": "Block",
-              "src": "242:55:7",
+              "src": "242:55:5",
               "statements": [
                 {
                   "expression": {
@@ -1438,12 +1438,12 @@
                     "arguments": [
                       {
                         "argumentTypes": null,
-                        "id": 6722,
+                        "id": 6099,
                         "name": "_snowflakeAddress",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 6718,
-                        "src": "272:17:7",
+                        "referencedDeclaration": 6095,
+                        "src": "272:17:5",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
@@ -1457,18 +1457,18 @@
                           "typeString": "address"
                         }
                       ],
-                      "id": 6721,
+                      "id": 6098,
                       "name": "setSnowflakeAddress",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6750,
-                      "src": "252:19:7",
+                      "referencedDeclaration": 6127,
+                      "src": "252:19:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_nonpayable$_t_address_$returns$__$",
                         "typeString": "function (address)"
                       }
                     },
-                    "id": 6723,
+                    "id": 6100,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1476,36 +1476,36 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "252:38:7",
+                    "src": "252:38:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 6724,
+                  "id": 6101,
                   "nodeType": "ExpressionStatement",
-                  "src": "252:38:7"
+                  "src": "252:38:5"
                 }
               ]
             },
             "documentation": null,
-            "id": 6726,
+            "id": 6103,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6719,
+              "id": 6096,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6718,
+                  "id": 6095,
                   "name": "_snowflakeAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6726,
-                  "src": "208:25:7",
+                  "scope": 6103,
+                  "src": "208:25:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1513,10 +1513,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6717,
+                    "id": 6094,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "208:7:7",
+                    "src": "208:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1527,25 +1527,25 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "207:27:7"
+              "src": "207:27:5"
             },
             "returnParameters": {
-              "id": 6720,
+              "id": 6097,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "242:0:7"
+              "src": "242:0:5"
             },
-            "scope": 6799,
-            "src": "196:101:7",
+            "scope": 6176,
+            "src": "196:101:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           },
           {
             "body": {
-              "id": 6737,
+              "id": 6114,
               "nodeType": "Block",
-              "src": "332:104:7",
+              "src": "332:104:5",
               "statements": [
                 {
                   "expression": {
@@ -1557,7 +1557,7 @@
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         },
-                        "id": 6732,
+                        "id": 6109,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1566,18 +1566,18 @@
                           "argumentTypes": null,
                           "expression": {
                             "argumentTypes": null,
-                            "id": 6729,
+                            "id": 6106,
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 8354,
-                            "src": "350:3:7",
+                            "referencedDeclaration": 7881,
+                            "src": "350:3:5",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
                               "typeString": "msg"
                             }
                           },
-                          "id": 6730,
+                          "id": 6107,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1585,7 +1585,7 @@
                           "memberName": "sender",
                           "nodeType": "MemberAccess",
                           "referencedDeclaration": null,
-                          "src": "350:10:7",
+                          "src": "350:10:5",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address_payable",
                             "typeString": "address payable"
@@ -1595,18 +1595,18 @@
                         "operator": "==",
                         "rightExpression": {
                           "argumentTypes": null,
-                          "id": 6731,
+                          "id": 6108,
                           "name": "snowflakeAddress",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 6716,
-                          "src": "364:16:7",
+                          "referencedDeclaration": 6093,
+                          "src": "364:16:5",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
                             "typeString": "address"
                           }
                         },
-                        "src": "350:30:7",
+                        "src": "350:30:5",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bool",
                           "typeString": "bool"
@@ -1615,14 +1615,14 @@
                       {
                         "argumentTypes": null,
                         "hexValue": "446964206e6f74206f726967696e6174652066726f6d20536e6f77666c616b652e",
-                        "id": 6733,
+                        "id": 6110,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "382:35:7",
+                        "src": "382:35:5",
                         "subdenomination": null,
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_dfc5f2a25036e81fa4bbd142ef7f504af232c75ceba70bcb4c0f0a96d9f0b56a",
@@ -1642,21 +1642,21 @@
                           "typeString": "literal_string \"Did not originate from Snowflake.\""
                         }
                       ],
-                      "id": 6728,
+                      "id": 6105,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        8357,
-                        8358
+                        7884,
+                        7885
                       ],
-                      "referencedDeclaration": 8358,
-                      "src": "342:7:7",
+                      "referencedDeclaration": 7885,
+                      "src": "342:7:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 6734,
+                    "id": 6111,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1664,58 +1664,58 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "342:76:7",
+                    "src": "342:76:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 6735,
+                  "id": 6112,
                   "nodeType": "ExpressionStatement",
-                  "src": "342:76:7"
+                  "src": "342:76:5"
                 },
                 {
-                  "id": 6736,
+                  "id": 6113,
                   "nodeType": "PlaceholderStatement",
-                  "src": "428:1:7"
+                  "src": "428:1:5"
                 }
               ]
             },
             "documentation": null,
-            "id": 6738,
+            "id": 6115,
             "name": "senderIsSnowflake",
             "nodeType": "ModifierDefinition",
             "parameters": {
-              "id": 6727,
+              "id": 6104,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "329:2:7"
+              "src": "329:2:5"
             },
-            "src": "303:133:7",
+            "src": "303:133:5",
             "visibility": "internal"
           },
           {
             "body": {
-              "id": 6749,
+              "id": 6126,
               "nodeType": "Block",
-              "src": "628:53:7",
+              "src": "628:53:5",
               "statements": [
                 {
                   "expression": {
                     "argumentTypes": null,
-                    "id": 6747,
+                    "id": 6124,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "argumentTypes": null,
-                      "id": 6745,
+                      "id": 6122,
                       "name": "snowflakeAddress",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6716,
-                      "src": "638:16:7",
+                      "referencedDeclaration": 6093,
+                      "src": "638:16:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
@@ -1725,67 +1725,67 @@
                     "operator": "=",
                     "rightHandSide": {
                       "argumentTypes": null,
-                      "id": 6746,
+                      "id": 6123,
                       "name": "_snowflakeAddress",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 6740,
-                      "src": "657:17:7",
+                      "referencedDeclaration": 6117,
+                      "src": "657:17:5",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
                         "typeString": "address"
                       }
                     },
-                    "src": "638:36:7",
+                    "src": "638:36:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "id": 6748,
+                  "id": 6125,
                   "nodeType": "ExpressionStatement",
-                  "src": "638:36:7"
+                  "src": "638:36:5"
                 }
               ]
             },
             "documentation": null,
-            "id": 6750,
+            "id": 6127,
             "implemented": true,
             "kind": "function",
             "modifiers": [
               {
                 "arguments": null,
-                "id": 6743,
+                "id": 6120,
                 "modifierName": {
                   "argumentTypes": null,
-                  "id": 6742,
+                  "id": 6119,
                   "name": "onlyOwner",
                   "nodeType": "Identifier",
                   "overloadedDeclarations": [],
-                  "referencedDeclaration": 8273,
-                  "src": "618:9:7",
+                  "referencedDeclaration": 7800,
+                  "src": "618:9:5",
                   "typeDescriptions": {
                     "typeIdentifier": "t_modifier$__$",
                     "typeString": "modifier ()"
                   }
                 },
                 "nodeType": "ModifierInvocation",
-                "src": "618:9:7"
+                "src": "618:9:5"
               }
             ],
             "name": "setSnowflakeAddress",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6741,
+              "id": 6118,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6740,
+                  "id": 6117,
                   "name": "_snowflakeAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6750,
-                  "src": "584:25:7",
+                  "scope": 6127,
+                  "src": "584:25:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1793,10 +1793,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6739,
+                    "id": 6116,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "584:7:7",
+                    "src": "584:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1807,16 +1807,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "583:27:7"
+              "src": "583:27:5"
             },
             "returnParameters": {
-              "id": 6744,
+              "id": 6121,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "628:0:7"
+              "src": "628:0:5"
             },
-            "scope": 6799,
-            "src": "555:126:7",
+            "scope": 6176,
+            "src": "555:126:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -1824,23 +1824,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6763,
+            "id": 6140,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6761,
+              "id": 6138,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6752,
+                  "id": 6129,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1083:16:7",
+                  "scope": 6140,
+                  "src": "1083:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1848,10 +1848,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6751,
+                    "id": 6128,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1083:7:7",
+                    "src": "1083:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1863,11 +1863,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6754,
+                  "id": 6131,
                   "name": "einFrom",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1101:12:7",
+                  "scope": 6140,
+                  "src": "1101:12:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1875,10 +1875,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6753,
+                    "id": 6130,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1101:4:7",
+                    "src": "1101:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1889,11 +1889,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6756,
+                  "id": 6133,
                   "name": "einTo",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1115:10:7",
+                  "scope": 6140,
+                  "src": "1115:10:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1901,10 +1901,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6755,
+                    "id": 6132,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1115:4:7",
+                    "src": "1115:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1915,11 +1915,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6758,
+                  "id": 6135,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1127:11:7",
+                  "scope": 6140,
+                  "src": "1127:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1927,10 +1927,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6757,
+                    "id": 6134,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1127:4:7",
+                    "src": "1127:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1941,11 +1941,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6760,
+                  "id": 6137,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6763,
-                  "src": "1140:31:7",
+                  "scope": 6140,
+                  "src": "1140:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -1953,10 +1953,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6759,
+                    "id": 6136,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1140:5:7",
+                    "src": "1140:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -1966,16 +1966,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1082:90:7"
+              "src": "1082:90:5"
             },
             "returnParameters": {
-              "id": 6762,
+              "id": 6139,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1187:0:7"
+              "src": "1187:0:5"
             },
-            "scope": 6799,
-            "src": "1060:128:7",
+            "scope": 6176,
+            "src": "1060:128:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -1983,23 +1983,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6776,
+            "id": 6153,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6774,
+              "id": 6151,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6765,
+                  "id": 6142,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1225:16:7",
+                  "scope": 6153,
+                  "src": "1225:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2007,10 +2007,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6764,
+                    "id": 6141,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1225:7:7",
+                    "src": "1225:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2022,11 +2022,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6767,
+                  "id": 6144,
                   "name": "einFrom",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1243:12:7",
+                  "scope": 6153,
+                  "src": "1243:12:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2034,10 +2034,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6766,
+                    "id": 6143,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1243:4:7",
+                    "src": "1243:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2048,11 +2048,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6769,
+                  "id": 6146,
                   "name": "to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1257:18:7",
+                  "scope": 6153,
+                  "src": "1257:18:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2060,10 +2060,10 @@
                     "typeString": "address payable"
                   },
                   "typeName": {
-                    "id": 6768,
+                    "id": 6145,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1257:15:7",
+                    "src": "1257:15:5",
                     "stateMutability": "payable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address_payable",
@@ -2075,11 +2075,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6771,
+                  "id": 6148,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1277:11:7",
+                  "scope": 6153,
+                  "src": "1277:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2087,10 +2087,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6770,
+                    "id": 6147,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1277:4:7",
+                    "src": "1277:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2101,11 +2101,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6773,
+                  "id": 6150,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6776,
-                  "src": "1290:31:7",
+                  "scope": 6153,
+                  "src": "1290:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -2113,10 +2113,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6772,
+                    "id": 6149,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1290:5:7",
+                    "src": "1290:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -2126,16 +2126,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1215:112:7"
+              "src": "1215:112:5"
             },
             "returnParameters": {
-              "id": 6775,
+              "id": 6152,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1334:0:7"
+              "src": "1334:0:5"
             },
-            "scope": 6799,
-            "src": "1193:142:7",
+            "scope": 6176,
+            "src": "1193:142:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -2143,23 +2143,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6787,
+            "id": 6164,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6785,
+              "id": 6162,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6778,
+                  "id": 6155,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1363:16:7",
+                  "scope": 6164,
+                  "src": "1363:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2167,10 +2167,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6777,
+                    "id": 6154,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1363:7:7",
+                    "src": "1363:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2182,11 +2182,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6780,
+                  "id": 6157,
                   "name": "einTo",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1381:10:7",
+                  "scope": 6164,
+                  "src": "1381:10:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2194,10 +2194,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6779,
+                    "id": 6156,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1381:4:7",
+                    "src": "1381:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2208,11 +2208,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6782,
+                  "id": 6159,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1393:11:7",
+                  "scope": 6164,
+                  "src": "1393:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2220,10 +2220,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6781,
+                    "id": 6158,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1393:4:7",
+                    "src": "1393:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2234,11 +2234,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6784,
+                  "id": 6161,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6787,
-                  "src": "1406:31:7",
+                  "scope": 6164,
+                  "src": "1406:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -2246,10 +2246,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6783,
+                    "id": 6160,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1406:5:7",
+                    "src": "1406:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -2259,16 +2259,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1362:76:7"
+              "src": "1362:76:5"
             },
             "returnParameters": {
-              "id": 6786,
+              "id": 6163,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1445:0:7"
+              "src": "1445:0:5"
             },
-            "scope": 6799,
-            "src": "1340:106:7",
+            "scope": 6176,
+            "src": "1340:106:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
@@ -2276,23 +2276,23 @@
           {
             "body": null,
             "documentation": null,
-            "id": 6798,
+            "id": 6175,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "snowflakeCall",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 6796,
+              "id": 6173,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 6789,
+                  "id": 6166,
                   "name": "resolver",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1474:16:7",
+                  "scope": 6175,
+                  "src": "1474:16:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2300,10 +2300,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 6788,
+                    "id": 6165,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1474:7:7",
+                    "src": "1474:7:5",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -2315,11 +2315,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6791,
+                  "id": 6168,
                   "name": "to",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1492:18:7",
+                  "scope": 6175,
+                  "src": "1492:18:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2327,10 +2327,10 @@
                     "typeString": "address payable"
                   },
                   "typeName": {
-                    "id": 6790,
+                    "id": 6167,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1492:15:7",
+                    "src": "1492:15:5",
                     "stateMutability": "payable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address_payable",
@@ -2342,11 +2342,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6793,
+                  "id": 6170,
                   "name": "amount",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1512:11:7",
+                  "scope": 6175,
+                  "src": "1512:11:5",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -2354,10 +2354,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 6792,
+                    "id": 6169,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1512:4:7",
+                    "src": "1512:4:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -2368,11 +2368,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 6795,
+                  "id": 6172,
                   "name": "snowflakeCallBytes",
                   "nodeType": "VariableDeclaration",
-                  "scope": 6798,
-                  "src": "1525:31:7",
+                  "scope": 6175,
+                  "src": "1525:31:5",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
@@ -2380,10 +2380,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 6794,
+                    "id": 6171,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "1525:5:7",
+                    "src": "1525:5:5",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -2393,26 +2393,26 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "1473:84:7"
+              "src": "1473:84:5"
             },
             "returnParameters": {
-              "id": 6797,
+              "id": 6174,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "1564:0:7"
+              "src": "1564:0:5"
             },
-            "scope": 6799,
-            "src": "1451:114:7",
+            "scope": 6176,
+            "src": "1451:114:5",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "public"
           }
         ],
-        "scope": 6800,
-        "src": "119:1448:7"
+        "scope": 6177,
+        "src": "119:1448:5"
       }
     ],
-    "src": "0:1568:7"
+    "src": "0:1568:5"
   },
   "compiler": {
     "name": "solc",
@@ -2420,7 +2420,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.6",
-  "updatedAt": "2019-05-05T11:35:42.283Z",
+  "updatedAt": "2019-05-08T14:08:07.536Z",
   "devdoc": {
     "methods": {
       "isOwner()": {

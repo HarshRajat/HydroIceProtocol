@@ -25,8 +25,8 @@ contract Ice {
      * given an associationIndex, any file can be retrieved.
      */
     mapping (uint => mapping(uint => Association)) globalItems;
-    uint public globalItemsIndex1; // store the first index of association to retrieve files
-    uint public globalItemsIndex2; // store the first index of association to retrieve files
+    uint public globalIndex1; // store the first index of association to retrieve files
+    uint public globalIndex2; // store the first index of association to retrieve files
 
     /* for each user (EIN), look up the Transitioon State they have
      * stored on a given index.
@@ -58,21 +58,21 @@ contract Ice {
     /* for each user (EIN), look up the incoming sharing files
      * stored on a given index.
      */
-    mapping (uint => mapping(uint => GlobalRecord)) shares;
+    mapping (uint => mapping(uint => GlobalRecord)) public shares;
     mapping (uint => mapping(uint => SortOrder)) public shareOrder; // Store round robin order of sharing
     mapping (uint => uint) public shareCount; // store the maximum shared items count reached to provide looping functionality
 
     /* for each user (EIN), look up the incoming sharing files
      * stored on a given index.
      */
-    mapping (uint => mapping(uint => GlobalRecord)) stampings;
+    mapping (uint => mapping(uint => GlobalRecord)) public stampings;
     mapping (uint => mapping(uint => SortOrder)) public stampingOrder; // Store round robin order of stamping
     mapping (uint => uint) public stampingCount; // store the maximum file index reached to provide looping functionality
 
     /* for each user (EIN), look up the incoming sharing files
      * stored on a given index.
      */
-    mapping (uint => mapping(uint => GlobalRecord))  stampingsRequest;
+    mapping (uint => mapping(uint => GlobalRecord)) public stampingsRequest;
     mapping (uint => mapping(uint => SortOrder)) public stampingsRequestOrder; // Store round robin order of stamping requests
     mapping (uint => uint) public stampingsRequestCount; // store the maximum file index reached to provide looping functionality
 
@@ -117,15 +117,15 @@ contract Ice {
     }
 
     struct GlobalRecord {
-        uint index1; // store associated global index 1 for access
-        uint index2; // store associated global index 2 for access
+        uint i1; // store associated global index 1 for access
+        uint i2; // store associated global index 2 for access
     }
 
     /* To define File structure of all stored files
      */
     struct File {
         // File Meta Data
-        GlobalRecord record; // store the association in global record
+        GlobalRecord rec; // store the association in global record
         uint fileOwner; // store file owner EIN
 
         // File Properties
@@ -156,7 +156,7 @@ contract Ice {
      * sort of like a folder, 0 or default grooupID is root
      */
     struct Group {
-        GlobalRecord record; // store the association in global record
+        GlobalRecord rec; // store the association in global record
 
         string name; // the name of the Group
 
@@ -276,8 +276,8 @@ contract Ice {
     /* ***************
     * DEFINE CONSTRUCTORS AND RELATED FUNCTIONS
     *************** */
-    // SNOWFLAKE CONSTRUCTOR / FUNCTIONS
-    address snowflakeAddress = 0xB536a9b68e7c1D2Fd6b9851Af2F955099B3A59a9; // For local use
+    // CONSTRUCTOR / FUNCTIONS
+    address snowflakeAddress = 0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; //0xB536a9b68e7c1D2Fd6b9851Af2F955099B3A59a9; // For local use
     constructor (/*address snowflakeAddress*/) public {
         snowflake = SnowflakeInterface(snowflakeAddress);
         identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
@@ -293,7 +293,7 @@ contract Ice {
      * @param _index2 is the second index of item
      */
     function getGlobalItems(uint _index1, uint _index2)
-    public view
+    external view
     returns (uint ownerEIN, uint itemRecord, bool isFile, bool isHidden, bool deleted, uint sharedToCount, uint stampingReqsCount) {
         ownerEIN = globalItems[_index1][_index2].ownerInfo.EIN;
         itemRecord = globalItems[_index1][_index2].ownerInfo.index;
@@ -307,114 +307,6 @@ contract Ice {
     }
 
     /**
-     * @dev Private Function to get global item via the record struct
-     * @param _record is the GlobalRecord Struct
-     */
-    function _getGlobalItemViaRecord(GlobalRecord memory _record)
-    internal pure
-    returns (uint _index1, uint _index2) {
-        _index1 = _record.index1;
-        _index2 = _record.index2;
-    }
-
-    /**
-     * @dev Private Function to add item to global items
-     * @param _ownerEIN is the EIN of global items
-     * @param _itemIndex is the index at which the item exists on the user mapping
-     * @param _isFile indicates if the item is file or group
-     * @param _isHidden indicates if the item has is hiddden or not
-     */
-    function _addItemToGlobalItems(uint _ownerEIN, uint _itemIndex, bool _isFile, bool _isHidden, bool _isStamped)
-    private
-    returns (uint globalIndex1, uint globalIndex2){
-        // Increment global Item (0, 0 is always reserved | Is User Avatar)
-        globalItemsIndex1 = globalItemsIndex1;
-        globalItemsIndex2 = globalItemsIndex2 + 1;
-
-        if (globalItemsIndex2 == 0) {
-            // This is loopback, Increment newIndex1
-            globalItemsIndex1 = globalItemsIndex1 + 1;
-
-            require (
-                globalItemsIndex1 > 0,
-                "Storage Full"
-            );
-        }
-
-        ItemOwner memory owner = ItemOwner (
-            _ownerEIN, // Owner EIN
-            _itemIndex // Item stored at what index for that EIN
-        );
-
-        // Add item to global item, no stiching it
-        globalItems[globalItemsIndex1][globalItemsIndex2] = Association (
-            owner, // Item Owner Info
-
-            _isFile, // Item is file or group
-            _isHidden, // whether stamping is initiated or not
-            _isStamped, // whether file is stamped or not
-            false, // Item is deleted or still exists
-
-            0, // the count of shared EINs
-            0 // the count of stamping requests
-        );
-
-        globalIndex1 = globalItemsIndex1;
-        globalIndex2 = globalItemsIndex2;
-    }
-
-    function _addToGlobalItemsMapping(GlobalRecord storage _record, uint8 _ofType, ItemOwner memory _mappedItem)
-    internal
-    returns (uint8 _newCount) {
-        // Logic
-        // Allocalte based on type.
-        if (_ofType == uint8(GlobalItemProp.sharedTo)) {
-            _newCount = globalItems[_record.index1][_record.index2].sharedToCount + 1;
-            globalItems[_record.index1][_record.index2].sharedTo[_newCount] = _mappedItem;
-            globalItems[_record.index1][_record.index2].sharedToCount = _newCount;
-        }
-        else if (_ofType == uint8(GlobalItemProp.stampedTo)) {
-            _newCount = globalItems[_record.index1][_record.index2].stampedToCount + 1;
-            globalItems[_record.index1][_record.index2].stampedTo[_newCount] = _mappedItem;
-            globalItems[_record.index1][_record.index2].stampedToCount = _newCount;
-        }
-
-        require (
-            (_newCount > globalItems[_record.index1][_record.index2].stampedToCount),
-            "Global Mapping Full"
-        );
-    }
-
-    function _deleteFromGlobalItemsMapping(GlobalRecord storage _record, uint8 _ofType, uint8 _mappedIndex, uint8 _mappedCount)
-    internal
-    returns (uint8 _newCount) {
-        // Logic
-        require (
-            (_mappedCount > 0),
-            "Invalid Global Mapping"
-        );
-
-        _newCount = _mappedCount - 1;
-
-        // Allocalte based on type.
-        if (_ofType == uint8(GlobalItemProp.sharedTo)) {
-            // Just swap and deduct
-            globalItems[_record.index1][_record.index2].sharedTo[_mappedIndex] = globalItems[_record.index1][_record.index2].sharedTo[_mappedCount];
-            globalItems[_record.index1][_record.index2].sharedToCount = _newCount;
-        }
-        else if (_ofType == uint8(GlobalItemProp.stampedTo)) {
-            // Just swap and deduct
-            globalItems[_record.index1][_record.index2].stampedTo[_mappedIndex] = globalItems[_record.index1][_record.index2].stampedTo[_mappedCount];
-            globalItems[_record.index1][_record.index2].stampedToCount = _newCount;
-        }
-
-        require (
-            (_newCount > 0),
-            "Global Mapping Full"
-        );
-    }
-
-    /**
      * @dev Function to get info of mapping to user for a specific global item
      * @param _index1 is the first index of global item
      * @param _index2 is the second index of global item
@@ -424,7 +316,7 @@ contract Ice {
      * @return atIndex is the specific index in question
      */
     function getGlobalItemsMapping(uint _index1, uint _index2, uint8 _ofType, uint8 _mappedIndex)
-    public view
+    external view
     returns (uint mappedToEIN, uint atIndex) {
         ItemOwner memory _mappedItem;
 
@@ -439,14 +331,154 @@ contract Ice {
         mappedToEIN = _mappedItem.EIN;
         atIndex = _mappedItem.index;
     }
+    
+    /**
+     * @dev Private Function to get global item via the record struct
+     * @param _rec is the GlobalRecord Struct
+     */
+    function _getGlobalItemViaRecord(GlobalRecord memory _rec)
+    internal pure
+    returns (uint _i1, uint _i2) {
+        _i1 = _rec.i1;
+        _i2 = _rec.i2;
+    }
+
+    /**
+     * @dev Private Function to add item to global items
+     * @param _ownerEIN is the EIN of global items
+     * @param _itemIndex is the index at which the item exists on the user mapping
+     * @param _isFile indicates if the item is file or group
+     * @param _isHidden indicates if the item has is hiddden or not
+     */
+    function _addItemToGlobalItems(uint _ownerEIN, uint _itemIndex, bool _isFile, bool _isHidden, bool _isStamped)
+    internal
+    returns (uint i1, uint i2){
+        // Increment global Item (0, 0 is always reserved | Is User Avatar)
+        globalIndex1 = globalIndex1;
+        globalIndex2 = globalIndex2 + 1;
+
+        if (globalIndex2 == 0) {
+            // This is loopback, Increment newIndex1
+            globalIndex1 = globalIndex1 + 1;
+
+            require (
+                globalIndex1 > 0,
+                "Storage Full"
+            );
+        }
+
+        // Add item to global item, no stiching it
+        globalItems[globalIndex1][globalIndex2] = Association (
+            ItemOwner (
+                _ownerEIN, // Owner EIN
+                _itemIndex // Item stored at what index for that EIN
+            ),
+
+            _isFile, // Item is file or group
+            _isHidden, // whether stamping is initiated or not
+            _isStamped, // whether file is stamped or not
+            false, // Item is deleted or still exists
+
+            0, // the count of shared EINs
+            0 // the count of stamping requests
+        );
+
+        i1 = globalIndex1;
+        i2 = globalIndex2;
+    }
 
     /**
      * @dev Private Function to delete a global items
-     * @param _record is the GlobalRecord Struct
+     * @param _rec is the GlobalRecord Struct
      */
-    function _deleteGlobalRecord(GlobalRecord memory _record)
+    function _deleteGlobalRecord(GlobalRecord memory _rec)
     internal {
-        globalItems[_record.index1][_record.index2].deleted = true;
+        globalItems[_rec.i1][_rec.i2].deleted = true;
+    }
+    
+    function _getEINsForGlobalItemsMapping(mapping (uint8 => ItemOwner) storage _relatedMapping, uint8 _count) 
+    internal view 
+    returns (uint[32] memory EINs){
+        uint8 i = 0;
+        while (_count != 0) {
+            EINs[i] = _relatedMapping[_count].EIN;
+            
+            _count--;
+        }
+    }
+    
+    /**
+     * @dev Private Function to find the relevant mapping index of item mapped in non owner
+     * @param _relatedMapping is the passed pointer of relative mapping of global item Association
+     * @param _count is the count of relative mapping of global item Association
+     * @param _searchForEIN is the non-owner EIN to search
+     * @return mappedIndex is the index which is where the relative mapping points to for those items
+     */
+    function _findGlobalItemsMapping(mapping (uint8 => ItemOwner) storage _relatedMapping, uint8 _count, uint256 _searchForEIN) 
+    internal view 
+    returns (uint8 mappedIndex) {
+        // Logic
+        mappedIndex = 0;
+
+        while (_count != 0) {
+            if (_relatedMapping[_count].EIN == _searchForEIN) {
+                mappedIndex = _count;
+                
+                _count = 1;
+            }
+            
+            _count--;
+        }
+    }
+    
+    /**
+     * @dev Private Function to add to global items mapping
+     * @param _rec is the Global Record
+     * @param _ofType is the type of global item properties 
+     * @param _mappedItem is the non-owner mapping of stored item 
+     */
+    function _addToGlobalItemsMapping(GlobalRecord storage _rec, uint8 _ofType, ItemOwner memory _mappedItem)
+    internal
+    returns (uint8 _newCount) {
+        // Logic
+        // Allocalte based on type.
+        if (_ofType == uint8(GlobalItemProp.sharedTo)) {
+            _newCount = globalItems[_rec.i1][_rec.i2].sharedToCount + 1;
+            globalItems[_rec.i1][_rec.i2].sharedTo[_newCount] = _mappedItem;
+        }
+        else if (_ofType == uint8(GlobalItemProp.stampedTo)) {
+            _newCount = globalItems[_rec.i1][_rec.i2].stampedToCount + 1;
+            globalItems[_rec.i1][_rec.i2].stampedTo[_newCount] = _mappedItem;
+        }
+
+        globalItems[_rec.i1][_rec.i2].stampedToCount = _newCount;
+        require (
+            (_newCount > globalItems[_rec.i1][_rec.i2].stampedToCount),
+            "Global Mapping Full"
+        );
+    }
+
+    /**
+     * @dev Private Function to remove from global items mapping
+     * @param _rec is the Global Record
+     * @param _mappedIndex is the non-owner mapping of stored item 
+     */
+    function _removeFromGlobalItemsMapping(GlobalRecord memory _rec, uint8 _mappedIndex)
+    internal
+    returns (uint8 _newCount) {
+        // Logic
+        
+        // Just swap and deduct
+        _newCount = globalItems[_rec.i1][_rec.i2].sharedToCount;
+        globalItems[_rec.i1][_rec.i2].sharedTo[_mappedIndex] = globalItems[_rec.i1][_rec.i2].sharedTo[_newCount];
+
+        require (
+            (_newCount > 0),
+            "Invalid Global Mapping"
+        );
+        
+        _newCount = _newCount - 1;
+        globalItems[_rec.i1][_rec.i2].sharedToCount = _newCount;
     }
 
     // 2. FILE FUNCTIONS
@@ -458,7 +490,7 @@ contract Ice {
      * @param _asc is the order by which the files will be presented
      */
     function getFileIndexes(uint _ein, uint _seedPointer, uint16 _limit, bool _asc)
-    public view
+    external view
     returns (uint[20] memory fileIndexes) {
         fileIndexes = _getIndexes(fileOrder[_ein], _seedPointer, _limit, _asc);
     }
@@ -469,7 +501,7 @@ contract Ice {
      * @param _fileIndex is index of the file
      */
     function getFile(uint _ein, uint _fileIndex)
-    public view
+    external view
     returns (uint8 protocol, bytes memory protocolMeta, string memory name, string memory hash, bytes8 ext, uint32 timestamp, bool encrypted, uint associatedGroupIndex, uint associatedGroupFileIndex) {
         // Logic
         protocol = files[_ein][_fileIndex].protocol;
@@ -491,7 +523,7 @@ contract Ice {
      * @param _fileIndex is index of the file
      */
     function getFileTransferInfo(uint _ein, uint _fileIndex)
-    public view
+    external view
     returns (uint transCount, uint transEIN, uint transIndex, bool forTrans) {
         // Logic
         transCount = files[_ein][_fileIndex].transferCount;
@@ -507,7 +539,7 @@ contract Ice {
      * @param _transferIndex is index to poll
      */
     function getFileTransferOwners(uint _ein, uint _fileIndex, uint _transferIndex)
-    public view
+    external view
     returns (uint recipientEIN) {
         recipientEIN = files[_ein][_fileIndex].transferHistory[_transferIndex];
     }
@@ -537,19 +569,16 @@ contract Ice {
         atomicity[ein].lockFiles = true;
         atomicity[ein].lockGroups = true;
 
-        uint currentFileIndex = fileCount[ein];
-        uint nextFileIndex = currentFileIndex + 1;
-
         // Add to Global Items
         uint index1;
         uint index2;
-        (index1, index2) = _addItemToGlobalItems(ein, nextFileIndex, true, false, false);
+        (index1, index2) = _addItemToGlobalItems(ein, (fileCount[ein] + 1), true, false, false);
 
         // Add file to group
-        groups[ein][_groupIndex].groupFilesCount = _addFileToGroup(ein, _groupIndex, nextFileIndex);
+        groups[ein][_groupIndex].groupFilesCount = _addFileToGroup(ein, _groupIndex, (fileCount[ein] + 1));
 
         // Finally create the file it to User (EIN)
-        files[ein][nextFileIndex] = File (
+        files[ein][(fileCount[ein] + 1)] = File (
             GlobalRecord(
                 index1, // Global Index 1
                 index2 // Global Index 2
@@ -576,16 +605,16 @@ contract Ice {
         );
 
         // To map encrypted password
-        files[ein][nextFileIndex].encryptedHash[msg.sender] = _encryptedHash;
+        files[ein][(fileCount[ein] + 1)].encryptedHash[msg.sender] = _encryptedHash;
 
         // To map transfer history
-        files[ein][nextFileIndex].transferHistory[0] = ein;
+        files[ein][(fileCount[ein] + 1)].transferHistory[0] = ein;
 
         // Add to Stitch Order & Increment index
-        fileCount[ein] = _addToSortOrder(fileOrder[ein], currentFileIndex, 0);
+        fileCount[ein] = _addToSortOrder(fileOrder[ein], fileCount[ein], 0);
 
         // Trigger Event
-        emit FileCreated(ein, nextFileIndex, _name);
+        emit FileCreated(ein, (fileCount[ein] + 1), _name);
 
         // Reset Files & Group Atomicity
         atomicity[ein].lockFiles = false;
@@ -597,8 +626,8 @@ contract Ice {
      * @param _fileIndex is the index where file is stored
      * @param _name is the name of stored file
      */
-    function changeFileName(uint _fileIndex, string memory _name)
-    public {
+    function changeFileName(uint _fileIndex, string calldata _name)
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -615,15 +644,15 @@ contract Ice {
      * @param _newGroupIndex is the index of the new group where file has to be moved
      */
     function moveFileToGroup(uint _fileIndex, uint _newGroupIndex)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
         // Check Restrictions
         _isValidGrpOrder(ein, _newGroupIndex); // Check if the new group is valid
-        _isUnstampedItem(files[ein][_fileIndex].record); // Check if the file is unstamped, can't move a stamped file
-        _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].record); // Check if the current group is unstamped, can't move a file from stamped group
-        _isUnstampedItem(groups[ein][_newGroupIndex].record); // Check if the new group is unstamped, can't move a file from stamped group
+        _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the file is unstamped, can't move a stamped file
+        _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].rec); // Check if the current group is unstamped, can't move a file from stamped group
+        _isUnstampedItem(groups[ein][_newGroupIndex].rec); // Check if the new group is unstamped, can't move a file from stamped group
         _isFilesOpLocked(ein); // Check if the files operations are not locked for the user
         _isGrpsOpLocked(ein); // Check if the groups operations are not locked for the user
 
@@ -646,12 +675,12 @@ contract Ice {
      * @param _fileIndex is the index where file is stored
      */
     function deleteFile(uint _fileIndex)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
         // Check Restrictions
-        _isUnstampedItem(files[ein][_fileIndex].record); // Check if the file is unstamped, can't delete a stamped file
+        _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the file is unstamped, can't delete a stamped file
 
         // Set Files & Group Atomicity
         atomicity[ein].lockFiles = true;
@@ -678,8 +707,11 @@ contract Ice {
         // Get current Index, Stich check previous index so not required to recheck
         uint currentIndex = fileCount[_ein];
 
+        // Remove item from sharing of other users
+        _removeAllShares(files[_ein][_fileIndex].rec);
+        
         // Deactivate From Global Items
-        _deleteGlobalRecord(files[_ein][_fileIndex].record);
+        _deleteGlobalRecord(files[_ein][_fileIndex].rec);
 
         // Remove from Group which holds the File
         _removeFileFromGroup(_ein, files[_ein][_fileIndex].associatedGroupIndex, files[_ein][_fileIndex].associatedGroupFileIndex);
@@ -687,7 +719,10 @@ contract Ice {
         // Swap File
         files[_ein][_fileIndex] = files[_ein][currentIndex];
         fileCount[_ein] = _stichSortOrder(fileOrder[_ein], _fileIndex, currentIndex, 0);
-
+        
+        // Delete the latest group now
+        delete (files[_ein][currentIndex]);
+        
         // Trigger Event
         emit FileDeleted(_ein, _fileIndex);
     }
@@ -756,7 +791,7 @@ contract Ice {
      * @param _asc is the order by which the files will be presented
      */
     function getGroupFileIndexes(uint _ein, uint _groupIndex, uint _seedPointer, uint16 _limit, bool _asc)
-    public view
+    external view
     returns (uint[20] memory groupFileIndexes) {
         return _getIndexes(groups[_ein][_groupIndex].groupFilesOrder, _seedPointer, _limit, _asc);
     }
@@ -770,7 +805,7 @@ contract Ice {
      * @return name is the name associated with the group
      */
     function getGroup(uint _ein, uint _groupIndex)
-    public view
+    external view
     returns (uint index, string memory name) {
         // Check constraints
         _isValidItem(_groupIndex, groupCount[_ein]);
@@ -795,7 +830,7 @@ contract Ice {
      * @return groupIndexes the indexes of the groups associated with the ein in the preferred order
      */
     function getGroupIndexes(uint _ein, uint _seedPointer, uint16 _limit, bool _asc)
-    public view
+    external view
     returns (uint[20] memory groupIndexes) {
         groupIndexes = _getIndexes(groupOrder[_ein], _seedPointer, _limit, _asc);
     }
@@ -850,8 +885,8 @@ contract Ice {
      * @param _groupIndex describes the associated index of the group for the user / ein
      * @param _groupName describes the new name of the group
      */
-    function renameGroup(uint _groupIndex, string memory _groupName)
-    public  {
+    function renameGroup(uint _groupIndex, string calldata _groupName)
+    external  {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -871,7 +906,7 @@ contract Ice {
      * @param _groupIndex describes the associated index of the group for the user / ein
      */
     function deleteGroup(uint _groupIndex)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -887,8 +922,11 @@ contract Ice {
         // Check if the group exists or not
         uint currentGroupIndex = groupCount[ein];
 
-        // Mark the item as deleted in global items
-        _deleteGlobalRecord(groups[ein][_groupIndex].record);
+        // Remove item from sharing of other users
+        _removeAllShares(groups[ein][_groupIndex].rec);
+        
+        // Deactivate from global record
+        _deleteGlobalRecord(groups[ein][_groupIndex].rec);
 
         // Swap Index mapping & remap the latest group ID if this is not the last group
         groups[ein][_groupIndex] = groups[ein][currentGroupIndex];
@@ -905,8 +943,14 @@ contract Ice {
     }
 
     // 5. SHARING FUNCTIONS
-    function shareItemToEINs(uint[] memory _toEINs, uint _itemIndex, bool _isFile)
-    public {
+    /**
+     * @dev Function to share an item to other users, always called by owner of the Item
+     * @param _toEINs are the array of EINs which the item should be shared to
+     * @param _itemIndex is the index of the item to be shared to
+     * @param _isFile indicates if the item is file or group
+     */
+    function shareItemToEINs(uint[] calldata _toEINs, uint _itemIndex, bool _isFile)
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -931,7 +975,108 @@ contract Ice {
         atomicity[ein].lockSharings = false;
     }
 
+    /**
+     * @dev Function to remove a shared item from the multiple user's mapping, always called by owner of the Item
+     * @param _toEINs are the EINs to which the item should be removed from sharing
+     * @param _itemIndex is the index of the item on the owner's mapping
+     * @param _isFile indicates if the item is file or group 
+     */
+    function removeShareFromEINs(uint[32] memory _toEINs, uint _itemIndex, bool _isFile)
+    public {
+        // Get user EIN
+        uint ein = identityRegistry.getEIN(msg.sender);
+
+        // Check Restriction
+        _isSharingsOpLocked(ein); // Check if sharing operations are locked or not for the owner
+
+        // Logic
+        // Set Lock
+        atomicity[ein].lockSharings = true;
+        
+        // Get reference of global item record
+        GlobalRecord memory rec;
+        if (_isFile == true) {
+            // is file
+            rec = files[ein][_itemIndex].rec;
+        }
+        else {
+            // is group
+            rec = groups[ein][_itemIndex].rec;
+        }
+
+        // Adjust for valid loop
+        uint count = globalItems[rec.i1][rec.i2].sharedToCount;
+        for (uint i=0; i < count; i++) {
+            // call share for each EIN you want to remove the share with
+            _removeShareFromEIN(_toEINs[i], rec, globalItems[rec.i1][rec.i2]);
+        }
+
+        // Reset Lock
+        atomicity[ein].lockSharings = false;
+    }
+    
+    /**
+     * @dev Function to remove shared item by the non owner of that item
+     * @param _itemIndex is the index of the item in shares
+     */
+    function removeSharingItemNonOwner(uint _itemIndex) 
+    external {
+        // Get user EIN
+        uint ein = identityRegistry.getEIN(msg.sender);
+        
+        // Logic
+        GlobalRecord memory rec = shares[ein][_itemIndex];
+        _removeShareFromEIN(ein, shares[ein][_itemIndex], globalItems[rec.i1][rec.i2]); // Handles atomicity and other Restrictions
+    }
+    
+    /**
+     * @dev Private Function to share an item to Individual user
+     * @param _ein is the EIN to of the owner
+     * @param _toEIN is the EIN to which the item should be shared to
+     * @param _itemIndex is the index of the item to be shared to
+     * @param _isFile indicates if the item is file or group
+     */
     function _shareItemToEIN(uint _ein, uint _toEIN, uint _itemIndex, bool _isFile)
+    internal {
+        // Check Restrictions
+        _isNonOwner(_toEIN); // Recipient EIN should not be the owner
+        
+        // Logic
+        // Set Lock
+        atomicity[_toEIN].lockSharings = true;
+
+        // Create Sharing
+        uint curIndex = shareCount[_toEIN];
+        uint nextIndex = curIndex + 1;
+
+        // no need to require as share can be multiple
+        // and thus should not hamper other sharings
+        if (nextIndex > curIndex) {
+            if (_isFile == true) {
+                // is file
+                shares[_toEIN][nextIndex] = files[_ein][_itemIndex].rec;
+            }
+            else {
+                // is group
+                shares[_toEIN][nextIndex] = groups[_ein][_itemIndex].rec;
+            }
+
+            // Add to share order & global mapping
+            shareCount[_toEIN] = _addToSortOrder(shareOrder[_toEIN], curIndex, 0);
+            _addToGlobalItemsMapping(shares[_toEIN][nextIndex], uint8(GlobalItemProp.sharedTo), ItemOwner(_toEIN, nextIndex));
+        }
+
+        // Reset Lock
+        atomicity[_toEIN].lockSharings = false;
+    }
+
+    /**
+     * @dev Private Function to remove a shared item from the user's mapping
+     * @param _toEIN is the EIN to which the item should be removed from sharing
+     * @param _rec is the global record of the file
+     * @param _globalItem is the pointer to the global item
+     */
+    function _removeShareFromEIN(uint _toEIN, GlobalRecord memory _rec, Association storage _globalItem)
     internal {
         // Check Restrictions
         _isNonOwner(_toEIN); // Recipient EIN should not be the owner
@@ -942,33 +1087,49 @@ contract Ice {
 
         // Create Sharing
         uint curIndex = shareCount[_toEIN];
-        uint nextIndex = curIndex + 1;
-        uint8 ofType;
 
         // no need to require as share can be multiple
-        // and thus should not hamper other sharings
-        if (nextIndex > curIndex) {
-            if (_isFile == true) {
-                // is file
-                shares[_toEIN][nextIndex] = files[_ein][_itemIndex].record;
-                ofType = uint8(GlobalItemProp.sharedTo);
+        // and thus should not hamper other sharings removals
+        if (curIndex > 0) {
+            uint8 mappedIndex = _findGlobalItemsMapping(_globalItem.sharedTo, _globalItem.sharedToCount, _toEIN);
+            
+            // Only proceed if mapping if found 
+            if (mappedIndex > 0) {
+                uint _itemIndex = _globalItem.sharedTo[mappedIndex].index;
+                
+                // Remove the share from global items mapping
+                _removeFromGlobalItemsMapping(_rec, mappedIndex);
+                
+                // Swap the shares, then Reove from share order & stich
+                shares[_toEIN][_itemIndex] = shares[_toEIN][curIndex];
+                shareCount[_toEIN] = _stichSortOrder(shareOrder[_toEIN], _itemIndex, curIndex, 0);
             }
-            else {
-                // is group
-                shares[_toEIN][nextIndex] = groups[_ein][_itemIndex].record;
-                ofType = uint8(GlobalItemProp.stampedTo);
-            }
-
-            // Add to share order & global mapping
-            shareCount[_toEIN] = _addToSortOrder(shareOrder[_toEIN], curIndex, 0);
-            _addToGlobalItemsMapping(shares[_toEIN][nextIndex], ofType, ItemOwner(_toEIN, nextIndex));
         }
 
         // Reset Lock
         atomicity[_toEIN].lockSharings = false;
     }
+    
+    /**
+     * @dev Function to remove all shares of an Item, always called by owner of the Item
+     * @param _rec is the global item record index 
+     */
+    function _removeAllShares(GlobalRecord memory _rec) 
+    internal {
+        // Get user EIN
+        uint ein = identityRegistry.getEIN(msg.sender);
 
-    //function removeSharedItemFrom
+        // Check Restriction
+        _isSharingsOpLocked(ein); // Check if sharing operations are locked or not for the owner
+
+        // Logic
+        // get and pass all EINs, remove share takes care of locking
+        uint[32] memory eins = _getEINsForGlobalItemsMapping(globalItems[_rec.i1][_rec.i2].sharedTo, globalItems[_rec.i1][_rec.i2].sharedToCount);
+        removeShareFromEINs(eins, globalItems[_rec.i1][_rec.i2].ownerInfo.index, globalItems[_rec.i1][_rec.i2].isFile);
+        
+        // just adjust share count 
+        globalItems[_rec.i1][_rec.i2].sharedToCount = 0;
+    }
     // 6. STAMPING FUNCTIONS
 
     // 8. WHITELIST / BLACKLIST FUNCTIONS
@@ -977,7 +1138,7 @@ contract Ice {
      * @param _nonOwnerEIN is the ein of the recipient
      */
     function addToWhitelist(uint _nonOwnerEIN)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -996,7 +1157,7 @@ contract Ice {
      * @param _nonOwnerEIN is the ein of the recipient
      */
     function removeFromWhitelist(uint _nonOwnerEIN)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -1015,7 +1176,7 @@ contract Ice {
      * @param _nonOwnerEIN is the ein of the recipient
      */
     function addToBlacklist(uint _nonOwnerEIN)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -1034,7 +1195,7 @@ contract Ice {
      * @param _nonOwnerEIN is the ein of the recipient
      */
     function removeFromBlacklist(uint _nonOwnerEIN)
-    public {
+    external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
@@ -1342,13 +1503,13 @@ contract Ice {
 
     /**
      * @dev Private Function to check that a file hasn't been marked for stamping
-     * @param _record is struct record containing global association
+     * @param _rec is struct record containing global association
      */
-    function _isUnstampedItem(GlobalRecord memory _record)
+    function _isUnstampedItem(GlobalRecord memory _rec)
     internal view {
         // Check if the group file exists or not
         require (
-            (globalItems[_record.index1][_record.index2].isStamped == false),
+            (globalItems[_rec.i1][_rec.i2].isStamped == false),
             "Item Stamped"
         );
     }
@@ -1501,17 +1662,17 @@ contract Ice {
     // Get Indexes with Names for EIN
     // _for = 1 is Files, 2 is GroupFiles, 3 is Groups
     function debugIndexesWithNames(uint _ein, uint _groupIndex, uint _seedPointer, uint16 _limit, bool _asc, uint8 _for)
-    public view
+    external view
     returns (uint[20] memory _indexes, string memory _names) {
 
         if (_for == 1) {
-            _indexes = getFileIndexes(_ein, _seedPointer, _limit, _asc);
+            _indexes = _getIndexes(fileOrder[_ein], _seedPointer, _limit, _asc);
         }
         else if (_for == 2) {
-            _indexes = getGroupFileIndexes(_ein, _groupIndex, _seedPointer, _limit, _asc);
+            _indexes = _getIndexes(groups[_ein][_groupIndex].groupFilesOrder, _seedPointer, _limit, _asc);
         }
         else if (_for == 3) {
-            _indexes = getGroupIndexes(_ein, _seedPointer, _limit, _asc);
+            _indexes = _getIndexes(groupOrder[_ein], _seedPointer, _limit, _asc);
         }
 
         uint16 i = 0;
@@ -1521,16 +1682,12 @@ contract Ice {
             string memory name;
 
             // Get Name
-            if (_for == 1) {
-                ( , , name, , , , , , ) = getFile(_ein, _indexes[i]);
-            }
-            else if (_for == 2) {
-                ( , , name, , , , , , ) = getFile(_ein, _indexes[i]);
+            if (_for == 1 || _for == 2) {
+                name = files[_ein][_indexes[i]].name;
             }
             else if (_for == 3) {
-                (, name) = getGroup(_ein, _indexes[i]);
+                name = groups[_ein][_indexes[i]].name;
             }
-
 
             // Add To Return Vars
             name = _append(name, "|");
