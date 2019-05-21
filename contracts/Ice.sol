@@ -3,8 +3,7 @@ pragma solidity ^0.5.1;
 import "./interfaces/SnowflakeInterface.sol";
 import "./interfaces/IdentityRegistryInterface.sol";
 
-import "./IceGlobal.sol";
-import "./IceSort.sol";
+import "./IceFMS.sol";
 
 /**
  * @title Ice Protocol
@@ -18,10 +17,21 @@ contract Ice {
     using IceGlobal for IceGlobal.GlobalRecord;
     using IceGlobal for IceGlobal.ItemOwner;
     using IceGlobal for IceGlobal.Association;
+    using IceGlobal for IceGlobal.UserMeta;
+    using IceGlobal for mapping (uint => bool);
     using IceGlobal for mapping (uint8 => IceGlobal.ItemOwner);
-    using IceGlobal for mapping (uint => mapping(uint => IceGlobal.Association));
+    using IceGlobal for mapping (uint => mapping (uint => IceGlobal.Association));
     
     using IceSort for mapping(uint => IceSort.SortOrder);
+    using IceSort for IceSort.SortOrder;
+    
+    using IceFMS for IceFMS.File;
+    using IceFMS for mapping (uint => IceFMS.File);
+    using IceFMS for IceFMS.Group;
+    using IceFMS for uint;
+    
+    using IceFMSAdv for mapping (uint => IceGlobal.GlobalRecord);
+    using IceFMSAdv for mapping (uint => mapping(uint => IceGlobal.GlobalRecord));
     
     /* ***************
     * DEFINE ENUM
@@ -31,60 +41,7 @@ contract Ice {
     /* ***************
     * DEFINE STRUCTURES
     *************** */
-    /* To define File structure of all stored files */
-    struct File {
-        // File Meta Data
-        IceGlobal.GlobalRecord rec; // store the association in global record
-
-        // File Properties
-        uint8 protocol; // store protocol of the file stored | 0 is URL, 1 is IPFS
-        uint8 ext; // store the extension of the file
-        uint8 transferCount; // To maintain the transfer count for mapping
-        
-        bytes protocolMeta; // store metadata of the protocol
-        bytes32 name; // the name of the file
-        bytes32 hash1; // Store the hash of the file for verification | 0x000 for deleted files
-        bytes32 hash2; // IPFS hashes are more than 32 bytes
-        uint32 timestamp; // to store the timestamp of the block when file is created
-
-        // File Properties - Encryption Properties
-        bool encrypted; // whether the file is encrypted
-        bool markedForTransfer; // Mark the file as transferred
-        mapping (address => string) encryptedHash; // Maps Individual address to the stored hash
-
-        // File Other Properties
-        uint associatedGroupIndex;
-        uint associatedGroupFileIndex;
-        uint transferEIN; // To record EIN of the user to whom trasnfer is inititated
-        uint transferIndex; // To record the transfer specific index of the transferee
-
-        // File Transfer Properties
-        mapping (uint => uint) transferHistory; // To maintain histroy of transfer of all EIN
-    }
-
-    /* To connect Files in linear grouping,
-     * sort of like a folder, 0 or default grooupID is root
-     */
-    struct Group {
-        IceGlobal.GlobalRecord rec; // store the association in global record
-
-        string name; // the name of the Group
-
-        mapping (uint => IceSort.SortOrder) groupFilesOrder; // the order of files in the current group
-        uint groupFilesCount; // To keep the count of group files
-    }
-    
-    /* To define state and flags for Individual things,
-     * used in cases where state change should be atomic
-     */
-     struct UserMeta {
-        bool lockFiles;
-        bool lockGroups;
-        bool lockTransfers;
-        bool lockSharings;
-        
-        bool hasAvatar;
-     }
+    // Done in Libraries
      
     /* ***************
     * DEFINE VARIABLES
@@ -100,12 +57,12 @@ contract Ice {
     /* for each user (EIN), look up the Transitioon State they have
      * stored on a given index.
      */
-    mapping (uint => UserMeta) public usermeta;
+    mapping (uint => IceGlobal.UserMeta) public usermeta;
 
     /* for each user (EIN), look up the file they have
      * stored on a given index.
      */
-    mapping (uint => mapping(uint => File)) files;
+    mapping (uint => mapping(uint => IceFMS.File)) files;
     mapping (uint => mapping(uint => IceSort.SortOrder)) public fileOrder; // Store round robin order of files
     mapping (uint => uint) public fileCount; // store the maximum file count reached to provide looping functionality
 
@@ -113,7 +70,7 @@ contract Ice {
      * stored on a given index. Default group 0 indicates
      * root folder
      */
-    mapping (uint => mapping(uint => Group)) groups;
+    mapping (uint => mapping(uint => IceFMS.Group)) groups;
     mapping (uint => mapping(uint => IceSort.SortOrder)) public groupOrder; // Store round robin order of group
     mapping (uint => uint) public groupCount; // store the maximum group count reached to provide looping functionality
 
@@ -275,6 +232,8 @@ contract Ice {
 
         sharedToCount = globalItems[_index1][_index2].sharedToCount;
         stampingReqsCount = globalItems[_index1][_index2].stampedToCount;
+        
+        //getGlobalItems
     }
     
     /**
@@ -285,8 +244,11 @@ contract Ice {
      */
     function hideGlobalItem(uint _index1, uint _index2, bool _isHidden) 
     external {
+        // Get user EIN
+        uint ein = identityRegistry.getEIN(msg.sender);
+        
         // Check Restrictions
-        _isItemOwner(IceGlobal.GlobalRecord(_index1, _index2));
+        globalItems[_index1][_index2].condItemOwner(ein);
         
         // Logic
         globalItems[_index1][_index2].isHidden = _isHidden;
@@ -362,24 +324,23 @@ contract Ice {
      * @param _ein is the owner EIN
      * @param _fileIndex is index of the file
      */
-    function getFile(uint _ein, uint _fileIndex)
+    function getFileInfo(uint _ein, uint _fileIndex)
     external view
-    returns (uint8 protocol, bytes memory protocolMeta, string memory name, string memory hash1, string memory hash2,
-    uint8 ext, uint32 timestamp, bool encrypted, uint associatedGroupIndex, uint associatedGroupFileIndex) {
+    returns (uint8 protocol, bytes memory protocolMeta, string memory name, string memory hash1, string memory hash2, bool encrypted) {
         // Logic
-        protocol = files[_ein][_fileIndex].protocol;
-        protocolMeta = files[_ein][_fileIndex].protocolMeta;
-        name = IceSort.bytes32ToString(files[_ein][_fileIndex].name);
-        hash1 = IceSort.bytes32ToString(files[_ein][_fileIndex].hash1);
-        hash2 = IceSort.bytes32ToString(files[_ein][_fileIndex].hash1);
-        
-        ext = files[_ein][_fileIndex].ext;
-        timestamp = files[_ein][_fileIndex].timestamp;
-
-        encrypted = files[_ein][_fileIndex].encrypted;
-
-        associatedGroupIndex = files[_ein][_fileIndex].associatedGroupIndex;
-        associatedGroupFileIndex = files[_ein][_fileIndex].associatedGroupFileIndex;
+        (protocol, protocolMeta, name, hash1, hash2, encrypted) = files[_ein][_fileIndex].getFileInfo();
+    }
+    
+    /**
+     * @dev Function to get file info of an EIN
+     * @param _ein is the owner EIN
+     * @param _fileIndex is index of the file
+     */
+    function getFileOtherInfo(uint _ein, uint _fileIndex)
+    external view
+    returns (uint32 timestamp, uint associatedGroupIndex, uint associatedGroupFileIndex) {
+        // Logic
+        (timestamp, associatedGroupIndex, associatedGroupFileIndex) = files[_ein][_fileIndex].getFileOtherInfo();
     }
 
     /**
@@ -391,10 +352,7 @@ contract Ice {
     external view
     returns (uint transCount, uint transEIN, uint transIndex, bool forTrans) {
         // Logic
-        transCount = files[_ein][_fileIndex].transferCount;
-        transEIN = files[_ein][_fileIndex].transferEIN;
-        transIndex = files[_ein][_fileIndex].transferIndex;
-        forTrans = files[_ein][_fileIndex].markedForTransfer;
+        (transCount, transEIN, transIndex, forTrans) = files[_ein][_fileIndex].getFileTransferInfo();
     }
 
     /**
@@ -406,7 +364,7 @@ contract Ice {
     function getFileTransferOwners(uint _ein, uint _fileIndex, uint _transferIndex)
     external view
     returns (uint recipientEIN) {
-        recipientEIN = files[_ein][_fileIndex].transferHistory[_transferIndex];
+        recipientEIN = files[_ein][_fileIndex].getFileTransferOwners(_transferIndex);
     }
 
     /**
@@ -416,22 +374,21 @@ contract Ice {
      * @param _name is the name of the file
      * @param _hash1 is the first split hash of the stored file
      * @param _hash2 is the second split hash of the stored file
-     * @param _ext is the extension of the file
      * @param _encrypted defines if the file is encrypted or not
      * @param _encryptedHash defines the encrypted public key password for the sender address
      * @param _groupIndex defines the index of the group of file
      */
     function addFile(uint8 _op, uint8 _protocol, bytes memory _protocolMeta, 
-    bytes32 _name, bytes32 _hash1, bytes32 _hash2, uint8 _ext, 
+    bytes32 _name, bytes32 _hash1, bytes32 _hash2, 
     bool _encrypted, string memory _encryptedHash, uint _groupIndex)
     public {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
         // Check constraints
-        _isValidItem(_groupIndex, groupCount[ein]);
-        _isFilesOpLocked(ein);
-        _isGrpsOpLocked(ein);
+        _groupIndex.condValidItem(groupCount[ein]);
+        usermeta[ein].condFilesOpFree();
+        usermeta[ein].condGroupsOpFree();
         
         // Set File & Group Atomicity
         usermeta[ein].lockFiles = true;
@@ -456,64 +413,22 @@ contract Ice {
         }
         
         // Finally create the file it to User (EIN)
-        files[ein][nextIndex] = File (
-            IceGlobal.GlobalRecord( // Add Record to struct
-                i1,
-                i2
-            ),
-
-            _protocol, // Protocol For Interpretation
-            _ext, // Extension of File
-            1, // Transfer Count, treat creation as a transfer count
-            
-            _protocolMeta, // Serialized Hex of Array
-            _name, // Name of File
-            _hash1, // Hash1 of File
-            _hash2, // Hash1 of File
-            
-            uint32(now), // Timestamp of File
-
-            _encrypted, // File Encyption
-            false, // File is not flagged for Transfer
-
-            _groupIndex, // Store the group index
-            groups[ein][_groupIndex].groupFilesCount, // Store the group specific file index
-            0, // Transfer EIN
-            0 // Transfer Index for Transferee
-        );
+        files[ein][nextIndex].createFileObject(IceGlobal.GlobalRecord(i1, i2), _protocol, _protocolMeta, _name, _hash1, _hash2, _encrypted, _groupIndex, groups[ein][_groupIndex].groupFilesCount);
         
-        _writeFile(ein, _op, nextIndex, _encryptedHash, _groupIndex);
+        // OP 0 - Normal | 1 - Avatar
+        if (_op == 0) {
+            fileCount[ein] = files[ein][nextIndex].writeFile(groups[ein][_groupIndex], _groupIndex, fileOrder[ein], fileCount[ein], nextIndex, ein, _encryptedHash);
+        }
+        else if (_op == 1) {
+            usermeta[ein].hasAvatar = true;
+        }
         
         // Trigger Event
-        emit FileCreated(ein, (fileCount[ein] + 1), IceSort.bytes32ToString(_name));
+        emit FileCreated(ein, (fileCount[ein] + 1), IceUtil.bytes32ToString(_name));
 
         // Reset Files & Group Atomicity
         usermeta[ein].lockFiles = false;
         usermeta[ein].lockGroups = false;
-    }
-    
-    function _writeFile(uint _ein, uint8 _op, uint _nextIndex, string memory _encryptedHash, uint _groupIndex) 
-    internal {
-         // OP 0 - Normal | 1 - Avatar
-        // If Not Avatar Operation
-        if (_op == 0) {
-            // Add file to group 
-            groups[_ein][_groupIndex].groupFilesCount = _addFileToGroup(_ein, _groupIndex, _nextIndex);
- 
-            // To map encrypted password
-            files[_ein][_nextIndex].encryptedHash[msg.sender] = _encryptedHash;
-
-            // To map transfer history
-            files[_ein][_nextIndex].transferHistory[0] = _ein;
-
-            // Add to Stitch Order & Increment index
-            fileCount[_ein] = fileOrder[_ein].addToSortOrder(fileCount[_ein], 0);
-        }
-        else if (_op == 1) { // For
-            _nextIndex = 0;
-            usermeta[_ein].hasAvatar = true;
-            
-        }
     }
 
     /**
@@ -530,7 +445,7 @@ contract Ice {
         files[ein][_fileIndex].name = _name;
 
         // Trigger Event
-        emit FileRenamed(ein, _fileIndex, IceSort.bytes32ToString(_name));
+        emit FileRenamed(ein, _fileIndex, IceUtil.bytes32ToString(_name));
     }
 
     /**
@@ -543,26 +458,11 @@ contract Ice {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
-        // Check Restrictions
-        _isValidGrpOrder(ein, _newGroupIndex); // Check if the new group is valid
-        _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the file is unstamped, can't move a stamped file
-        _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].rec); // Check if the current group is unstamped, can't move a file from stamped group
-        _isUnstampedItem(groups[ein][_newGroupIndex].rec); // Check if the new group is unstamped, can't move a file from stamped group
-        _isFilesOpLocked(ein); // Check if the files operations are not locked for the user
-        _isGrpsOpLocked(ein); // Check if the groups operations are not locked for the user
-
-        // Set Files & Group Atomicity
-        usermeta[ein].lockFiles = true;
-        usermeta[ein].lockGroups = true;
-
-        uint GFIndex = _remapFileToGroup(ein, files[ein][_fileIndex].associatedGroupIndex, files[ein][_fileIndex].associatedGroupFileIndex, _newGroupIndex);
+        // Logic
+        uint GFIndex = files[ein][_fileIndex].moveFileToGroup(groups[ein], groupOrder[ein], _newGroupIndex, globalItems, usermeta[ein]);
 
         // Trigger Event
         emit FileMoved(ein, _fileIndex, _newGroupIndex, GFIndex);
-
-        // Reset Files & Group Atomicity
-        usermeta[ein].lockFiles = false;
-        usermeta[ein].lockGroups = false;
     }
 
     /**
@@ -574,18 +474,8 @@ contract Ice {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
-        // Check Restrictions
-        _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the file is unstamped, can't delete a stamped file
-
-        // Set Files & Group Atomicity
-        usermeta[ein].lockFiles = true;
-        usermeta[ein].lockGroups = true;
-
+        // Delegate the call
         _deleteFileAnyOwner(ein, _fileIndex);
-
-        // Reset Files & Group Atomicity
-        usermeta[ein].lockFiles = false;
-        usermeta[ein].lockGroups = false;
     }
 
     /**
@@ -595,88 +485,23 @@ contract Ice {
      */
     function _deleteFileAnyOwner(uint _ein, uint _fileIndex)
     internal {
-        // Check Restrictions
-        _isValidItem(_fileIndex, fileCount[_ein]);
-        _isValidGrpOrder(_ein, files[_ein][_fileIndex].associatedGroupIndex);
-
-        // Get current Index, Stich check previous index so not required to recheck
-        uint currentIndex = fileCount[_ein];
-
-        // Remove item from sharing of other users
-        _removeAllShares(files[_ein][_fileIndex].rec);
-        
-        // Deactivate From Global Items
-        uint i1; 
-        uint i2;
-        (i1, i2) = files[_ein][_fileIndex].rec.getGlobalItemViaRecord();
-        globalItems[i1][i2].deleteGlobalRecord();
-
-        // Remove from Group which holds the File
-        _removeFileFromGroup(_ein, files[_ein][_fileIndex].associatedGroupIndex, files[_ein][_fileIndex].associatedGroupFileIndex);
-
-        // Swap File
-        files[_ein][_fileIndex] = files[_ein][currentIndex];
-        fileCount[_ein] = fileOrder[_ein].stichSortOrder(_fileIndex, currentIndex, 0);
-        
-        // Delete the latest group now
-        delete (files[_ein][currentIndex]);
+        // Logic
+        files[_ein].deleteFile(
+            _ein, 
+            _fileIndex, 
+            fileOrder[_ein], 
+            fileCount, 
+            groups[_ein][files[_ein][_fileIndex].associatedGroupIndex], 
+            groupOrder[_ein][files[_ein][_fileIndex].associatedGroupIndex],
+            shares,
+            shareOrder,
+            shareCount,
+            usermeta,
+            globalItems
+        );
         
         // Trigger Event
         emit FileDeleted(_ein, _fileIndex);
-    }
-
-    /**
-     * @dev Private Function to add file to a group
-     * @param _ein is the EIN of the intended user
-     * @param _groupIndex is the index of the group belonging to that user, 0 is reserved for root
-     * @param _fileIndex is the index of the file belonging to that user
-     */
-    function _addFileToGroup(uint _ein, uint _groupIndex, uint _fileIndex)
-    internal
-    returns (uint) {
-        // Add File to a group is just adding the index of that file
-        uint currentIndex = groups[_ein][_groupIndex].groupFilesCount;
-        groups[_ein][_groupIndex].groupFilesCount = groups[_ein][_groupIndex].groupFilesOrder.addToSortOrder(currentIndex, _fileIndex);
-
-        // Map group index and group order index in file
-        files[_ein][_fileIndex].associatedGroupIndex = _groupIndex;
-        files[_ein][_fileIndex].associatedGroupFileIndex = groups[_ein][_groupIndex].groupFilesCount;
-
-        return groups[_ein][_groupIndex].groupFilesCount;
-    }
-
-    /**
-     * @dev Private Function to remove file from a group
-     * @param _ein is the EIN of the intended user
-     * @param _groupIndex is the index of the group belonging to that user
-     * @param _groupFileOrderIndex is the index of the file order within that group
-     */
-    function _removeFileFromGroup(uint _ein, uint _groupIndex, uint _groupFileOrderIndex)
-    internal {
-        uint maxIndex = groups[_ein][_groupIndex].groupFilesCount;
-        uint pointerID = groups[_ein][_groupIndex].groupFilesOrder[maxIndex].pointerID;
-
-        groups[_ein][_groupIndex].groupFilesCount = groups[_ein][_groupIndex].groupFilesOrder.stichSortOrder(_groupFileOrderIndex, maxIndex, pointerID);
-    }
-
-    /**
-     * @dev Private Function to remap file from one group to another
-     * @param _ein is the EIN of the intended user
-     * @param _groupIndex is the index of the group belonging to that user, 0 is reserved for root
-     * @param _groupFileOrderIndex is the index of the file order within that group
-     * @param _newGroupIndex is the index of the new group belonging to that user
-     */
-    function _remapFileToGroup(uint _ein, uint _groupIndex, uint _groupFileOrderIndex, uint _newGroupIndex)
-    internal
-    returns (uint) {
-        // Get file index for the Association
-        uint fileIndex = groups[_ein][_groupIndex].groupFilesOrder[_groupFileOrderIndex].pointerID;
-
-        // Remove File from existing group
-        _removeFileFromGroup(_ein, _groupIndex, _groupFileOrderIndex);
-
-        // Add File to new group
-        return _addFileToGroup(_ein, _newGroupIndex, fileIndex);
     }
 
     // 4. GROUP FILES FUNCTIONS
@@ -694,7 +519,7 @@ contract Ice {
         return groups[_ein][_groupIndex].groupFilesOrder.getIndexes(_seedPointer, _limit, _asc);
     }
 
-    // 4. GROUP FUNCTIONS
+    // 3. GROUP FUNCTIONS
     /**
      * @dev Function to return group info for an EIN
      * @param _ein the EIN of the user
@@ -706,7 +531,7 @@ contract Ice {
     external view
     returns (uint index, string memory name) {
         // Check constraints
-        _isValidItem(_groupIndex, groupCount[_ein]);
+        _groupIndex.condValidItem(groupCount[_ein]);
 
         // Logic flow
         index = _groupIndex;
@@ -743,7 +568,7 @@ contract Ice {
         uint ein = identityRegistry.getEIN(msg.sender);
         
         // Check Restrictions
-        _isGrpsOpLocked(ein);
+        usermeta[ein].condGroupsOpFree();
 
         // Set Group Atomicity
         usermeta[ein].lockGroups = true;
@@ -761,7 +586,7 @@ contract Ice {
         globalItems.addItemToGlobalItems(i1, i2, ein, nextGroupIndex, false, false, false);
         
         // Assign it to User (EIN)
-        groups[ein][nextGroupIndex] = Group(
+        groups[ein][nextGroupIndex] = IceFMS.Group(
             IceGlobal.GlobalRecord( // Add Record to struct
                 i1,
                 i2
@@ -793,7 +618,7 @@ contract Ice {
 
         // Check Restrictions
         _isNonReservedItem(_groupIndex);
-        _isValidItem(_groupIndex, groupCount[ein]);
+        _groupIndex.condValidItem(groupCount[ein]);
 
         // Replace the group name
         groups[ein][_groupIndex].name = _groupName;
@@ -814,8 +639,8 @@ contract Ice {
         // Check Restrictions
         _isGroupFileFree(ein, _groupIndex); // Check that Group contains no Files
         _isNonReservedItem(_groupIndex);
-        _isValidItem(_groupIndex, groupCount[ein]);
-        _isGrpsOpLocked(ein);
+        _groupIndex.condValidItem(groupCount[ein]);
+        usermeta[ein].condGroupsOpFree();
 
         // Set Group Atomicity
         usermeta[ein].lockGroups = true;
@@ -824,12 +649,11 @@ contract Ice {
         uint currentGroupIndex = groupCount[ein];
 
         // Remove item from sharing of other users
-        _removeAllShares(groups[ein][_groupIndex].rec);
+        IceGlobal.Association storage globalItem = groups[ein][_groupIndex].rec.getGlobalItemViaRecord(globalItems);
+        shares.removeAllShares(globalItem, shareOrder, shareCount, usermeta, ein);
         
         // Deactivate from global record
-        IceGlobal.GlobalRecord memory rec;
-        (rec.i1, rec.i2) = groups[ein][_groupIndex].rec.getGlobalItemViaRecord();
-        globalItems[rec.i1][rec.i2].deleteGlobalRecord();
+        globalItem.deleteGlobalRecord();
 
         // Swap Index mapping & remap the latest group ID if this is not the last group
         groups[ein][_groupIndex] = groups[ein][currentGroupIndex];
@@ -845,7 +669,7 @@ contract Ice {
         usermeta[ein].lockGroups = false;
     }
 
-    // 5. SHARING FUNCTIONS
+    // 4. SHARING FUNCTIONS
     /**
      * @dev Function to share an item to other users, always called by owner of the Item
      * @param _toEINs are the array of EINs which the item should be shared to
@@ -857,200 +681,64 @@ contract Ice {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
         
-        // Check Restriction
-        _isSharingsOpLocked(ein); // Check if sharing operations are locked or not for the owner
-        if (_isFile == true) { // Check if item is file or group and accordingly check if Item is valid
-            _isValidItem(_itemIndex, fileCount[ein]);
+        // Check if item is file or group and accordingly check if Item is valid & Logic
+        if (_isFile == true) { 
+            _itemIndex.condValidItem(fileCount[ein]);
+            shares.shareItemToEINs(globalItems, shareOrder, shareCount, usermeta, blacklist, files[ein][_itemIndex].rec, ein, _toEINs);
         }
         else {
-            _isValidItem(_itemIndex, groupCount[ein]);
+            _itemIndex.condValidItem(groupCount[ein]);
+            shares.shareItemToEINs(globalItems, shareOrder, shareCount, usermeta, blacklist, groups[ein][_itemIndex].rec, ein, _toEINs);
         }
-        
-        // Logic
-        // Set Lock
-        usermeta[ein].lockSharings = true;
-
-        // Warn: Unbounded Loop
-        for (uint i=0; i < _toEINs.length; i++) {
-            // call share for each EIN you want to share with
-            // Since its multiple share, don't put require blacklist but ignore the share
-            // if owner of the file is in blacklist
-            if (blacklist[_toEINs[i]][ein] == false) {
-                _shareItemToEIN(ein, _toEINs[i], _itemIndex, _isFile);
-            }
-        }
-
-        // Reset Lock
-        usermeta[ein].lockSharings = false;
     }
 
     /**
      * @dev Function to remove a shared item from the multiple user's mapping, always called by owner of the Item
-     * @param _toEINs are the EINs to which the item should be removed from sharing
+     * @param _fromEINs are the EINs to which the item should be removed from sharing
      * @param _itemIndex is the index of the item on the owner's mapping
      * @param _isFile indicates if the item is file or group 
      */
-    function removeShareFromEINs(uint[32] memory _toEINs, uint _itemIndex, bool _isFile)
+    function removeShareFromEINs(uint[32] memory _fromEINs, uint _itemIndex, bool _isFile)
     public {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
-        // Check Restriction
-        _isSharingsOpLocked(ein); // Check if sharing operations are locked or not for the owner
-
-        // Logic
-        // Set Lock
-        usermeta[ein].lockSharings = true;
-        
-        // Get reference of global item record
+        // Check if item is file or group and accordingly check if Item is valid & Logic
         IceGlobal.GlobalRecord memory rec;
-        if (_isFile == true) {
-            // is file
+        if (_isFile == true) { 
+            _itemIndex.condValidItem(fileCount[ein]);
             rec = files[ein][_itemIndex].rec;
         }
         else {
-            // is group
-            rec = groups[ein][_itemIndex].rec;
+            _itemIndex.condValidItem(groupCount[ein]);
+            rec = files[ein][_itemIndex].rec;
         }
-
-        // Adjust for valid loop
-        uint count = globalItems[rec.i1][rec.i2].sharedToCount;
-        for (uint i=0; i < count; i++) {
-            // call share for each EIN you want to remove the share with
-            _removeShareFromEIN(_toEINs[i], rec, globalItems[rec.i1][rec.i2]);
-        }
-
-        // Reset Lock
-        usermeta[ein].lockSharings = false;
+        
+        shares.removeShareFromEINs(globalItems[rec.i1][rec.i2], shareOrder, shareCount, usermeta, ein, _fromEINs);
     }
     
+    
     /**
-     * @dev Function to remove shared item by the non owner of that item
+     * @dev Function to remove shared item by the user to whom the item is shared
      * @param _itemIndex is the index of the item in shares
      */
-    function removeSharingItemNonOwner(uint _itemIndex) 
+    function removeSharingItemBySharee(uint _itemIndex) 
     external {
-        // Get user EIN
-        uint ein = identityRegistry.getEIN(msg.sender);
-        
         // Logic
-        IceGlobal.GlobalRecord memory rec = shares[ein][_itemIndex];
-        _removeShareFromEIN(ein, shares[ein][_itemIndex], globalItems[rec.i1][rec.i2]); // Handles usermeta and other Restrictions
+        uint shareeEIN = identityRegistry.getEIN(msg.sender);
+        IceGlobal.Association storage globalItem = shares[shareeEIN][_itemIndex].getGlobalItemViaRecord(globalItems);
+        
+        shares[shareeEIN].removeSharingItemBySharee(globalItem, shareOrder[shareeEIN], shareCount, usermeta[shareeEIN], shareeEIN);
     }
     
+    // 5. STAMPING FUNCTIONS
+    
+    // 6. TRANSFER FILE FUNCTIONS
     /**
-     * @dev Private Function to share an item to Individual user
-     * @param _ein is the EIN to of the owner
-     * @param _toEIN is the EIN to which the item should be shared to
-     * @param _itemIndex is the index of the item to be shared to
-     * @param _isFile indicates if the item is file or group
+     * @dev Function to intiate file transfer to another EIN(user)
+     * @param _fileIndex is the index of file for the original user's EIN
+     * @param _transfereeEIN is the recipient user's EIN
      */
-    function _shareItemToEIN(uint _ein, uint _toEIN, uint _itemIndex, bool _isFile)
-    internal {
-        // Check Restrictions
-        _isNonOwner(_toEIN); // Recipient EIN should not be the owner
-        
-        // Logic
-        // Set Lock
-        usermeta[_toEIN].lockSharings = true;
-
-        // Create Sharing
-        uint curIndex = shareCount[_toEIN];
-        uint nextIndex = curIndex + 1;
-        
-        // no need to require as share can be multiple
-        // and thus should not hamper other sharings
-        if (nextIndex > curIndex) {
-            if (_isFile == true) {
-                // is file
-                shares[_toEIN][nextIndex] = files[_ein][_itemIndex].rec;
-            }
-            else {
-                // is group
-                shares[_toEIN][nextIndex] = groups[_ein][_itemIndex].rec;
-            }
-
-            // Add to share order & global mapping
-            shareCount[_toEIN] = shareOrder[_toEIN].addToSortOrder(curIndex, 0);
-            
-            IceGlobal.GlobalRecord memory rec;
-            (rec.i1, rec.i2) = shares[_toEIN][nextIndex].getGlobalItemViaRecord();
-            globalItems[rec.i1][rec.i2].addToGlobalItemsMapping(uint8(IceGlobal.AsscProp.sharedTo), _toEIN, nextIndex);
-        }
-
-        // Reset Lock
-        usermeta[_toEIN].lockSharings = false;
-    }
-
-    /**
-     * @dev Private Function to remove a shared item from the user's mapping
-     * @param _toEIN is the EIN to which the item should be removed from sharing
-     * @param _rec is the global record of the file
-     * @param _globalItem is the pointer to the global item
-     */
-    function _removeShareFromEIN(uint _toEIN, IceGlobal.GlobalRecord memory _rec, IceGlobal.Association storage _globalItem)
-    internal {
-        // Check Restrictions
-        _isNonOwner(_toEIN); // Recipient EIN should not be the owner
-
-        // Logic
-        // Set Lock
-        usermeta[_toEIN].lockSharings = true;
-
-        // Create Sharing
-        uint curIndex = shareCount[_toEIN];
-
-        // no need to require as share can be multiple
-        // and thus should not hamper other sharings removals
-        if (curIndex > 0) {
-            uint8 mappedIndex = _globalItem.sharedTo.findGlobalItemsMapping(_globalItem.sharedToCount, _toEIN);
-            
-            // Only proceed if mapping if found 
-            if (mappedIndex > 0) {
-                uint _itemIndex = _globalItem.sharedTo[mappedIndex].index;
-                
-                // Remove the share from global items mapping
-                globalItems[_rec.i1][_rec.i2].removeFromGlobalItemsMapping(mappedIndex);
-                
-                // Swap the shares, then Reove from share order & stich
-                shares[_toEIN][_itemIndex] = shares[_toEIN][curIndex];
-                shareCount[_toEIN] = shareOrder[_toEIN].stichSortOrder(_itemIndex, curIndex, 0);
-            }
-        }
-
-        // Reset Lock
-        usermeta[_toEIN].lockSharings = false;
-    }
-    
-    /**
-     * @dev Function to remove all shares of an Item, always called by owner of the Item
-     * @param _rec is the global item record index 
-     */
-    function _removeAllShares(IceGlobal.GlobalRecord memory _rec) 
-    internal {
-        // Get user EIN
-        uint ein = identityRegistry.getEIN(msg.sender);
-
-        // Check Restriction
-        _isSharingsOpLocked(ein); // Check if sharing operations are locked or not for the owner
-
-        // Logic
-        // get and pass all EINs, remove share takes care of locking
-        uint[32] memory eins = globalItems[_rec.i1][_rec.i2].sharedTo.getEINsForGlobalItemsMapping(globalItems[_rec.i1][_rec.i2].sharedToCount);
-        removeShareFromEINs(eins, globalItems[_rec.i1][_rec.i2].ownerInfo.index, globalItems[_rec.i1][_rec.i2].isFile);
-        
-        // just adjust share count 
-        globalItems[_rec.i1][_rec.i2].sharedToCount = 0;
-    }
-    
-    // 6. STAMPING FUNCTIONS
-    
-    // // 7. TRANSFER FILE FUNCTIONS
-    // /**
-    //  * @dev Function to intiate file transfer to another EIN(user)
-    //  * @param _fileIndex is the index of file for the original user's EIN
-    //  * @param _transfereeEIN is the recipient user's EIN
-    //  */
     // function initiateFileTransfer(uint _fileIndex, uint _transfereeEIN)
     // external {
     //     // Get user EIN
@@ -1061,9 +749,9 @@ contract Ice {
     //     _isUnqEIN(ein, _transfereeEIN); // Check EINs and Unique
     //     _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the File is not stamped
     //     _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].rec); // Check if the Group is not stamped
-    //     _isNotBlacklist(_transfereeEIN, ein); // Check if The transfee hasn't blacklisted the file owner
-    //     _isTransfersOpLocked(ein); // Check if Transfers are not locked for current user
-    //     _isTransfersOpLocked(_transfereeEIN); // Check if the transfers are not locked for recipient user
+    //     blacklist[_transfereeEIN].condNotInList(ein); // Check if The transfee hasn't blacklisted the file owner
+    //     usermeta[ein].condTransfersOpFree(); // Check if Transfers are not locked for current user
+    //     usermeta[_transfereeEIN].condTransfersOpFree(); // Check if the transfers are not locked for recipient user
 
     //     // Set Transfers Atomiticy
     //     usermeta[ein].lockTransfers = true;
@@ -1098,8 +786,8 @@ contract Ice {
 
     //     // Check Restrictions
     //     _isMarkedForTransferee(_transfererEIN, _fileIndex, ein); // Check if the file is marked for transfer to the recipient
-    //     _isTransfersOpLocked(_transfererEIN); // Check that the transfers are not locked for the sender of the file
-    //     _isTransfersOpLocked(ein); // Check that the transfers are not locked for the recipient of the file
+    //     usermeta[_transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the sender of the file
+    //     usermeta[ein].condTransfersOpFree(); // Check that the transfers are not locked for the recipient of the file
 
     //     // Set Transfers Atomiticy
     //     usermeta[_transfererEIN].lockTransfers = true;
@@ -1133,8 +821,8 @@ contract Ice {
     //     uint ein = identityRegistry.getEIN(msg.sender);
 
     //     // Check Restrictions
-    //     _isTransfersOpLocked(ein);
-    //     _isTransfersOpLocked(_transfereeEIN);
+    //     usermeta[_transfereeEIN].condTransfersOpFree(); 
+    //     usermeta[ein].condTransfersOpFree();
 
     //     // Set Transfers Atomiticy
     //     usermeta[ein].lockTransfers = true;
@@ -1247,7 +935,7 @@ contract Ice {
     //     fileCount[_transfereeEIN] = fileOrder[_transfereeEIN].addToSortOrder(currentTransfereeIndex, 0);
 
     //     // Add File to transferee group
-    //     _addFileToGroup(_transfereeEIN, _groupIndex, fileCount[_transfereeEIN]);
+    //     groups[_transfereeEIN][_groupIndex].addFileToGroup(_groupIndex, fileCount[_transfereeEIN]);
 
     //     // Get global association
     //     uint index1;
@@ -1287,21 +975,16 @@ contract Ice {
     //     }
     // }
 
-    // 8. WHITELIST / BLACKLIST FUNCTIONS
-    /**
-     * @dev Add a non-owner user to whitelist
-     * @param _nonOwnerEIN is the ein of the recipient
-     */
+    // // 7. WHITELIST / BLACKLIST FUNCTIONS
+    // /**
+    //  * @dev Add a non-owner user to whitelist
+    //  * @param _nonOwnerEIN is the ein of the recipient
+    //  */
     // function addToWhitelist(uint _nonOwnerEIN)
     // external {
-    //     // Get user EIN
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-
-    //     // Check Restrictions
-    //     _isNotBlacklist(ein, _nonOwnerEIN);
-
     //     // Logic
-    //     whitelist[ein][_nonOwnerEIN] = true;
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
 
     //     // Trigger Event
     //     emit AddedToWhitelist(ein, _nonOwnerEIN);
@@ -1313,14 +996,9 @@ contract Ice {
     //  */
     // function removeFromWhitelist(uint _nonOwnerEIN)
     // external {
-    //     // Get user EIN
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-
-    //     // Check Restrictions
-    //     _isNotBlacklist(ein, _nonOwnerEIN);
-
     //     // Logic
-    //     whitelist[ein][_nonOwnerEIN] = false;
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
 
     //     // Trigger Event
     //     emit RemovedFromWhitelist(ein, _nonOwnerEIN);
@@ -1332,14 +1010,9 @@ contract Ice {
     //  */
     // function addToBlacklist(uint _nonOwnerEIN)
     // external {
-    //     // Get user EIN
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-
-    //     // Check Restrictions
-    //     _isNotWhitelist(ein, _nonOwnerEIN);
-
     //     // Logic
-    //     blacklist[ein][_nonOwnerEIN] = true;
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
 
     //     // Trigger Event
     //     emit AddedToBlacklist(ein, _nonOwnerEIN);
@@ -1351,14 +1024,9 @@ contract Ice {
     //  */
     // function removeFromBlacklist(uint _nonOwnerEIN)
     // external {
-    //     // Get user EIN
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-
-    //     // Check Restrictions
-    //     _isNotWhitelist(ein, _nonOwnerEIN);
-
     //     // Logic
-    //     whitelist[ein][_nonOwnerEIN] = false;
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
 
     //     // Trigger Event
     //     emit RemovedFromBlacklist(ein, _nonOwnerEIN);
@@ -1426,19 +1094,7 @@ contract Ice {
             "Same EINs"
         );
     }
-
-    /**
-     * @dev Private Function to check that a file exists for the current EIN
-     * @param _fileIndex The index of the file
-     */
-    function _doesFileExists(uint _fileIndex)
-    internal view {
-        require (
-            (_fileIndex <= fileCount[identityRegistry.getEIN(msg.sender)]),
-            "File not Found"
-        );
-    }
-
+    
     /**
      * @dev Private Function to check that a file has been marked for transferee EIN
      * @param _fileIndex The index of the file
@@ -1449,31 +1105,6 @@ contract Ice {
         require (
             (files[_fileOwnerEIN][_fileIndex].transferEIN == _transfereeEIN),
             "File not marked for Transfers"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that only owner of EIN can access this
-     * @param _rec is the GlobalRecord of the item
-     */
-    function _isItemOwner(IceGlobal.GlobalRecord memory _rec)
-    internal view {
-        require (
-            (identityRegistry.getEIN(msg.sender) == globalItems[_rec.i1][_rec.i2].ownerInfo.EIN),
-            "Only File Owner"
-        );
-    }
-    
-    /**
-     * @dev Private Function to check that a file hasn't been marked for stamping
-     * @param _rec is struct record containing global association
-     */
-    function _isUnstampedItem(IceGlobal.GlobalRecord memory _rec)
-    internal view {
-        // Check if the group file exists or not
-        require (
-            (globalItems[_rec.i1][_rec.i2].isStamped == false),
-            "Item Stamped"
         );
     }
 
@@ -1502,106 +1133,6 @@ contract Ice {
         );
     }
 
-    /**
-     * @dev Private Function to check if an item exists
-     * @param _itemIndex the index of the item
-     * @param _itemCount is the count of that mapping
-     */
-    function _isValidItem(uint _itemIndex, uint _itemCount)
-    internal pure {
-        require (
-            (_itemIndex <= _itemCount),
-            "Item Not Found"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that Group Order is valid
-     * @param _ein is the EIN of the target user
-     * @param _groupOrderIndex The index of the group order
-     */
-    function _isValidGrpOrder(uint _ein, uint _groupOrderIndex)
-    internal view {
-        require (
-            (_groupOrderIndex == 0 || groupOrder[_ein][_groupOrderIndex].active == true),
-            "Group Order not Found"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that operation of Files is currently locked or not
-     * @param _ein is the EIN of the target user
-     */
-    function _isFilesOpLocked(uint _ein)
-    internal view {
-        require (
-          (usermeta[_ein].lockFiles == false),
-          "Files Locked"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that operation of Groups is currently locked or not
-     * @param _ein is the EIN of the target user
-     */
-    function _isGrpsOpLocked(uint _ein)
-    internal view {
-        require (
-          (usermeta[_ein].lockGroups == false),
-          "Groups Locked"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that operation of Sharings is currently locked or not
-     * @param _ein is the EIN of the target user
-     */
-    function _isSharingsOpLocked(uint _ein)
-    internal view {
-        require (
-          (usermeta[_ein].lockSharings == false),
-          "Sharing Locked"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that operation of Transfers is currently locked or not
-     * @param _ein is the EIN of the target user
-     */
-    function _isTransfersOpLocked(uint _ein)
-    internal view {
-        require (
-          (usermeta[_ein].lockTransfers == false),
-          "Transfers Locked"
-        );
-    }
-
-    /**
-     * @dev Private Function to check if the user is not blacklisted by the current user
-     * @param _ein is the EIN of the self
-     * @param _otherEIN is the EIN of the target user
-     */
-    function _isNotBlacklist(uint _ein, uint _otherEIN)
-    internal view {
-        require (
-            (blacklist[_ein][_otherEIN] == false),
-            "EIN Blacklisted"
-        );
-    }
-
-    /**
-     * @dev Private Function to check if the user is not whitelisted by the current user
-     * @param _ein is the EIN of the self
-     * @param _otherEIN is the EIN of the target user
-     */
-    function _isNotWhitelist(uint _ein, uint _otherEIN)
-    internal view {
-        require (
-            (whitelist[_ein][_otherEIN] == false),
-            "EIN Whitelisted"
-        );
-    }
-
     // *. FOR DEBUGGING CONTRACT
     // To Build Groups & File System for users
     function debugBuildFS()
@@ -1613,12 +1144,12 @@ contract Ice {
         createGroup("E.AdobeContract");
 
         // Create Files
-        // addFile(_op, _protocol, _protocolMeta, _name,  _hash1, _hash2, _ext, _encrypted, _encryptedHash, _groupIndex)
-        addFile(0, 1, bytes("0x00"), IceSort.stringToBytes32("index"), IceSort.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceSort.stringToBytes32("L4ZCr9iwDnp9q7"), 1, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceSort.stringToBytes32("family"), IceSort.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceSort.stringToBytes32("L4ZCr9iwDnp9q7"), 1, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceSort.stringToBytes32("myportrait"), IceSort.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceSort.stringToBytes32("L4ZCr9iwDnp9q7"), 2, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceSort.stringToBytes32("cutepic"), IceSort.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceSort.stringToBytes32("L4ZCr9iwDnp9q7"), 2, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceSort.stringToBytes32("awesome"), IceSort.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceSort.stringToBytes32("L4ZCr9iwDnp9q7"), 2, false, "", 0);
+        // addFile(_op, _protocol, _protocolMeta, _name,  _hash1, _hash2, _encrypted, _encryptedHash, _groupIndex)
+        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("index"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("family"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("myportrait"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("cutepic"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("awesome"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
     }
 
     // Get Indexes with Names for EIN
@@ -1648,7 +1179,7 @@ contract Ice {
 
             // Get Name
             if (_for == 1 || _for == 2) {
-                name = IceSort.bytes32ToString(files[_ein][_indexes[i]].name);
+                name = IceUtil.bytes32ToString(files[_ein][_indexes[i]].name);
             }
             else if (_for == 3) {
                 name = groups[_ein][_indexes[i]].name;
@@ -1658,7 +1189,7 @@ contract Ice {
                 IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
                 
                 if (globalItems[record.i1][record.i2].isFile == true) {
-                    name = IceSort.bytes32ToString(files[owner.EIN][owner.index].name);
+                    name = IceUtil.bytes32ToString(files[owner.EIN][owner.index].name);
                 } 
                 else {
                     name = groups[owner.EIN][owner.index].name;
