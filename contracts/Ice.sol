@@ -976,61 +976,61 @@ contract Ice {
     // }
 
     // // 7. WHITELIST / BLACKLIST FUNCTIONS
-    // /**
-    //  * @dev Add a non-owner user to whitelist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function addToWhitelist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
+    /**
+     * @dev Add a non-owner user to whitelist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function addToWhitelist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
 
-    //     // Trigger Event
-    //     emit AddedToWhitelist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit AddedToWhitelist(ein, _nonOwnerEIN);
+    }
 
-    // /**
-    //  * @dev Remove a non-owner user from whitelist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function removeFromWhitelist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
+    /**
+     * @dev Remove a non-owner user from whitelist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function removeFromWhitelist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
 
-    //     // Trigger Event
-    //     emit RemovedFromWhitelist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit RemovedFromWhitelist(ein, _nonOwnerEIN);
+    }
 
-    // /**
-    //  * @dev Remove a non-owner user to blacklist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function addToBlacklist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
+    /**
+     * @dev Remove a non-owner user to blacklist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function addToBlacklist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
 
-    //     // Trigger Event
-    //     emit AddedToBlacklist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit AddedToBlacklist(ein, _nonOwnerEIN);
+    }
 
-    // /**
-    //  * @dev Remove a non-owner user from blacklist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function removeFromBlacklist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
+    /**
+     * @dev Remove a non-owner user from blacklist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function removeFromBlacklist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
 
-    //     // Trigger Event
-    //     emit RemovedFromBlacklist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit RemovedFromBlacklist(ein, _nonOwnerEIN);
+    }
 
     // *. GENERAL CONTRACT HELPERS
     /** @dev Private Function to append two strings together
@@ -1137,19 +1137,19 @@ contract Ice {
     // To Build Groups & File System for users
     function debugBuildFS()
     public {
-        createGroup("A.Images");
-        createGroup("B.Movies");
-        createGroup("C.Crypto");
-        createGroup("D.Others");
-        createGroup("E.AdobeContract");
+        // createGroup("A.Images");
+        // createGroup("B.Movies");
+        // createGroup("C.Crypto");
+        // createGroup("D.Others");
+        // createGroup("E.AdobeContract");
 
-        // Create Files
-        // addFile(_op, _protocol, _protocolMeta, _name,  _hash1, _hash2, _encrypted, _encryptedHash, _groupIndex)
-        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("index"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("family"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("myportrait"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("cutepic"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("awesome"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        // // Create Files
+        // // addFile(_op, _protocol, _protocolMeta, _name,  _hash1, _hash2, _encrypted, _encryptedHash, _groupIndex)
+        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("index"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("family"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("myportrait"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("cutepic"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("awesome"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
     }
 
     // Get Indexes with Names for EIN

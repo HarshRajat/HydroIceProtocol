@@ -6760,7 +6760,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.6",
-  "updatedAt": "2019-05-21T20:40:34.605Z",
+  "updatedAt": "2019-06-14T08:17:01.349Z",
   "devdoc": {
     "methods": {
       "isOwner()": {
