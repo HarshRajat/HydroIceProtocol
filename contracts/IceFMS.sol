@@ -1,5 +1,10 @@
 pragma solidity ^0.5.1;
 
+import "./SafeMath.sol";
+
+import "./IceGlobal.sol";
+import "./IceSort.sol";
+
 import "./IceFMSAdv.sol";
 
 /**
@@ -70,7 +75,7 @@ library IceFMS {
     /* ***************
     * DEFINE FUNCTIONS
     *************** */
-     // 1. FILE FUNCTIONS
+    // 1. FILE FUNCTIONS
     /**
      * @dev Function to get file info of an EIN
      * @param self is the pointer to the File Struct (IceFMS Library) passed
@@ -82,9 +87,9 @@ library IceFMS {
         return (
             self.protocol,                       // Protocol
             self.protocolMeta,                   // Protocol meta
-            IceUtil.bytes32ToString(self.name),  // File Name for byte32 to string
-            IceUtil.bytes32ToString(self.hash1), // First hash of the file
-            IceUtil.bytes32ToString(self.hash2), // Second hash of the file
+            bytes32ToString(self.name),         // File Name for byte32 to string
+            bytes32ToString(self.hash1),        // First hash of the file
+            bytes32ToString(self.hash2),        // Second hash of the file
             
             self.encrypted                      // Whether the file is encrypted or not
         );
@@ -160,8 +165,16 @@ library IceFMS {
      * @dev Function to write file to a user FMS
      * @param self is the pointer to the File Struct (IceFMS Library) passed
      */
-    function writeFile(File storage self, Group storage group, uint _groupIndex, 
-    mapping(uint => IceSort.SortOrder) storage fileOrder, uint fileCount, uint _nextIndex, uint _transferEin, string calldata _encryptedHash) 
+    function writeFile(
+        File storage self, 
+        Group storage group, 
+        uint _groupIndex, 
+        mapping(uint => IceSort.SortOrder) storage fileOrder, 
+        uint fileCount, 
+        uint _nextIndex, 
+        uint _transferEin, 
+        string calldata _encryptedHash
+    ) 
     external 
     returns (uint newFileCount) {
         // Add file to group 
@@ -245,13 +258,13 @@ library IceFMS {
         // uint currentIndex = _fileCount[_ein];
         
         // Delete File Shares and Global Mapping
-        //_deleteFileInternalLogic(self[_ein].rec.getGlobalItemViaRecord(_globalItems), _ein, _shares, _shareOrder, _shareCount, _usermeta);
+        _deleteFileInternalLogic(self[_ein].rec.getGlobalItemViaRecord(_globalItems), _ein, _shares, _shareOrder, _shareCount, _usermeta);
         
         // Delete File Actual
         _deleteFileActual(self, _ein, _fileIndex, _fileOrder, _fileCount, _group);
         
         // Delete the latest file now
-        //delete (_fileCount[_ein]);
+        delete (_fileCount[_ein]);
 
         // Reset Files & Group Atomicity
         _usermeta[_ein].lockFiles = false;
@@ -390,7 +403,7 @@ library IceFMS {
         );
     }
     
-    // 7. USER META FUNCTIONS
+    // 4. USER META FUNCTIONS
     /**
      * @dev Function to check that a file exists for the current EIN
      */
@@ -400,5 +413,40 @@ library IceFMS {
             (_fileIndex <= _fileCount),
             "File not Found"
         );
+    }
+    
+    // 5. STRING / BYTE CONVERSION
+    function stringToBytes32(string memory source) 
+    public pure 
+    returns (bytes32 result) {
+        bytes memory tempEmptyStringTest = bytes(source);
+        string memory tempSource = source;
+        
+        if (tempEmptyStringTest.length == 0) {
+            return 0x0;
+        }
+    
+        assembly {
+            result := mload(add(tempSource, 32))
+        }
+    }
+    
+    function bytes32ToString(bytes32 x) 
+    public pure 
+    returns (string memory) {
+        bytes memory bytesString = new bytes(32);
+        uint charCount = 0;
+        for (uint j = 0; j < 32; j++) {
+            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            if (char != 0) {
+                bytesString[charCount] = char;
+                charCount++;
+            }
+        }
+        bytes memory bytesStringTrimmed = new bytes(charCount);
+        for (uint j = 0; j < charCount; j++) {
+            bytesStringTrimmed[j] = bytesString[j];
+        }
+        return string(bytesStringTrimmed);
     }
 }

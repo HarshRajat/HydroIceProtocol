@@ -85,7 +85,7 @@ library IceGlobal {
     /**
      * @dev Function to get global item via the record struct
      */
-    function getGlobalItemViaRecord(GlobalRecord storage self, mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems)
+    function getGlobalItemViaRecord(GlobalRecord storage self, mapping (uint => mapping(uint => Association)) storage _globalItems)
     internal view
     returns (Association storage association) {
         association = _globalItems[self.i1][self.i2];
@@ -227,6 +227,20 @@ library IceGlobal {
             self.stampedToCount = newCount;
         }
     }
+
+    /**
+     * @dev Private Function to check that only unique EINs can have access
+     * @param _ein1 The First EIN
+     * @param _ein2 The Second EIN
+     */
+    function condUniqueEIN(uint _ein1, uint _ein2)
+    external pure {
+        require (
+            (_ein1 != _ein2),
+            "Same EINs"
+        );
+    }
+    
     
     /**
      * @dev Function to check that only owner of EIN can access this

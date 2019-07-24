@@ -3,6 +3,13 @@ pragma solidity ^0.5.1;
 import "./interfaces/SnowflakeInterface.sol";
 import "./interfaces/IdentityRegistryInterface.sol";
 
+import "./SafeMath.sol";
+
+import "./IceGlobal.sol";
+import "./IceSort.sol";
+
+import "./IceFMSAdv.sol";
+
 import "./IceFMS.sol";
 
 /**
@@ -205,7 +212,9 @@ contract Ice {
     * DEFINE CONSTRUCTORS AND RELATED FUNCTIONS
     *************** */
     // CONSTRUCTOR / FUNCTIONS
-    address snowflakeAddress = 0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; //0xB536a9b68e7c1D2Fd6b9851Af2F955099B3A59a9; // For local use
+    address snowflakeAddress = 0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For local use
+    //address snowflakeAddress = 0xB0D5a36733886a4c5597849a05B315626aF5222E; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For rinkeby
+    
     constructor (/*address snowflakeAddress*/) public {
         snowflake = SnowflakeInterface(snowflakeAddress);
         identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
@@ -325,7 +334,7 @@ contract Ice {
      * @param _fileIndex is index of the file
      */
     function getFileInfo(uint _ein, uint _fileIndex)
-    external view
+    external view 
     returns (uint8 protocol, bytes memory protocolMeta, string memory name, string memory hash1, string memory hash2, bool encrypted) {
         // Logic
         (protocol, protocolMeta, name, hash1, hash2, encrypted) = files[_ein][_fileIndex].getFileInfo();
@@ -367,17 +376,17 @@ contract Ice {
         recipientEIN = files[_ein][_fileIndex].getFileTransferOwners(_transferIndex);
     }
 
-    /**
-     * @dev Function to add File
-     * @param _protocol is the protocol used
-     * @param _protocolMeta is the metadata used by the protocol if any
-     * @param _name is the name of the file
-     * @param _hash1 is the first split hash of the stored file
-     * @param _hash2 is the second split hash of the stored file
-     * @param _encrypted defines if the file is encrypted or not
-     * @param _encryptedHash defines the encrypted public key password for the sender address
-     * @param _groupIndex defines the index of the group of file
-     */
+    // /**
+    //  * @dev Function to add File
+    //  * @param _protocol is the protocol used
+    //  * @param _protocolMeta is the metadata used by the protocol if any
+    //  * @param _name is the name of the file
+    //  * @param _hash1 is the first split hash of the stored file
+    //  * @param _hash2 is the second split hash of the stored file
+    //  * @param _encrypted defines if the file is encrypted or not
+    //  * @param _encryptedHash defines the encrypted public key password for the sender address
+    //  * @param _groupIndex defines the index of the group of file
+    //  */
     function addFile(uint8 _op, uint8 _protocol, bytes memory _protocolMeta, 
     bytes32 _name, bytes32 _hash1, bytes32 _hash2, 
     bool _encrypted, string memory _encryptedHash, uint _groupIndex)
@@ -413,29 +422,47 @@ contract Ice {
         }
         
         // Finally create the file it to User (EIN)
-        files[ein][nextIndex].createFileObject(IceGlobal.GlobalRecord(i1, i2), _protocol, _protocolMeta, _name, _hash1, _hash2, _encrypted, _groupIndex, groups[ein][_groupIndex].groupFilesCount);
+        files[ein][nextIndex].createFileObject(
+            IceGlobal.GlobalRecord(i1, i2), 
+            _protocol, 
+            _protocolMeta, 
+            _name, 
+            _hash1, 
+            _hash2, 
+            _encrypted, 
+            _groupIndex, 
+            groups[ein][_groupIndex].groupFilesCount
+        );
         
         // OP 0 - Normal | 1 - Avatar
         if (_op == 0) {
-            fileCount[ein] = files[ein][nextIndex].writeFile(groups[ein][_groupIndex], _groupIndex, fileOrder[ein], fileCount[ein], nextIndex, ein, _encryptedHash);
+            fileCount[ein] = files[ein][nextIndex].writeFile(
+                groups[ein][_groupIndex], 
+                _groupIndex, 
+                fileOrder[ein], 
+                fileCount[ein], 
+                nextIndex, 
+                ein, 
+                _encryptedHash
+            );
         }
         else if (_op == 1) {
             usermeta[ein].hasAvatar = true;
         }
         
         // Trigger Event
-        emit FileCreated(ein, (fileCount[ein] + 1), IceUtil.bytes32ToString(_name));
+        emit FileCreated(ein, (fileCount[ein] + 1), IceFMS.bytes32ToString(_name));
 
         // Reset Files & Group Atomicity
         usermeta[ein].lockFiles = false;
         usermeta[ein].lockGroups = false;
     }
 
-    /**
-     * @dev Function to change File Name
-     * @param _fileIndex is the index where file is stored
-     * @param _name is the name of stored file
-     */
+    // /**
+    //  * @dev Function to change File Name
+    //  * @param _fileIndex is the index where file is stored
+    //  * @param _name is the name of stored file
+    //  */
     function changeFileName(uint _fileIndex, bytes32 _name)
     external {
         // Get user EIN
@@ -445,14 +472,14 @@ contract Ice {
         files[ein][_fileIndex].name = _name;
 
         // Trigger Event
-        emit FileRenamed(ein, _fileIndex, IceUtil.bytes32ToString(_name));
+        emit FileRenamed(ein, _fileIndex, IceFMS.bytes32ToString(_name));
     }
 
-    /**
-     * @dev Function to move file to another group
-     * @param _fileIndex is the index where file is stored
-     * @param _newGroupIndex is the index of the new group where file has to be moved
-     */
+    // /**
+    //  * @dev Function to move file to another group
+    //  * @param _fileIndex is the index where file is stored
+    //  * @param _newGroupIndex is the index of the new group where file has to be moved
+    //  */
     function moveFileToGroup(uint _fileIndex, uint _newGroupIndex)
     external {
         // Get user EIN
@@ -465,10 +492,10 @@ contract Ice {
         emit FileMoved(ein, _fileIndex, _newGroupIndex, GFIndex);
     }
 
-    /**
-     * @dev Function to delete file of the owner
-     * @param _fileIndex is the index where file is stored
-     */
+    // /**
+    //  * @dev Function to delete file of the owner
+    //  * @param _fileIndex is the index where file is stored
+    //  */
     function deleteFile(uint _fileIndex)
     external {
         // Get user EIN
@@ -478,11 +505,11 @@ contract Ice {
         _deleteFileAnyOwner(ein, _fileIndex);
     }
 
-    /**
-     * @dev Function to delete file of any EIN
-     * @param _ein is the owner EIN
-     * @param _fileIndex is the index where file is stored
-     */
+    // /**
+    //  * @dev Function to delete file of any EIN
+    //  * @param _ein is the owner EIN
+    //  * @param _fileIndex is the index where file is stored
+    //  */
     function _deleteFileAnyOwner(uint _ein, uint _fileIndex)
     internal {
         // Logic
@@ -733,12 +760,12 @@ contract Ice {
     
     // 5. STAMPING FUNCTIONS
     
-    // 6. TRANSFER FILE FUNCTIONS
-    /**
-     * @dev Function to intiate file transfer to another EIN(user)
-     * @param _fileIndex is the index of file for the original user's EIN
-     * @param _transfereeEIN is the recipient user's EIN
-     */
+    // // 6. TRANSFER FILE FUNCTIONS
+    // /**
+    //  * @dev Function to intiate file transfer to another EIN(user)
+    //  * @param _fileIndex is the index of file for the original user's EIN
+    //  * @param _transfereeEIN is the recipient user's EIN
+    //  */
     // function initiateFileTransfer(uint _fileIndex, uint _transfereeEIN)
     // external {
     //     // Get user EIN
@@ -746,9 +773,9 @@ contract Ice {
 
     //     // Check Restrictions
     //     _isValidEIN(_transfereeEIN); // Check Valid EIN
-    //     _isUnqEIN(ein, _transfereeEIN); // Check EINs and Unique
-    //     _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the File is not stamped
-    //     _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].rec); // Check if the Group is not stamped
+    //     IceGlobal.condUniqueEIN(ein, _transfereeEIN); // Check EINs and Unique
+    //     // Do later _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the File is not stamped
+    //     // Do later _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].rec); // Check if the Group is not stamped
     //     blacklist[_transfereeEIN].condNotInList(ein); // Check if The transfee hasn't blacklisted the file owner
     //     usermeta[ein].condTransfersOpFree(); // Check if Transfers are not locked for current user
     //     usermeta[_transfereeEIN].condTransfersOpFree(); // Check if the transfers are not locked for recipient user
@@ -870,18 +897,16 @@ contract Ice {
     //     files[_transfereeEIN][_fileIndex].transferIndex = nextTransferIndex;
 
     //     // Get Item Association Index
-    //     uint index1;
-    //     uint index2;
-    //     (index1, index2) = files[_transfererEIN][_fileIndex].rec.getGlobalItemViaRecord();
+    //     IceGlobal.Association storage globalItem = files[_transfererEIN][_fileIndex].rec.getGlobalItemViaRecord(globalItems);
 
     //     // Check Item is file
     //     require (
-    //         (globalItems[index1][index2].isFile == true),
+    //         (globalItem.isFile == true),
     //         "Non-Transferable"
     //     );
 
     //     // Create New Transfer
-    //     transfers[_transfereeEIN][nextTransferIndex] = globalItems[index1][index2];
+    //     transfers[_transfereeEIN][nextTransferIndex] = globalItem;
 
     //     // Update sort order and index
     //     transferIndex[_transfereeEIN] = transferOrder[_transfererEIN].addToSortOrder(currentTransferIndex, 0);
@@ -938,13 +963,11 @@ contract Ice {
     //     groups[_transfereeEIN][_groupIndex].addFileToGroup(_groupIndex, fileCount[_transfereeEIN]);
 
     //     // Get global association
-    //     uint index1;
-    //     uint index2;
-    //     (index1, index2) = files[_transfereeEIN][_fileIndex].rec.getGlobalItemViaRecord();
+    //     IceGlobal.Association storage globalItem = files[_transfereeEIN][_fileIndex].rec.getGlobalItemViaRecord(globalItems);
 
     //     // Update global file association
-    //     globalItems[index1][index2].ownerInfo.EIN = _transfereeEIN;
-    //     globalItems[index1][index2].ownerInfo.index = nextTransfereeIndex;
+    //     globalItem.ownerInfo.EIN = _transfereeEIN;
+    //     globalItem.ownerInfo.index = nextTransfereeIndex;
     // }
 
     // /**
@@ -975,62 +998,62 @@ contract Ice {
     //     }
     // }
 
-    // // 7. WHITELIST / BLACKLIST FUNCTIONS
+    // 7. WHITELIST / BLACKLIST FUNCTIONS
     /**
      * @dev Add a non-owner user to whitelist
      * @param _nonOwnerEIN is the ein of the recipient
      */
-    function addToWhitelist(uint _nonOwnerEIN)
-    external {
-        // Logic
-        uint ein = identityRegistry.getEIN(msg.sender);
-        whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
+    // function addToWhitelist(uint _nonOwnerEIN)
+    // external {
+    //     // Logic
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
 
-        // Trigger Event
-        emit AddedToWhitelist(ein, _nonOwnerEIN);
-    }
+    //     // Trigger Event
+    //     emit AddedToWhitelist(ein, _nonOwnerEIN);
+    // }
 
-    /**
-     * @dev Remove a non-owner user from whitelist
-     * @param _nonOwnerEIN is the ein of the recipient
-     */
-    function removeFromWhitelist(uint _nonOwnerEIN)
-    external {
-        // Logic
-        uint ein = identityRegistry.getEIN(msg.sender);
-        whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
+    // /**
+    //  * @dev Remove a non-owner user from whitelist
+    //  * @param _nonOwnerEIN is the ein of the recipient
+    //  */
+    // function removeFromWhitelist(uint _nonOwnerEIN)
+    // external {
+    //     // Logic
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
 
-        // Trigger Event
-        emit RemovedFromWhitelist(ein, _nonOwnerEIN);
-    }
+    //     // Trigger Event
+    //     emit RemovedFromWhitelist(ein, _nonOwnerEIN);
+    // }
 
-    /**
-     * @dev Remove a non-owner user to blacklist
-     * @param _nonOwnerEIN is the ein of the recipient
-     */
-    function addToBlacklist(uint _nonOwnerEIN)
-    external {
-        // Logic
-        uint ein = identityRegistry.getEIN(msg.sender);
-        blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
+    // /**
+    //  * @dev Remove a non-owner user to blacklist
+    //  * @param _nonOwnerEIN is the ein of the recipient
+    //  */
+    // function addToBlacklist(uint _nonOwnerEIN)
+    // external {
+    //     // Logic
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
 
-        // Trigger Event
-        emit AddedToBlacklist(ein, _nonOwnerEIN);
-    }
+    //     // Trigger Event
+    //     emit AddedToBlacklist(ein, _nonOwnerEIN);
+    // }
 
-    /**
-     * @dev Remove a non-owner user from blacklist
-     * @param _nonOwnerEIN is the ein of the recipient
-     */
-    function removeFromBlacklist(uint _nonOwnerEIN)
-    external {
-        // Logic
-        uint ein = identityRegistry.getEIN(msg.sender);
-        blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
+    // /**
+    //  * @dev Remove a non-owner user from blacklist
+    //  * @param _nonOwnerEIN is the ein of the recipient
+    //  */
+    // function removeFromBlacklist(uint _nonOwnerEIN)
+    // external {
+    //     // Logic
+    //     uint ein = identityRegistry.getEIN(msg.sender);
+    //     blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
 
-        // Trigger Event
-        emit RemovedFromBlacklist(ein, _nonOwnerEIN);
-    }
+    //     // Trigger Event
+    //     emit RemovedFromBlacklist(ein, _nonOwnerEIN);
+    // }
 
     // *. GENERAL CONTRACT HELPERS
     /** @dev Private Function to append two strings together
@@ -1046,42 +1069,6 @@ contract Ice {
     /* ***************
     * DEFINE MODIFIERS AS INTERNAL VIEW FUNTIONS
     *************** */
-    /**
-     * @dev Private Function to check that only owner can have access
-     * @param _ein The EIN of the file Owner
-     */
-    function _isOwner(uint _ein)
-    internal view {
-        require (
-            (identityRegistry.getEIN(msg.sender) == _ein),
-            "Only Owner"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that only non-owner can have access
-     * @param _ein The EIN of the file Owner
-     */
-    function _isNonOwner(uint _ein)
-    internal view {
-        require (
-            (identityRegistry.getEIN(msg.sender) != _ein),
-            "Only Non-Owner"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that only valid EINs can have access
-     * @param _ein The EIN of the Passer
-     */
-    function _isValidEIN(uint _ein)
-    internal view {
-        require (
-            (identityRegistry.identityExists(_ein) == true),
-            "EIN not Found"
-        );
-    }
-
     /**
      * @dev Private Function to check that only unique EINs can have access
      * @param _ein1 The First EIN
@@ -1137,19 +1124,19 @@ contract Ice {
     // To Build Groups & File System for users
     function debugBuildFS()
     public {
-        // createGroup("A.Images");
-        // createGroup("B.Movies");
-        // createGroup("C.Crypto");
-        // createGroup("D.Others");
-        // createGroup("E.AdobeContract");
+        createGroup("A.Images");
+        createGroup("B.Movies");
+        createGroup("C.Crypto");
+        createGroup("D.Others");
+        createGroup("E.AdobeContract");
 
         // // Create Files
         // // addFile(_op, _protocol, _protocolMeta, _name,  _hash1, _hash2, _encrypted, _encryptedHash, _groupIndex)
-        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("index"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("family"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("myportrait"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("cutepic"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
-        // addFile(0, 1, bytes("0x00"), IceUtil.stringToBytes32("awesome"), IceUtil.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceUtil.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("index"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("family"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("myportrait"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("cutepic"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
+        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("awesome"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7"), false, "", 0);
     }
 
     // Get Indexes with Names for EIN
@@ -1179,7 +1166,7 @@ contract Ice {
 
             // Get Name
             if (_for == 1 || _for == 2) {
-                name = IceUtil.bytes32ToString(files[_ein][_indexes[i]].name);
+                name = IceFMS.bytes32ToString(files[_ein][_indexes[i]].name);
             }
             else if (_for == 3) {
                 name = groups[_ein][_indexes[i]].name;
@@ -1189,7 +1176,7 @@ contract Ice {
                 IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
                 
                 if (globalItems[record.i1][record.i2].isFile == true) {
-                    name = IceUtil.bytes32ToString(files[owner.EIN][owner.index].name);
+                    name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].name);
                 } 
                 else {
                     name = groups[owner.EIN][owner.index].name;

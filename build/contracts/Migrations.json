@@ -13,8 +13,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x445df0ac"
+      "type": "function"
     },
     {
       "constant": true,
@@ -28,8 +27,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x8da5cb5b"
+      "type": "function"
     },
     {
       "inputs": [],
@@ -49,8 +47,7 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0xfdacd576"
+      "type": "function"
     },
     {
       "constant": false,
@@ -64,8 +61,7 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0x0900f010"
+      "type": "function"
     }
   ],
   "metadata": "{\"compiler\":{\"version\":\"0.5.1+commit.c8a2cb62\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"new_address\",\"type\":\"address\"}],\"name\":\"upgrade\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"last_completed_migration\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"completed\",\"type\":\"uint256\"}],\"name\":\"setCompleted\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/MAMPWeb/HydroIce/HydroIceContract/contracts/Migrations.sol\":\"Migrations\"},\"evmVersion\":\"byzantium\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/MAMPWeb/HydroIce/HydroIceContract/contracts/Migrations.sol\":{\"keccak256\":\"0x209a69f78f459497592842a20adcd7af3cbb559aa6508092c361e0a0aa87e782\",\"urls\":[\"bzzr://d6c47638097f0c60340279c11560218bca22f3d043c56e823248d5e9a5ee8289\"]}},\"version\":1}",
@@ -1372,6 +1368,12 @@
     "version": "0.5.1+commit.c8a2cb62.Emscripten.clang"
   },
   "networks": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x520794F12B56378b80910413EF50ED541D19397f",
+      "transactionHash": "0x349271af0a8ea5813a9e462f3339e5c3a66bf685c279b3073a8894f81056347e"
+    },
     "5777": {
       "events": {},
       "links": {},
@@ -1379,8 +1381,8 @@
       "transactionHash": "0xbb8992ac27807a174656d90d6c772ca04a9ea4003cd9e32a47f6e8970a4bd8e1"
     }
   },
-  "schemaVersion": "3.0.6",
-  "updatedAt": "2019-06-14T08:17:01.303Z",
+  "schemaVersion": "3.0.11",
+  "updatedAt": "2019-07-24T00:12:04.396Z",
   "devdoc": {
     "methods": {}
   },

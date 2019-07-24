@@ -35,7 +35,10 @@ library IceSort {
      * @return pointerID is the pointer index which the sort order is pointing to
      * @return active shows whether that particular sort order mapping is active or not
      */
-    function getOrder(mapping(uint => SortOrder) storage self, uint _seedPointer)
+    function getOrder(
+        mapping(uint => SortOrder) storage self, 
+        uint _seedPointer
+    )
     public view
     returns (uint prev, uint next, uint pointerID, bool active) {
         prev = self[_seedPointer].prev;
@@ -50,7 +53,11 @@ library IceSort {
      * @param _pointerID is the ID to which it should point to, pass 0 to calculate on existing logic flow
      * @return nextIndex is the count of the specific sort order mapping
      */
-    function addToSortOrder(mapping(uint => SortOrder) storage self, uint _currentIndex, uint _pointerID)
+    function addToSortOrder(
+        mapping(uint => SortOrder) storage self, 
+        uint _currentIndex, 
+        uint _pointerID
+    )
     external
     returns (uint nextIndex) {
         // Next Index is always +1
@@ -93,7 +100,12 @@ library IceSort {
      * @param _pointerID is the ID to which it should point to, pass 0 to calculate on existing logic flow
      * @return prevIndex is the count of the specific sort order mapping
      */
-    function stichSortOrder(mapping(uint => SortOrder) storage self, uint _remappedIndex, uint _maxIndex, uint _pointerID)
+    function stichSortOrder(
+        mapping(uint => SortOrder) storage self, 
+        uint _remappedIndex, 
+        uint _maxIndex, 
+        uint _pointerID
+    )
     external
     returns (uint prevIndex){
         // Stich Order
@@ -133,7 +145,12 @@ library IceSort {
      * @param _limit is the number of files requested | Maximum of 20 can be retrieved
      * @param _asc is the order, i.e. Ascending or Descending
      */
-    function getIndexes(mapping(uint => IceSort.SortOrder) storage self, uint _seedPointer, uint16 _limit, bool _asc)
+    function getIndexes(
+        mapping(uint => SortOrder) storage self, 
+        uint _seedPointer, 
+        uint16 _limit, 
+        bool _asc
+    )
     external view
     returns (uint[20] memory sortedIndexes) {
         uint next;
@@ -200,7 +217,10 @@ library IceSort {
      * @param self is the specific Sort Order struct
      * @param _groupOrderIndex The index of the group order
      */
-    function condValidSortOrder(SortOrder storage self, uint _groupOrderIndex)
+    function condValidSortOrder(
+        SortOrder storage self, 
+        uint _groupOrderIndex
+    )
     public view {
         require (
             (_groupOrderIndex == 0 || self.active == true),

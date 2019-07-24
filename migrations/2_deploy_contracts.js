@@ -1,4 +1,4 @@
-var IceUtil = artifacts.require("IceUtil");
+// var IceUtil = artifacts.require("IceUtil");
 
 var IceGlobal = artifacts.require("IceGlobal");
 var IceSort = artifacts.require("IceSort");
@@ -23,10 +23,10 @@ async function doDeploy(deployer, network) {
     await deployer.link(IceSort, IceFMSAdv);
 	await deployer.link(IceSort, Ice);
 
-    await deployer.deploy(IceUtil);
-    await deployer.link(IceUtil, IceFMS);
-    await deployer.link(IceUtil, IceFMSAdv);
-    await deployer.link(IceUtil, Ice);
+    // await deployer.deploy(IceUtil);
+    // await deployer.link(IceUtil, IceFMS);
+    // await deployer.link(IceUtil, IceFMSAdv);
+    // await deployer.link(IceUtil, Ice);
 
     await deployer.deploy(IceFMSAdv);
 	await deployer.link(IceFMSAdv, IceFMS);
@@ -35,7 +35,8 @@ async function doDeploy(deployer, network) {
 	await deployer.deploy(IceFMS);
     await deployer.link(IceFMS, Ice);
 
-    await deployer.deploy(Ice);
+    await deployer.deploy(Ice)
+        .then(() => console.log(Ice.address))
 }
 
 

@@ -1,8 +1,9 @@
 pragma solidity ^0.5.1;
 
+import "./SafeMath.sol";
+
 import "./IceGlobal.sol";
 import "./IceSort.sol";
-import "./IceUtil.sol";
 
 /**
  * @title Ice Protocol Files / Groups / Users Meta Management System Libray
