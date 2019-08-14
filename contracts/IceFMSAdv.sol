@@ -81,7 +81,7 @@ library IceFMSAdv {
             self[nextIndex] = _rec;
 
             // Add to share order & global mapping
-            _shareCount[_toEIN] = _shareOrder.addToSortOrder(curIndex, 0);
+            _shareCount[_toEIN] = _shareOrder.addToSortOrder(_shareOrder[0].prev, _shareCount[_toEIN], 0);
             
             IceGlobal.Association storage globalItem = self[nextIndex].getGlobalItemViaRecord(_globalItems);
             globalItem.addToGlobalItemsMapping(uint8(IceGlobal.AsscProp.sharedTo), _toEIN, nextIndex);
@@ -139,7 +139,7 @@ library IceFMSAdv {
         // no need to require as share can be multiple
         // and thus should not hamper other sharings removals
         if (curIndex > 0) {
-            uint8 mappedIndex = _globalItem.sharedTo.findGlobalItemsMapping(_globalItem.sharedToCount, _fromEIN);
+            uint8 mappedIndex = _globalItem.sharedTo.findItemOwnerInGlobalItems(_globalItem.sharedToCount, _fromEIN);
             
             // Only proceed if mapping if found 
             if (mappedIndex > 0) {
@@ -176,7 +176,7 @@ library IceFMSAdv {
     
             // Logic
             // get and pass all EINs, remove share takes care of locking
-            uint[32] memory fromEINs = _globalItem.sharedTo.getEINsForGlobalItemsMapping(_globalItem.sharedToCount);
+            uint[32] memory fromEINs = _globalItem.sharedTo.getHistoralEINsForGlobalItems(_globalItem.sharedToCount);
             removeShareFromEINs(self, _globalItem, _shareOrder, _shareCount, _usermeta, _ein, fromEINs);
         }
     }

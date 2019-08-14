@@ -327,7 +327,7 @@ contract Ice {
     returns (
         IceGlobal.GlobalRecord memory rec
     ){
-        // Increment global Item, this starts from 0, 0
+        // Increment global Item (0, 0 is always reserved | Is User Avatar)
         uint i1 = globalIndex1;
         uint i2 = globalIndex2;
         
@@ -455,7 +455,7 @@ contract Ice {
     public {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
-        
+
         // Check constraints
         _groupIndex.condValidItem(groupCount[ein]);
         usermeta[ein].condFilesOpFree();
@@ -534,10 +534,7 @@ contract Ice {
     //  * @param _fileIndex is the index where file is stored
     //  * @param _name is the name of stored file
     //  */
-    function changeFileName(
-        uint _fileIndex, 
-        bytes32 _name
-    )
+    function changeFileName(uint _fileIndex, bytes32 _name)
     external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
@@ -554,19 +551,16 @@ contract Ice {
     //  * @param _fileIndex is the index where file is stored
     //  * @param _newGroupIndex is the index of the new group where file has to be moved
     //  */
-    function moveFileToGroup(
-        uint _fileIndex, 
-        uint _newGroupIndex
-    )
+    function moveFileToGroup(uint _fileIndex, uint _newGroupIndex)
     external {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
         // Logic
-        uint groupFileIndex = files[ein][_fileIndex].moveFileToGroup(_fileIndex, groups[ein], groupOrder[ein], _newGroupIndex, globalItems, usermeta[ein]);
+        uint GFIndex = files[ein][_fileIndex].moveFileToGroup(groups[ein], groupOrder[ein], _newGroupIndex, globalItems, usermeta[ein]);
 
         // Trigger Event
-        emit FileMoved(ein, _fileIndex, _newGroupIndex, groupFileIndex);
+        emit FileMoved(ein, _fileIndex, _newGroupIndex, GFIndex);
     }
 
     // /**

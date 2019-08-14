@@ -1,0 +1,20 @@
+1. Delete Bug - Solved
+Steps to Reproduce
+- Add Files
+- Delete Last File
+- Add Files again
+
+The last file of the queue is overwritten
+
+2. Moving File to a new group
+Steps 
+- Try to move file, it fails
+
+ToDos
+----
+1. Limit Stamping to be between two parties
+2. Put Avatar related functions for user at index 0 of files
+
+Functions to Check
+---
+getGlobalItemsMapping

@@ -68,9 +68,28 @@ library IceGlobal {
     * DEFINE FUNCTIONS
     *************** */
     // 1. GLOBAL ITEMS
+    /**
+     * @dev Function to get global items from the entire File Management System
+     * @param self is the Association Struct (IceGlobal) which keeps tracks of item properties
+     * @return ownerEIN is the EIN of the owner
+     * @return itemRecord is the item index mapped for the specific user
+     * @return isFile indicates if the item is a File or a Group
+     * @return isHidden indicates if the item has been hidden
+     * @return deleted indicates if the item has been deleted
+     * @return sharedToCount is sharing count of that item
+     * @return stampingReqsCount is the number of stamping request for the file
+     */
     function getGlobalItems(Association storage self)
     external view
-    returns (uint ownerEIN, uint itemRecord, bool isFile, bool isHidden, bool deleted, uint sharedToCount, uint stampingReqsCount) {
+    returns (
+        uint ownerEIN, 
+        uint itemRecord, 
+        bool isFile, 
+        bool isHidden, 
+        bool deleted, 
+        uint sharedToCount, 
+        uint stampingReqsCount
+    ) {
         ownerEIN = self.ownerInfo.EIN;
         itemRecord = self.ownerInfo.index;
 
@@ -83,32 +102,57 @@ library IceGlobal {
     }
     
     /**
-     * @dev Function to get global item via the record struct
+     * @dev Function to get global item via the Association Struct (IceGlobal library)
+     * @param self is the GlobalRecord Struct (IceGlobal library) which contains the indexes used for storing an item
+     * @param _globalItems is the entire array of global items
+     * @return association is the Association Struct which contains properties of the specific item in question
      */
-    function getGlobalItemViaRecord(GlobalRecord storage self, mapping (uint => mapping(uint => Association)) storage _globalItems)
+    function getGlobalItemViaRecord(
+        GlobalRecord storage self, 
+        mapping (uint => mapping(uint => Association)) storage _globalItems
+    )
     internal view
     returns (Association storage association) {
         association = _globalItems[self.i1][self.i2];
     }
     
     /**
-     * @dev Function to get global indexes via the record struct
+     * @dev Function to get global indexes via the Struct GlobalRecord (IceGlobal library)
+     * @param self is the GlobalRecord Struct (IceGlobal library) which contains the indexes mapping of the item
+     * @return i1 is the first index mapping
+     * @return i2 is the second index mapping
      */
     function getGlobalIndexesViaRecord(GlobalRecord storage self)
     external view
-    returns (uint i1, uint i2) {
+    returns (
+        uint i1, 
+        uint i2
+    ) {
         i1 = self.i1;
         i2 = self.i2;
     }
 
     /**
      * @dev Function to add item to global items
-     * @param _ownerEIN is the EIN of global items
+     * @param self is the entire mapping of globalItems
+     * @param _index1 is the first index of the item in relation to globalItems variable
+     * @param _index2 is the second index of the item in relation to globalItems variable
+     * @param _ownerEIN is the EIN of the user
      * @param _itemIndex is the index at which the item exists on the user mapping
-     * @param _isFile indicates if the item is file or group
-     * @param _isHidden indicates if the item has is hiddden or not
+     * @param _isFile indicates if the item is a File or a Group
+     * @param _isHidden indicates if the item has been hidden
+     * @param _isStamped indicates if the item has been stamped or not
      */
-    function addItemToGlobalItems(mapping (uint => mapping(uint => Association)) storage self, uint _index1, uint _index2, uint _ownerEIN, uint _itemIndex, bool _isFile, bool _isHidden, bool _isStamped)
+    function addItemToGlobalItems(
+        mapping (uint => mapping(uint => Association)) storage self, 
+        uint _index1, 
+        uint _index2, 
+        uint _ownerEIN, 
+        uint _itemIndex, 
+        bool _isFile, 
+        bool _isHidden, 
+        bool _isStamped
+    )
     external {
         // Add item to global item, no stiching it
         self[_index1][_index2] = Association (
@@ -129,30 +173,44 @@ library IceGlobal {
 
     /**
      * @dev Function to delete a global items
+     * @param self is the Association Struct (IceGlobal library) of the item
      */
     function deleteGlobalRecord(Association storage self)
     external {
         self.deleted = true;
     }
     
-    function getEINsForGlobalItemsMapping(mapping (uint8 => ItemOwner) storage self, uint8 _count) 
+    /**
+     * @dev Function to get the transfer history of EINs
+     * @param self is the mapping of ItemOwner to users, useful in keeping a history of transfers
+     * @param _transferCount is the total transfers done for a particular file 
+     * 
+     */
+    function getHistoralEINsForGlobalItems(
+        mapping (uint8 => ItemOwner) storage self, 
+        uint8 _transferCount
+    ) 
     external view 
     returns (uint[32] memory EINs){
         uint8 i = 0;
-        while (_count != 0) {
-            EINs[i] = self[_count].EIN;
+        while (_transferCount != 0) {
+            EINs[i] = self[_transferCount].EIN;
             
-            _count.sub(1);
+            _transferCount.sub(1);
         }
     }
     
     /**
-     * @dev Function to find the relevant mapping index of item mapped in non owner
+     * @dev Function to find the relevant mapping index of item mapped for a given EIN
      * @param _count is the count of relative mapping of global item Association
      * @param _searchForEIN is the non-owner EIN to search
      * @return mappedIndex is the index which is where the relative mapping points to for those items
      */
-    function findGlobalItemsMapping(mapping (uint8 => ItemOwner) storage self, uint8 _count, uint256 _searchForEIN) 
+    function findItemOwnerInGlobalItems(
+        mapping (uint8 => ItemOwner) storage self, 
+        uint8 _count, 
+        uint256 _searchForEIN
+    ) 
     external view 
     returns (uint8 mappedIndex) {
         // Logic
@@ -171,12 +229,19 @@ library IceGlobal {
     }
     
     /**
-     * @dev Private Function to add to global items mapping
-     * @param _ofType is the type of global item properties 
+     * @dev Function to add items to the global items mapping
+     * @param self is the Association Struct (IceGlobal library) which contains item properties
+     * @param _ofType is the associative property type (shared or stamped)
      * @param _toEIN is the non-owner id 
      * @param _itemIndex is the index of the item for the non-owner id
+     * @return newCount is the new count of the associative property
      */
-    function addToGlobalItemsMapping(Association storage self, uint8 _ofType, uint _toEIN, uint _itemIndex)
+    function addToGlobalItemsMapping(
+        Association storage self, 
+        uint8 _ofType, 
+        uint _toEIN, 
+        uint _itemIndex
+    )
     external
     returns (uint8 newCount) {
         // Logic
@@ -208,9 +273,16 @@ library IceGlobal {
 
     /**
      * @dev Private Function to remove from global items mapping
+     * @param self is the Association Struct (IceGlobal library) which contains item properties     
+     * @param _ofType is the associative property type (shared or stamped)
      * @param _mappedIndex is the non-owner mapping of stored item 
+     * @return newCount is the new count of the associative property
      */
-    function removeFromGlobalItemsMapping(Association storage self, uint8 _ofType, uint8 _mappedIndex)
+    function removeFromGlobalItemsMapping(
+        Association storage self, 
+        uint8 _ofType, 
+        uint8 _mappedIndex
+    )
     external
     returns (uint8 newCount) {
         // Logic
@@ -233,7 +305,10 @@ library IceGlobal {
      * @param _ein1 The First EIN
      * @param _ein2 The Second EIN
      */
-    function condUniqueEIN(uint _ein1, uint _ein2)
+    function condUniqueEIN(
+        uint _ein1, 
+        uint _ein2
+    )
     external pure {
         require (
             (_ein1 != _ein2),
@@ -244,9 +319,13 @@ library IceGlobal {
     
     /**
      * @dev Function to check that only owner of EIN can access this
+     * @param self is the Association Struct (IceGlobal library) which contains item properties
      * @param _ein is the EIN of the item owner
      */
-    function condItemOwner(Association storage self, uint _ein)
+    function condItemOwner(
+        Association storage self, 
+        uint _ein
+    )
     public view {
         require (
             (self.ownerInfo.EIN == _ein),
@@ -256,6 +335,7 @@ library IceGlobal {
     
     /**
      * @dev Function to check that a file hasn't been marked for stamping
+     * @param self is the Association Struct (IceGlobal library) which contains item properties
      */
     function condUnstampedItem(Association storage self)
     public view {
@@ -268,86 +348,116 @@ library IceGlobal {
     
     // 2. WHITE / BLACK LIST
     /**
-     * @dev Check if user is in a particular list (blacklist / whitelist)
-     * @param _nonOwnerEIN is the ein of the recipient
+     * @dev Function to check if user is in a particular list (blacklist or whitelist) of the primary user
+     * @param self is the mapping of entire whitelist / blacklist of the primary user
+     * @param _forEIN is the ein of the recipient
      */
-    function isUserInList(mapping(uint => bool) storage self, uint _nonOwnerEIN) 
+    function isUserInList(
+        mapping(uint => bool) storage self, 
+        uint _forEIN
+    ) 
     external view 
     returns (bool) {
-        return self[_nonOwnerEIN];
+        return self[_forEIN];
     }
     
     /**
-     * @dev Add a non-owner user to whitelist
-     * @param _nonOwnerEIN is the ein of the recipient
-     * @param _blacklist is the blacklist associated to that user
+     * @dev Function to add a user who is not the owner of the item to whitelist of the primary user
+     * @param self is the mapping of entire whitelist of the primary user
+     * @param _targetEIN is the ein of the target user
+     * @param _blacklist is the maping entire blacklist of the primary user
      */
-    function addToWhitelist(mapping(uint => bool) storage self, uint _nonOwnerEIN, mapping(uint => bool) storage _blacklist)
+    function addToWhitelist(
+        mapping(uint => bool) storage self, 
+        uint _targetEIN, 
+        mapping(uint => bool) storage _blacklist
+    )
     external {
         // Check Restrictions
-        condNotInList(_blacklist, _nonOwnerEIN);
+        condNotInList(_blacklist, _targetEIN);
 
         // Logic
-        self[_nonOwnerEIN] = true;
+        self[_targetEIN] = true;
     }
 
     /**
-     * @dev Remove a non-owner user from whitelist
-     * @param _nonOwnerEIN is the ein of the recipient
-     * @param _blacklist is the blacklist associated to that user
+     * @dev Function to remove a user who is not the owner of the item to whitelist of the primary user
+     * @param self is the mapping of entire whitelist of the primary user
+     * @param _targetEIN is the ein of the target user
+     * @param _blacklist is the maping entire blacklist of the primary user
      */
-    function removeFromWhitelist(mapping(uint => bool) storage self, uint _nonOwnerEIN, mapping(uint => bool) storage _blacklist)
+    function removeFromWhitelist(
+        mapping(uint => bool) storage self, 
+        uint _targetEIN, 
+        mapping(uint => bool) storage _blacklist
+    )
     external {
         // Check Restrictions
-        condNotInList(_blacklist, _nonOwnerEIN);
+        condNotInList(_blacklist, _targetEIN);
 
         // Logic
-        self[_nonOwnerEIN] = false;
+        self[_targetEIN] = false;
     }
 
     /**
-     * @dev Remove a non-owner user to blacklist
-     * @param _nonOwnerEIN is the ein of the recipient
-     * @param _whitelist is the blacklist associated to that user
+     * @dev Function to add a user who is not the owner of the item to blacklist
+     * @param self is the mapping of entire blacklist of the primary user
+     * @param _targetEIN is the ein of the target user
+     * @param _whitelist is the maping entire whitelist of the primary user
      */
-    function addToBlacklist(mapping(uint => bool) storage self, uint _nonOwnerEIN, mapping(uint => bool) storage _whitelist)
+    function addToBlacklist(
+        mapping(uint => bool) storage self, 
+        uint _targetEIN, 
+        mapping(uint => bool) storage _whitelist
+    )
     external {
         // Check Restrictions
-        condNotInList(_whitelist, _nonOwnerEIN);
+        condNotInList(_whitelist, _targetEIN);
 
         // Logic
-        self[_nonOwnerEIN] = true;
+        self[_targetEIN] = true;
     }
 
     /**
-     * @dev Remove a non-owner user from blacklist
-     * @param _nonOwnerEIN is the ein of the recipient
-     * @param _whitelist is the blacklist associated to that user
+     * @dev Function to remove a user who is not the owner of the item from blacklist
+     * @param self is the mapping of entire blacklist of the primary user
+     * @param _targetEIN is the ein of the target user
+     * @param _whitelist is the mapiing entire whitelist of the primary user
      */
-    function removeFromBlacklist(mapping(uint => bool) storage self, uint _nonOwnerEIN, mapping(uint => bool) storage _whitelist)
+    function removeFromBlacklist(
+        mapping(uint => bool) storage self, 
+        uint _targetEIN, 
+        mapping(uint => bool) storage _whitelist
+    )
     external {
         // Check Restrictions
-        condNotInList(_whitelist, _nonOwnerEIN);
+        condNotInList(_whitelist, _targetEIN);
 
         // Logic
-        self[_nonOwnerEIN] = false;
+        self[_targetEIN] = false;
     }
     
     /**
-     * @dev Function to check if the user is not in a list (blacklist or whitelist) by the specific user
-     * @param _otherEIN is the EIN of the target user
+     * @dev Function to check if the user is not in a list (blacklist or whitelist) of primary user
+     * @param self is the mapping of entire whitelist or blacklist of the primary user
+     * @param _targetEIN is the EIN of the user who is getting checked
      */
-    function condNotInList(mapping(uint => bool) storage self, uint _otherEIN)
+    function condNotInList(
+        mapping(uint => bool) storage self, 
+        uint _targetEIN
+    )
     public view {
         require (
-            (self[_otherEIN] == false),
+            (self[_targetEIN] == false),
             "EIN in blacklist / whitelist"
         );
     }
     
-    // 3. USERMETA
+    // 3. LOCK CONDITIONS FOR FILE MANAGEMENT SYSTEM OF A USER
     /**
      * @dev Function to check that operation of Files is currently locked or not
+     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
+     * @param self is thee 
      */
     function condFilesOpFree(UserMeta storage self)
     public view {
@@ -359,6 +469,7 @@ library IceGlobal {
 
     /**
      * @dev Function to check that operation of Groups is currently locked or not
+     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
      */
     function condGroupsOpFree(UserMeta storage self)
     public view {
@@ -370,6 +481,7 @@ library IceGlobal {
 
     /**
      * @dev Function to check that operation of Sharings is currently locked or not
+     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
      */
     function condSharingsOpFree(UserMeta storage self)
     public view {
@@ -381,6 +493,7 @@ library IceGlobal {
 
     /**
      * @dev Function to check that operation of Transfers is currently locked or not
+     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
      */
     function condTransfersOpFree(UserMeta storage self)
     public view {

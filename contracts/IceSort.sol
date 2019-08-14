@@ -27,8 +27,10 @@ library IceSort {
     /* ***************
     * DEFINE FUNCTIONS
     *************** */
+    // 1. SORTING LIBRARY
     /**
      * @dev Function to facilitate returning of double linked list used
+     * @param self is the relevant mapping of SortOrder Struct (IceSort Library) for Files, Groups, Transfers, etc
      * @param _seedPointer is the pointer (index) of the order mapping
      * @return prev is the previous index in the sort order mapping 
      * @return next is the next index in the sort order mapping
@@ -49,26 +51,29 @@ library IceSort {
 
     /**
      * @dev Function to facilitate adding of double linked list used to preserve order and form cicular linked list
-     * @param _currentIndex is the index which will be maximum
+     * @param self is the relevant mapping of SortOrder Struct (IceSort Library) for Files, Groups, Transfers, etc
+     * @param _currentIndex is the index which is at the last of the queue
+     * @param _maxIndex is the highest index present
      * @param _pointerID is the ID to which it should point to, pass 0 to calculate on existing logic flow
      * @return nextIndex is the count of the specific sort order mapping
      */
     function addToSortOrder(
         mapping(uint => SortOrder) storage self, 
-        uint _currentIndex, 
+        uint _currentIndex,
+        uint _maxIndex,
         uint _pointerID
     )
     external
     returns (uint nextIndex) {
         // Next Index is always +1
-        nextIndex = _currentIndex.add(1);
+        nextIndex = _maxIndex.add(1);
 
         // Assign current order to next pointer
         self[_currentIndex].next = nextIndex;
         self[_currentIndex].active = true;
 
         // Special case of root of sort order
-        if (_currentIndex == 0) {
+        if (_maxIndex == 0) {
             self[0].next = nextIndex;
         }
 
@@ -95,6 +100,7 @@ library IceSort {
 
     /**
      * @dev Function to facilitate stiching of double linked list used to preserve order with delete
+     * @param self is the relevant mapping of SortOrder Struct (IceSort Library) for Files, Groups, Transfers, etc
      * @param _remappedIndex is the index which is swapped to from the latest index
      * @param _maxIndex is the index which will always be maximum
      * @param _pointerID is the ID to which it should point to, pass 0 to calculate on existing logic flow
@@ -140,10 +146,11 @@ library IceSort {
     /**
      * @dev Private Function to return maximum 20 Indexes of Files, Groups, Transfers,
      * etc based on their SortOrder. 0 is always reserved but will point to Root in Group & Avatar in Files
-     * @param self is the relevant sort order of Files, Groups, Transfers, etc
+     * @param self is the relevant mapping of SortOrder Struct (IceSort Library) for Files, Groups, Transfers, etc
      * @param _seedPointer is the pointer (index) of the order mapping
      * @param _limit is the number of files requested | Maximum of 20 can be retrieved
      * @param _asc is the order, i.e. Ascending or Descending
+     * @return sortedIndexes is the indexes returned for Files, Groups, Transfers, etc
      */
     function getIndexes(
         mapping(uint => SortOrder) storage self, 
@@ -214,7 +221,7 @@ library IceSort {
     
     /**
      * @dev Function to check that Group Order is valid
-     * @param self is the specific Sort Order struct
+     * @param self is the specific SortOrder Struct (IceSort Library)
      * @param _groupOrderIndex The index of the group order
      */
     function condValidSortOrder(

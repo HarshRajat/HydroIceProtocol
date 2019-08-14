@@ -20,6 +20,7 @@ library IceFMS {
     using IceGlobal for IceGlobal.Association;
     using IceGlobal for IceGlobal.UserMeta;
     using IceGlobal for mapping (uint8 => IceGlobal.ItemOwner);
+    using IceGlobal for mapping (uint => mapping (uint => IceGlobal.Association));
     
     using IceSort for mapping (uint => IceSort.SortOrder);
     using IceSort for IceSort.SortOrder;
@@ -30,29 +31,40 @@ library IceFMS {
     /* ***************
     * DEFINE STRUCTURES
     *************** */
+    /* To define the multihash function for storing of hash */
+    struct FileMeta {
+        bytes32 name; // to store the name of the file
+        
+        bytes32 hash; // to store the hash of file
+        bytes22 hashExtraInfo; // to store any extra info if required
+        
+        bool encrypted; // whether the file is encrypted
+        bool markedForTransfer; // Mark the file as transferred
+        
+        uint8 protocol; // store protocol of the file stored | 0 is URL, 1 is IPFS
+        uint8 transferCount; // To maintain the transfer count for mapping
+        
+        uint8 hashFunction; // Store the hash of the file for verification | 0x000 for deleted files
+        uint8 hashSize; // Store the length of the digest
+        
+        uint32 timestamp;  // to store the timestamp of the block when file is created
+    }
+    
     /* To define File structure of all stored files */
     struct File {
         // File Meta Data
         IceGlobal.GlobalRecord rec; // store the association in global record
 
         // File Properties
-        uint8 protocol; // store protocol of the file stored | 0 is URL, 1 is IPFS
-        uint8 transferCount; // To maintain the transfer count for mapping
-        
         bytes protocolMeta; // store metadata of the protocol
-        bytes32 name; // the name of the file
-        bytes32 hash1; // Store the hash of the file for verification | 0x000 for deleted files
-        bytes32 hash2; // IPFS hashes are more than 32 bytes
-        uint32 timestamp; // to store the timestamp of the block when file is created
+        FileMeta fileMeta; // store metadata associated with file
 
         // File Properties - Encryption Properties
-        bool encrypted; // whether the file is encrypted
-        bool markedForTransfer; // Mark the file as transferred
-        mapping (address => string) encryptedHash; // Maps Individual address to the stored hash
+        mapping (address => bytes32) encryptedHash; // Maps Individual address to the stored hash
 
         // File Other Properties
-        uint associatedGroupIndex;
-        uint associatedGroupFileIndex;
+        uint associatedGroupIndex; // to store the group index of the group that holds the file
+        uint associatedGroupFileIndex; // to store the mapping of file in the specific group order
         uint transferEIN; // To record EIN of the user to whom trasnfer is inititated
         uint transferIndex; // To record the transfer specific index of the transferee
 
@@ -79,107 +91,187 @@ library IceFMS {
     /**
      * @dev Function to get file info of an EIN
      * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @return protocol returns the protocol used for storage of the file (0 - URL, 1 - IPFS)
+     * @return protocolMeta returns the meta info associated with a protocol
+     * @return fileName is the name of the file
+     * @return fileHash is the Hash of the file
+     * @return hashExtraInfo is extra info stored as part of the protocol used 
+     * @return hashFunction is the function used to store that hash
+     * @return hashSize is the size of the digest
+     * @return encryptedStatus indicates if the file is encrypted or not 
      */
     function getFileInfo(File storage self)
     external view
-    returns (uint8, bytes memory, string memory, string memory, string memory, bool) {
+    returns (
+        uint8 protocol, 
+        bytes memory protocolMeta, 
+        string memory fileName, 
+        bytes32 fileHash, 
+        bytes22 hashExtraInfo,
+        uint8 hashFunction,
+        uint8 hashSize,
+        bool encryptedStatus
+    ) {
         // Logic
-        return (
-            self.protocol,                       // Protocol
-            self.protocolMeta,                   // Protocol meta
-            bytes32ToString(self.name),         // File Name for byte32 to string
-            bytes32ToString(self.hash1),        // First hash of the file
-            bytes32ToString(self.hash2),        // Second hash of the file
-            
-            self.encrypted                      // Whether the file is encrypted or not
-        );
+        protocol = self.fileMeta.protocol; // Protocol
+        protocolMeta = self.protocolMeta; // Protocol meta
+        
+        fileName = bytes32ToString(self.fileMeta.name); // File Name, convert from byte32 to string
+        
+        fileHash = self.fileMeta.hash; // hash of the file
+        hashExtraInfo = self.fileMeta.hashExtraInfo; // extra info of hash of the file (to utilize 22 bytes of wasted space)
+        hashFunction = self.fileMeta.hashFunction; // the hash function used to store the file
+        hashSize = self.fileMeta.hashSize; // The length of the digest
+        
+        encryptedStatus = self.fileMeta.encrypted; // Whether the file is encrypted or not
     }
     
     /**
      * @dev Function to get file info of an EIN
      * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @return timestamp indicates the timestamp of the file
+     * @return associatedGroupIndex indicates the group which the file is associated to in the user's FMS
+     * @return associatedGroupFileIndex indicates the file index within the group of the user's FMS
      */
     function getFileOtherInfo(File storage self)
     external view
-    returns (uint32, uint, uint) {
+    returns (
+        uint32 timestamp, 
+        uint associatedGroupIndex, 
+        uint associatedGroupFileIndex
+    ) {
         // Logic
-        return (
-            self.timestamp,                      // Timestamp attached to the file
-            
-            self.associatedGroupIndex,           // The associated group index
-            self.associatedGroupFileIndex        // The associated file index
-        );
+        timestamp = self.fileMeta.timestamp;
+        associatedGroupIndex = self.associatedGroupIndex;
+        associatedGroupFileIndex = self.associatedGroupFileIndex;
     }
 
     /**
      * @dev Function to get file tranfer info of an EIN
      * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @return transferCount indicates the number of times the file has been transferred
+     * @return transferEIN indicates the EIN of the user to which the file is currently scheduled for transfer
+     * @return transferIndex indicates the transfer index of the target EIN where the file is currently mapped to
+     * @return markedForTransfer indicates if the file is marked for transfer or not
      */
     function getFileTransferInfo(File storage self)
     external view
-    returns (uint, uint, uint, bool) {
+    returns (
+        uint transferCount, 
+        uint transferEIN, 
+        uint transferIndex, 
+        bool markedForTransfer
+    ) {
         // Logic
-        return (
-            self.transferCount,                 // Transfer Count
-            self.transferEIN,                   // Transferee EIN
-            self.transferIndex,                 // Tranferee's Transfer mapping index
-            self.markedForTransfer              // Whether file is marked for transfer or not 
-        );
+        transferCount = self.fileMeta.transferCount; 
+        transferEIN = self.transferEIN; 
+        transferIndex = self.transferIndex; 
+        markedForTransfer = self.fileMeta.markedForTransfer;
     }
 
     /**
      * @dev Function to get file tranfer owner info of an EIN
      * @param self is the pointer to the File Struct (IceFMS Library) passed
-     * @param _transferIndex is index to poll
+     * @param _transferIndex is index to poll which is useful to get the history of transfers and to what EIN the file previously belonged to
+     * @return previousOwnerEIN is the EIN of the user who had originally owned that file
      */
-    function getFileTransferOwners(File storage self, uint _transferIndex)
+    function getFileTransferOwners(
+        File storage self, 
+        uint _transferIndex
+    )
     external view
-    returns (uint) {
-        return self.transferHistory[_transferIndex];    // Return transfer history associated with a particular transfer index
+    returns (uint previousOwnerEIN) {
+        previousOwnerEIN = self.transferHistory[_transferIndex];    // Return transfer history associated with a particular transfer index
     }
     
-    function createFileObject(File storage self, IceGlobal.GlobalRecord memory _rec, 
-    uint8 _protocol, bytes memory _protocolMeta, 
-    bytes32 _name, bytes32 _hash1, bytes32 _hash2, 
-    bool _encrypted, uint _groupIndex, uint _groupFilesCount)
-    internal {
-        self.rec = _rec;
-        
-        self.protocol = _protocol;
-        self.transferCount = 1;
-        
+    /**
+     * @dev Function to create a basic File Object for a given file
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _protocolMeta is the meta info which is stored for a certain protocol
+     * @return _groupIndex is the index of the group where the file is stored
+     * @return _groupFilesCount is the number of files stored in that group 
+     */
+    function createFileObject(
+        File storage self,
+        bytes calldata _protocolMeta,
+        uint _groupIndex, 
+        uint _groupFilesCount
+    )
+    external {
+        // Set other File info
         self.protocolMeta = _protocolMeta;
-        self.name = _name;
-        self.hash1 = _hash1;
-        self.hash2 = _hash2;
-        
-        self.timestamp = uint32(now);
-        
-        self.encrypted = _encrypted;
         
         self.associatedGroupIndex = _groupIndex;
         self.associatedGroupFileIndex = _groupFilesCount;
     }
     
     /**
+     * @dev Function to create a File Meta Object and attach it to File Struct (IceFMS Library)
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _protocol is type of protocol used to store that file (0 - URL, 1- IPFS)
+     * @param _name is the name of the file with the extension
+     * @param _hash is the hash of the file (useful for IPFS and to verify authenticity)
+     * @param _hashExtraInfo is the extra info which can be stored in a 22 byte format (if required)
+     * @param _hashFunction is the function used to generate the hash
+     * @param _hashSize is the size of the digest
+     * @param _encrypted indicates if the file is encrypted or not  
+     */
+    function createFileMetaObject(
+        File storage self,
+        uint8 _protocol,
+        bytes32 _name, 
+        bytes32 _hash,
+        bytes22 _hashExtraInfo,
+        uint8 _hashFunction,
+        uint8 _hashSize,
+        bool _encrypted
+    )
+    external {
+        //set file meta
+        self.fileMeta = FileMeta(
+            _name,                  // to store the name of the file
+            
+            _hash,                  // to store the hash of file
+            _hashExtraInfo,         // to store any extra info if required
+            
+            _encrypted,             // whether the file is encrypted
+            false,                  // Mark the file as transferred, defaults to false
+                
+            _protocol,              // store protocol of the file stored | 0 is URL, 1 is IPFS
+            1,                      // Default transfer count is 1
+            
+            _hashFunction,          // Store the hash of the file for verification | 0x000 for deleted files
+            _hashSize,              // Store the length of the digest
+            
+            uint32(now)             // to store the timestamp of the block when file is created
+        );
+    }
+    
+    /**
      * @dev Function to write file to a user FMS
      * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param group is the pointer to the group where the file is going to be stored for the primary user (EIN)
+     * @param _groupIndex indicates the index of the group for the EIN's FMS
+     * @param _userFileOrderMapping is the mapping of the user's file order using SortOrder Struct (IceSort Library)
+     * @param _maxFileIndex indicates the maximum index of the files stored for the primary user (EIN)
+     * @param _nextIndex indicates the next index which will store the particular file in question
+     * @param _transferEin is the EIN of the user for which the file is getting written to, defaults to primary user
+     * @param _encryptedHash is the encrypted hash stored incase the file is encrypted
      */
     function writeFile(
         File storage self, 
         Group storage group, 
         uint _groupIndex, 
-        mapping(uint => IceSort.SortOrder) storage fileOrder, 
-        uint fileCount, 
+        mapping(uint => IceSort.SortOrder) storage _userFileOrderMapping, 
+        uint _maxFileIndex, 
         uint _nextIndex, 
         uint _transferEin, 
-        string calldata _encryptedHash
+        bytes32 _encryptedHash
     ) 
-    external 
+    internal 
     returns (uint newFileCount) {
         // Add file to group 
         (self.associatedGroupIndex, self.associatedGroupFileIndex) = addFileToGroup(group, _groupIndex, _nextIndex);
-        group.groupFilesCount = self.associatedGroupFileIndex;
         
         // To map encrypted password
         self.encryptedHash[msg.sender] = _encryptedHash;
@@ -188,7 +280,7 @@ library IceFMS {
         self.transferHistory[0] = _transferEin;
 
         // Add to Stitch Order & Increment index
-        newFileCount = fileOrder.addToSortOrder(fileCount, 0);
+        newFileCount = _userFileOrderMapping.addToSortOrder(_userFileOrderMapping[0].prev, _maxFileIndex, 0);
     }
     
     /**
@@ -197,31 +289,47 @@ library IceFMS {
      */
     function moveFileToGroup(
         File storage self, 
-        mapping(uint => IceFMS.Group) storage _groups, 
-        mapping(uint => IceSort.SortOrder) storage _groupOrder,
+        uint _fileIndex,
+        mapping(uint => IceFMS.Group) storage _groupMapping, 
+        mapping(uint => IceSort.SortOrder) storage _groupOrderMapping,
         uint _newGroupIndex,
         mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        IceGlobal.UserMeta storage usermeta
+        IceGlobal.UserMeta storage _specificUserMeta
     )
     external 
-    returns (uint GFIndex){
+    returns (uint groupFileIndex){
         // Check Restrictions
-        _groupOrder[_newGroupIndex].condValidSortOrder(_newGroupIndex); // Check if the new group is valid
+        _groupOrderMapping[_newGroupIndex].condValidSortOrder(_newGroupIndex); // Check if the new group is valid
         self.rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the file is unstamped, can't move a stamped file
-        _groups[self.associatedGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the current group is unstamped, can't move a file from stamped group
-        _groups[_newGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the new group is unstamped, can't move a file from stamped group
-        usermeta.condFilesOpFree(); // Check if the files operations are not locked for the user
-        usermeta.condGroupsOpFree(); // Check if the groups operations are not locked for the user
+        
+        // Check if the current group is unstamped, can't move a file from stamped group
+        _groupMapping[self.associatedGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); 
+        
+        // Check if the new group is unstamped, can't move a file from stamped group
+        _groupMapping[_newGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); 
+        
+        _specificUserMeta.condFilesOpFree(); // Check if the files operations are not locked for the user
+        _specificUserMeta.condGroupsOpFree(); // Check if the groups operations are not locked for the user
 
         // Set Files & Group Atomicity
-        usermeta.lockFiles = true;
-        usermeta.lockGroups = true;
+        _specificUserMeta.lockFiles = true;
+        _specificUserMeta.lockGroups = true;
 
-        GFIndex = remapFileToGroup(_groups[self.associatedGroupIndex], self.associatedGroupFileIndex, _newGroupIndex);
+        // get file existing index in the user FMS Mapping
+        //uint fileIndex = self.rec.getGlobalItemViaRecord(_globalItems).ownerInfo.index;
+        
+        // remap the file
+        groupFileIndex = remapFileToGroup(
+            self, 
+            _fileIndex,
+            _groupMapping[self.associatedGroupIndex], 
+            _groupMapping[_newGroupIndex], 
+            _newGroupIndex
+        );
 
         // Reset Files & Group Atomicity
-        usermeta.lockFiles = false;
-        usermeta.lockGroups = false;
+        _specificUserMeta.lockFiles = false;
+        _specificUserMeta.lockGroups = false;
     }
 
     /**
@@ -243,30 +351,27 @@ library IceFMS {
         mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
     )
     external {
-        // Check Restrictions
+        // // Check Restrictions
         self[_fileIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the file is unstamped, can't delete a stamped file
 
-        // Set Files & Group Atomicity
+        // // Set Files & Group Atomicity
         _usermeta[_ein].lockFiles = true;
         _usermeta[_ein].lockGroups = true;
 
-        // Check Restrictions
+        // // Check Restrictions
         condValidItem(_fileIndex, _fileCount[_ein]);
         _groupOrder.condValidSortOrder(self[_fileIndex].associatedGroupIndex);
 
-        // Get current Index, Stich check previous index so not required to recheck
-        // uint currentIndex = _fileCount[_ein];
-        
-        // Delete File Shares and Global Mapping
+        // // Delete File Shares and Global Mapping
         _deleteFileInternalLogic(self[_ein].rec.getGlobalItemViaRecord(_globalItems), _ein, _shares, _shareOrder, _shareCount, _usermeta);
         
-        // Delete File Actual
+        // // Delete File Actual
         _deleteFileActual(self, _ein, _fileIndex, _fileOrder, _fileCount, _group);
         
         // Delete the latest file now
         delete (_fileCount[_ein]);
 
-        // Reset Files & Group Atomicity
+        // // Reset Files & Group Atomicity
         _usermeta[_ein].lockFiles = false;
         _usermeta[_ein].lockGroups = false;
     }
@@ -310,12 +415,19 @@ library IceFMS {
      * @param _groupIndex is the index of the group belonging to that user, 0 is reserved for root
      * @param _fileIndex is the index of the file belonging to that user
      */
-    function addFileToGroup(Group storage self, uint _groupIndex, uint _fileIndex)
+    function addFileToGroup(
+        Group storage self, 
+        uint _groupIndex, 
+        uint _fileIndex
+    )
     public
-    returns (uint associatedGroupIndex, uint associatedGroupFileIndex) {
+    returns (
+        uint associatedGroupIndex, 
+        uint associatedGroupFileIndex
+    ) {
         // Add File to a group is just adding the index of that file
         uint currentIndex = self.groupFilesCount;
-        self.groupFilesCount = self.groupFilesOrder.addToSortOrder(currentIndex, _fileIndex);
+        self.groupFilesCount = self.groupFilesOrder.addToSortOrder(self.groupFilesOrder[0].prev, currentIndex, _fileIndex);
 
         // Map group index and group order index in file
         associatedGroupIndex = _groupIndex;
@@ -326,7 +438,10 @@ library IceFMS {
      * @dev Function to remove file from a group
      * @param _groupFileOrderIndex is the index of the file order within that group
      */
-    function removeFileFromGroup(Group storage self, uint _groupFileOrderIndex)
+    function removeFileFromGroup(
+        Group storage self, 
+        uint _groupFileOrderIndex
+    )
     public {
         uint maxIndex = self.groupFilesCount;
         uint pointerID = self.groupFilesOrder[maxIndex].pointerID;
@@ -336,20 +451,25 @@ library IceFMS {
 
     /**
      * @dev Private Function to remap file from one group to another
-     * @param _groupFileOrderIndex is the index of the file order within that group
      * @param _newGroupIndex is the index of the new group belonging to that user
      */
-    function remapFileToGroup(Group storage self, uint _groupFileOrderIndex, uint _newGroupIndex)
+    function remapFileToGroup(
+        File storage self,
+        uint _existingFileIndex,
+        Group storage _oldGroup,
+        Group storage _newGroup, 
+        uint _newGroupIndex
+    )
     public
     returns (uint newGroupIndex) {
-        // Get file index for the Association
-        uint fileIndex = self.groupFilesOrder[_groupFileOrderIndex].pointerID;
-
         // Remove File from existing group
-        removeFileFromGroup(self, _groupFileOrderIndex);
+        removeFileFromGroup(_oldGroup, self.associatedGroupFileIndex);
 
         // Add File to new group
-        (, newGroupIndex) = addFileToGroup(self, _newGroupIndex, fileIndex);
+        (self.associatedGroupIndex, self.associatedGroupFileIndex) = addFileToGroup(_newGroup, _newGroupIndex, _existingFileIndex);
+        
+        // The file added hass the asssociated group file index now
+        newGroupIndex = self.associatedGroupFileIndex;
     }
     
     /**
