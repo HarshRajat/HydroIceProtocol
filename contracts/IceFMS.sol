@@ -285,7 +285,14 @@ library IceFMS {
     
     /**
      * @dev Function to move file to another group
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _fileIndex is the file index in the user's FMS files mapping
+     * @param _groupMapping is the mapping of all groups for the user's FMS
+     * @param _groupOrderMapping is the mapping of the order of files in that group for the primary user's FMS
      * @param _newGroupIndex is the index of the new group where file has to be moved
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) for the primary user
+     * @return groupFileIndex is the index of the file stored in that relevant group of the primary user 
      */
     function moveFileToGroup(
         File storage self, 
@@ -315,9 +322,6 @@ library IceFMS {
         _specificUserMeta.lockFiles = true;
         _specificUserMeta.lockGroups = true;
 
-        // get file existing index in the user FMS Mapping
-        //uint fileIndex = self.rec.getGlobalItemViaRecord(_globalItems).ownerInfo.index;
-        
         // remap the file
         groupFileIndex = remapFileToGroup(
             self, 
@@ -334,86 +338,129 @@ library IceFMS {
 
     /**
      * @dev Function to delete file of the owner
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _ein is the EIN of the primary user
      * @param _fileIndex is the index where file is stored
+     * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
+     * @param _fileOrderMapping is the mapping of the files of the primary user's FMS
+     * @param _fileCountMapping is the mapping of the file count of all the users
+     * @param _fileGroup is the Group Struct (IceFMS Library) under which the file in question is stored
+     * @param _fileGroupOrder is the SortOrder Struct (IceSort Library) which points to the order of the file in the user's group
+     * @param _totalSharesMapping is the mapping of the entire shares
+     * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function deleteFile(
         mapping (uint => File) storage self,
         uint _ein,
         uint _fileIndex,
-        mapping (uint => IceSort.SortOrder) storage _fileOrder,
-        mapping (uint => uint) storage _fileCount,
-        Group storage _group,
-        IceSort.SortOrder storage _groupOrder,
-        mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _shares,
-        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _shareOrder, 
-        mapping (uint => uint) storage _shareCount,
-        mapping (uint => IceGlobal.UserMeta) storage _usermeta,
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
+        IceGlobal.Association storage _globalItemIndividual,
+        
+        mapping (uint => IceSort.SortOrder) storage _fileOrderMapping,
+        mapping (uint => uint) storage _fileCountMapping,
+        Group storage _fileGroup,
+        IceSort.SortOrder storage _fileGroupOrder,
+        
+        mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _totalSharesMapping,
+        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
+        mapping (uint => uint) storage _shareCountMapping,
+        
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
     )
     external {
-        // // Check Restrictions
-        self[_fileIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the file is unstamped, can't delete a stamped file
-
-        // // Set Files & Group Atomicity
-        _usermeta[_ein].lockFiles = true;
-        _usermeta[_ein].lockGroups = true;
-
-        // // Check Restrictions
-        condValidItem(_fileIndex, _fileCount[_ein]);
-        _groupOrder.condValidSortOrder(self[_fileIndex].associatedGroupIndex);
-
-        // // Delete File Shares and Global Mapping
-        _deleteFileInternalLogic(self[_ein].rec.getGlobalItemViaRecord(_globalItems), _ein, _shares, _shareOrder, _shareCount, _usermeta);
+        // Check Restrictions
+        condValidItem(_fileIndex, _fileCountMapping[_ein]); // Check if the file exists first
+        _globalItemIndividual.condUnstampedItem(); // Check if the file is unstamped, can't delete a stamped file
+        _fileGroupOrder.condValidSortOrder(self[_fileIndex].associatedGroupFileIndex); //Check if sort order is valid
         
-        // // Delete File Actual
-        _deleteFileActual(self, _ein, _fileIndex, _fileOrder, _fileCount, _group);
+        // Set Files & Group Atomicity
+        _userMetaMapping[_ein].lockFiles = true;
+        _userMetaMapping[_ein].lockGroups = true;
+
+        // Delete File Shares and Global Mapping
+        _deleteFileMappings(
+            _ein, 
+            _globalItemIndividual, 
+            _totalSharesMapping, 
+            _totalShareOrderMapping, 
+            _shareCountMapping, 
+            _userMetaMapping
+        );
+        
+        // Delete File Object
+        _deleteFileObject(
+            self, 
+            _ein, 
+            _fileIndex, 
+            _fileOrderMapping, 
+            _fileCountMapping, 
+            _fileGroup
+        );
         
         // Delete the latest file now
-        delete (_fileCount[_ein]);
+        delete (self[_fileIndex]);
 
         // // Reset Files & Group Atomicity
-        _usermeta[_ein].lockFiles = false;
-        _usermeta[_ein].lockGroups = false;
+        _userMetaMapping[_ein].lockFiles = false;
+        _userMetaMapping[_ein].lockGroups = false;
     }
     
-    function _deleteFileInternalLogic(
-        IceGlobal.Association storage _globalItem,
+    /**
+     * @dev Private Function to delete file mappings from a user's FMS system
+     * @param _ein is the EIN of the user
+     * @param _globalItemIndividual
+     */
+    function _deleteFileMappings(
         uint _ein,
-        mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _shares,
-        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _shareOrder, 
-        mapping (uint => uint) storage _shareCount,
-        mapping (uint => IceGlobal.UserMeta) storage _usermeta
+        IceGlobal.Association storage _globalItemIndividual,
+        mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _totalSharesMapping,
+        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
+        mapping (uint => uint) storage _shareCountMapping,
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
     ) 
     internal {
         // Remove item from sharing of other users
-        _shares.removeAllShares(_globalItem, _shareOrder, _shareCount, _usermeta, _ein);
+        _totalSharesMapping.removeAllShares(
+            _ein,
+            _globalItemIndividual, 
+            _totalShareOrderMapping, 
+            _shareCountMapping, 
+            _userMetaMapping
+        );
         
         // Remove from global Record
-        _globalItem.deleteGlobalRecord();
+        _globalItemIndividual.deleteGlobalRecord();
     }
     
-    function _deleteFileActual(
+    function _deleteFileObject(
         mapping (uint => File) storage _files,
         uint _ein,
         uint _fileIndex,
-        mapping (uint => IceSort.SortOrder) storage _fileOrder,
-        mapping (uint => uint) storage _fileCount,
-        Group storage _group
+        mapping (uint => IceSort.SortOrder) storage _fileOrderMapping,
+        mapping (uint => uint) storage _fileCountMapping,
+        Group storage _fileGroup
     )
     internal {
-        // Remove from Group which holds the File
-        removeFileFromGroup(_group, _files[_fileIndex].associatedGroupFileIndex);
+        // Remove file from Group which holds the File
+        removeFileFromGroup(
+            _fileGroup, 
+            _files[_fileIndex].associatedGroupFileIndex
+        );
 
         // Swap File
-        _files[_fileIndex] = _files[_fileCount[_ein]];
-        _fileCount[_ein] = _fileOrder.stichSortOrder(_fileIndex, _fileCount[_ein], 0);
+        _files[_fileIndex] = _files[_fileCountMapping[_ein]];
+        _fileCountMapping[_ein] = _fileOrderMapping.stichSortOrder(_fileIndex, _fileCountMapping[_ein], 0);
     }
 
     // 2. FILE TO GROUP FUNCTIONS 
     /**
      * @dev Private Function to add file to a group
+     * @param self is the pointer to the relevant Group Struct (IceFMS Library) to which the file has to bee added
      * @param _groupIndex is the index of the group belonging to that user, 0 is reserved for root
      * @param _fileIndex is the index of the file belonging to that user
+     * @return associatedGroupIndex is the group index of within the mapping of groups for the specific user
+     * @return associatedGroupFileIndex is the index where the file is placed within that group in the specific user's FMS
      */
     function addFileToGroup(
         Group storage self, 
@@ -436,6 +483,7 @@ library IceFMS {
 
     /**
      * @dev Function to remove file from a group
+     * @param self is the pointer to the relevant Group Struct (IceFMS Library) which has the file in the primary user's FMS
      * @param _groupFileOrderIndex is the index of the file order within that group
      */
     function removeFileFromGroup(
@@ -451,7 +499,12 @@ library IceFMS {
 
     /**
      * @dev Private Function to remap file from one group to another
-     * @param _newGroupIndex is the index of the new group belonging to that user
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _existingFileIndex is the file index in the user's FMS files mapping
+     * @param _oldGroup is the pointer to the old group where the file was present in the user's FMS
+     * @param _newGroup is the pointer to the new group where the file will be moved in the user's FMS
+     * @param _newGroupIndex is the index of the new group where file has to be moved
+     * @return groupFileIndex is the index of the file stored in that relevant group of the primary user 
      */
     function remapFileToGroup(
         File storage self,
@@ -461,7 +514,7 @@ library IceFMS {
         uint _newGroupIndex
     )
     public
-    returns (uint newGroupIndex) {
+    returns (uint groupFileIndex) {
         // Remove File from existing group
         removeFileFromGroup(_oldGroup, self.associatedGroupFileIndex);
 
@@ -469,7 +522,7 @@ library IceFMS {
         (self.associatedGroupIndex, self.associatedGroupFileIndex) = addFileToGroup(_newGroup, _newGroupIndex, _existingFileIndex);
         
         // The file added hass the asssociated group file index now
-        newGroupIndex = self.associatedGroupFileIndex;
+        groupFileIndex = self.associatedGroupFileIndex;
     }
     
     /**
@@ -477,7 +530,10 @@ library IceFMS {
      * @param _itemIndex the index of the item
      * @param _itemCount is the count of that mapping
      */
-    function condValidItem(uint _itemIndex, uint _itemCount)
+    function condValidItem(
+        uint _itemIndex, 
+        uint _itemCount
+    )
     public pure {
         require (
             (_itemIndex <= _itemCount),

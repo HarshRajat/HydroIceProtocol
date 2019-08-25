@@ -580,6 +580,9 @@ contract Ice {
 
         // Delegate the call
         _deleteFileAnyOwner(ein, _fileIndex);
+        
+        // Trigger Event
+        emit FileDeleted(ein, _fileIndex);
     }
 
     // /**
@@ -587,49 +590,28 @@ contract Ice {
     //  * @param _ein is the owner EIN
     //  * @param _fileIndex is the index where file is stored
     //  */
-    function _deleteFileAnyOwner(uint _ein, uint _fileIndex)
+    function _deleteFileAnyOwner(
+        uint _ein, 
+        uint _fileIndex
+    )
     internal {
         // Logic
-        // files[_ein].deleteFile(
-        //     _ein, 
-        //     _fileIndex, 
-        //     fileOrder[_ein], 
-        //     fileCount, 
-        //     groups[_ein][files[_ein][_fileIndex].associatedGroupIndex], 
-        //     groupOrder[_ein][files[_ein][_fileIndex].associatedGroupIndex],
-        //     shares,
-        //     shareOrder,
-        //     shareCount,
-        //     usermeta,
-        //     globalItems
-        // );
-        
-        // Check Restrictions
-        IceFMS.condValidItem(_fileIndex, fileCount[_ein]);
-        groupOrder[_ein][files[_ein][_fileIndex].associatedGroupIndex].condValidSortOrder(files[_ein][_fileIndex].associatedGroupFileIndex);
-
-        // Get current Index, Stich check previous index so not required to recheck
-        uint currentIndex = fileCount[_ein];
-
-        // Remove item from sharing of other users
-        //temp _removeAllShares(files[_ein][_fileIndex].rec);
-        
-        // Deactivate From Global Items
-        IceGlobal.Association storage globalItem = files[_ein][_fileIndex].rec.getGlobalItemViaRecord(globalItems);
-        globalItem.deleteGlobalRecord();
-
-        // Remove from Group which holds the File
-        groups[_ein][files[_ein][_fileIndex].associatedGroupIndex].removeFileFromGroup(files[_ein][_fileIndex].associatedGroupFileIndex);
-
-        // Swap File
-        files[_ein][_fileIndex] = files[_ein][currentIndex];
-        fileCount[_ein] = fileOrder[_ein].stichSortOrder(_fileIndex, currentIndex, 0);
-        
-        // Delete the latest group now
-        delete (files[_ein][currentIndex]);
-        
-        // Trigger Event
-        emit FileDeleted(_ein, _fileIndex);
+        files[_ein].deleteFile(
+            _ein,
+            _fileIndex,
+            files[_ein][_fileIndex].rec.getGlobalItemViaRecord(globalItems),
+            
+            fileOrder[_ein],
+            fileCount,
+            groups[_ein][files[_ein][_fileIndex].associatedGroupIndex],
+            groupOrder[_ein][files[_ein][_fileIndex].associatedGroupIndex],
+            
+            shares,
+            shareOrder,
+            shareCount,
+            
+            usermeta
+        );
     }
 
     // 4. GROUP FILES FUNCTIONS
@@ -773,7 +755,13 @@ contract Ice {
 
         // Remove item from sharing of other users
         IceGlobal.Association storage globalItem = groups[ein][_groupIndex].rec.getGlobalItemViaRecord(globalItems);
-        shares.removeAllShares(globalItem, shareOrder, shareCount, usermeta, ein);
+        shares.removeAllShares(
+            ein,
+            globalItem, 
+            shareOrder, 
+            shareCount, 
+            usermeta
+        );
         
         // Deactivate from global record
         globalItem.deleteGlobalRecord();
@@ -837,7 +825,14 @@ contract Ice {
             rec = files[ein][_itemIndex].rec;
         }
         
-        shares.removeShareFromEINs(globalItems[rec.i1][rec.i2], shareOrder, shareCount, usermeta, ein, _fromEINs);
+        shares.removeShareFromEINs(
+            ein, 
+            _fromEINs,
+            globalItems[rec.i1][rec.i2], 
+            shareOrder, 
+            shareCount, 
+            usermeta
+        );
     }
     
     
@@ -851,7 +846,13 @@ contract Ice {
         uint shareeEIN = identityRegistry.getEIN(msg.sender);
         IceGlobal.Association storage globalItem = shares[shareeEIN][_itemIndex].getGlobalItemViaRecord(globalItems);
         
-        shares[shareeEIN].removeSharingItemBySharee(globalItem, shareOrder[shareeEIN], shareCount, usermeta[shareeEIN], shareeEIN);
+        shares[shareeEIN].removeSharingItemBySharee( 
+            shareeEIN,
+            globalItem, 
+            shareOrder[shareeEIN], 
+            shareCount, 
+            usermeta[shareeEIN]
+        );
     }
     
     // 5. STAMPING FUNCTIONS
