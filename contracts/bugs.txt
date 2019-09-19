@@ -6,15 +6,31 @@ Steps to Reproduce
 
 The last file of the queue is overwritten
 
-2. Moving File to a new group
+2. Moving File to a new group - Solved
 Steps 
 - Try to move file, it fails
+
+3. Sharing File to same EIN again and again - Solved
+Steps
+- Share the same file to already shared EIN, that happens over and over again
+
+4. Delete Bug #2 - Solved
+- Keep on deleting file at index 1
+
+consecutive delete on index 1 makes the file system corrupted, possible different groups aren't deleted
+
+5. Transfer Bug - Solved
+- Tranfer doesn't copy the file info
 
 ToDos
 ----
 1. Limit Stamping to be between two parties
-2. Put Avatar related functions for user at index 0 of files
+2. Put Avatar related functions for user at index 0 of files - Done
+3. Check if group exists for a file transfer
+        
+        condValidItem(_fileIndex, _fileCountMapping[_transfererEIN]); // Check if the group exists
 
 Functions to Check
 ---
 getGlobalItemsMapping
+

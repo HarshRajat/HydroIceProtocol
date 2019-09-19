@@ -1,6 +1,7 @@
 pragma solidity ^0.5.1;
 
 import "./SafeMath.sol";
+import "./SafeMath8.sol";
 
 import "./IceGlobal.sol";
 import "./IceSort.sol";
@@ -15,10 +16,12 @@ import "./IceFMSAdv.sol";
  */
 library IceFMS {
     using SafeMath for uint;
+    using SafeMath8 for uint8;
     
     using IceGlobal for IceGlobal.GlobalRecord;
     using IceGlobal for IceGlobal.Association;
     using IceGlobal for IceGlobal.UserMeta;
+    using IceGlobal for mapping (uint => bool);
     using IceGlobal for mapping (uint8 => IceGlobal.ItemOwner);
     using IceGlobal for mapping (uint => mapping (uint => IceGlobal.Association));
     
@@ -268,7 +271,7 @@ library IceFMS {
         uint _transferEin, 
         bytes32 _encryptedHash
     ) 
-    internal 
+    external 
     returns (uint newFileCount) {
         // Add file to group 
         (self.associatedGroupIndex, self.associatedGroupFileIndex) = addFileToGroup(group, _groupIndex, _nextIndex);
@@ -338,7 +341,7 @@ library IceFMS {
 
     /**
      * @dev Function to delete file of the owner
-     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param self is the mapping of all pointer to the File Struct (IceFMS Library) passed for a user's FMS
      * @param _ein is the EIN of the primary user
      * @param _fileIndex is the index where file is stored
      * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
@@ -368,11 +371,12 @@ library IceFMS {
         
         mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
     )
-    external {
+    public {
         // Check Restrictions
         condValidItem(_fileIndex, _fileCountMapping[_ein]); // Check if the file exists first
         _globalItemIndividual.condUnstampedItem(); // Check if the file is unstamped, can't delete a stamped file
         _fileGroupOrder.condValidSortOrder(self[_fileIndex].associatedGroupFileIndex); //Check if sort order is valid
+        condItemMarkedForTransfer(self[_fileIndex]);// Check if the File is not marked for transfer
         
         // Set Files & Group Atomicity
         _userMetaMapping[_ein].lockFiles = true;
@@ -388,6 +392,9 @@ library IceFMS {
             _userMetaMapping
         );
         
+        // Delete the latest file now
+        delete (self[_fileIndex]);
+        
         // Delete File Object
         _deleteFileObject(
             self, 
@@ -398,9 +405,6 @@ library IceFMS {
             _fileGroup
         );
         
-        // Delete the latest file now
-        delete (self[_fileIndex]);
-
         // // Reset Files & Group Atomicity
         _userMetaMapping[_ein].lockFiles = false;
         _userMetaMapping[_ein].lockGroups = false;
@@ -409,7 +413,11 @@ library IceFMS {
     /**
      * @dev Private Function to delete file mappings from a user's FMS system
      * @param _ein is the EIN of the user
-     * @param _globalItemIndividual
+     * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
+     * @param _totalSharesMapping is the mapping of the entire shares
+     * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function _deleteFileMappings(
         uint _ein,
@@ -433,6 +441,15 @@ library IceFMS {
         _globalItemIndividual.deleteGlobalRecord();
     }
     
+    /**
+     * @dev Private Function to delete file mappings from a user's FMS system
+     * @param _files is the mapping of all pointer to the File Struct (IceFMS Library) passed for a user's FMS
+     * @param _ein is the EIN of the user
+     * @param _fileIndex is the file index in the user's FMS files mapping
+     * @param _fileOrderMapping is the mapping of the files of the primary user's FMS
+     * @param _fileCountMapping is the mapping of the file count of all the users
+     * @param _fileGroup is the Group Struct (IceFMS Library) under which the file in question is stored
+     */
     function _deleteFileObject(
         mapping (uint => File) storage _files,
         uint _ein,
@@ -542,10 +559,27 @@ library IceFMS {
     }
     
     /**
+     * @dev Function to check that a file has been marked for transfer
+     */
+    function condItemMarkedForTransfer(
+        File storage self
+    )
+    public view {
+        // Check if the group file exists or not
+        require (
+            (self.fileMeta.markedForTransfer == false),
+            "File already marked for Transfer"
+        );
+    }
+    
+    /**
      * @dev Function to check that a file has been marked for transferee EIN
      * @param _transfereeEIN is the intended EIN for file transfer
      */
-    function condMarkedForTransferee(File storage self, uint _transfereeEIN)
+    function condMarkedForTransferee(
+        File storage self, 
+        uint _transfereeEIN
+    )
     public view {
         // Check if the group file exists or not
         require (
@@ -568,6 +602,238 @@ library IceFMS {
     
     // 3. GROUP FUNCTIONS
     /**
+     * @dev Function to return group info
+     * @param self is the pointer to the Group Struct (IceFMS Library) passed
+     * @param _groupIndex the index of the group
+     * @param _groupCount is the count of the number of groups for that specific user
+     * @return index is the index of the group
+     * @return name is the name associated with the group
+     */
+    function getGroup(
+        Group storage self,
+        uint _groupIndex,
+        uint _groupCount
+    )
+    external view 
+    returns (
+        uint index, 
+        string memory name
+    ) {
+        // Check constraints
+        condValidItem(_groupIndex, _groupCount);
+    
+        // Logic flow
+        index = _groupIndex;
+    
+        if (_groupIndex == 0) {
+            name = "Root";
+        }
+        else {
+            name = self.name;
+        }
+    }
+    
+    /**
+     * @dev Function to create a new Group for the user
+     * @param self is the mapping of all pointer to the Group Struct (IceFMS Library) passed for a user's FMS
+     * @param _ein is the EIN of the primary user
+     * @param _groupName is the name which should be given to the group
+     * @param _groupOrderMapping is the mapping of the Groups Struct (IceFMS Library) of the primary user's FMS
+     * @param _groupCountMapping is the mapping of the file count of all the users
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _globalIndex1 is the initial first index of global items
+     * @param _globalIndex2 is the initial second index of global items
+     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) for the primary user
+     * @return newGlobalIndex1 is the new first index of global items
+     * @return newGlobalIndex2 is the new second index of global items
+     * @return nextGroupIndex is the new count of the group index after creating a group
+     */
+    function createGroup(
+        mapping (uint => Group) storage self,
+        uint _ein,
+        string calldata _groupName,
+        
+        mapping (uint => IceSort.SortOrder) storage _groupOrderMapping, 
+        mapping (uint => uint) storage _groupCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        uint _globalIndex1,
+        uint _globalIndex2,
+        
+        IceGlobal.UserMeta storage _specificUserMeta
+    )
+    external 
+    returns (
+        uint newGlobalIndex1,
+        uint newGlobalIndex2,
+        uint nextGroupIndex
+    ) {
+        // Check Restrictions
+        _specificUserMeta.condGroupsOpFree();
+
+        // Set Group Atomicity
+        _specificUserMeta.lockGroups = true;
+        
+        (newGlobalIndex1, newGlobalIndex2, nextGroupIndex) = _createGroupInner(
+           self, 
+           _ein, 
+           _groupName, 
+           _groupOrderMapping, 
+           _groupCountMapping, 
+           _globalItems, 
+           _globalIndex1, 
+           _globalIndex2
+        );
+
+        // Reset Group Atomicity
+        _specificUserMeta.lockGroups = false;
+    }
+    
+    /**
+     * @dev Private Function to facilitate in creating new Group for the user
+     * @param groups is the mapping of all pointer to the Group Struct (IceFMS Library) passed for a user's FMS
+     * @param _ein is the EIN of the primary user
+     * @param _groupName is the name which should be given to the group
+     * @param _groupOrderMapping is the mapping of the Groups Struct (IceFMS Library) of the primary user's FMS
+     * @param _groupCountMapping is the mapping of the file count of all the users
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _globalIndex1 is the initial first index of global items
+     * @param _globalIndex2 is the initial second index of global items
+     * @return newGlobalIndex1 is the new first index of global items
+     * @return newGlobalIndex2 is the new second index of global items
+     * @return nextGroupIndex is the new count of the group index after creating a group
+     */
+    function _createGroupInner(
+        mapping (uint => Group) storage groups,
+        uint _ein,
+        string memory _groupName,
+        
+        mapping (uint => IceSort.SortOrder) storage _groupOrderMapping, 
+        mapping (uint => uint) storage _groupCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        uint _globalIndex1,
+        uint _globalIndex2
+    )
+    internal 
+    returns (
+        uint newGlobalIndex1,
+        uint newGlobalIndex2,
+        uint nextGroupIndex
+    ) {
+        
+        // Reserve Global Index
+        (newGlobalIndex1, newGlobalIndex2) = IceGlobal.reserveGlobalItemSlot(_globalIndex1, _globalIndex2);
+
+        // Check if this is unitialized, if so, initialize it, reserved value of 0 is skipped as that's root
+        nextGroupIndex = _groupCountMapping[_ein].add(1);
+        
+        // Add to Global Items as well
+        _globalItems.addItemToGlobalItems(newGlobalIndex1, newGlobalIndex2, _ein, nextGroupIndex, false, false, false);
+        
+        // Assign it to User (EIN)
+        groups[nextGroupIndex] = IceFMS.Group(
+            IceGlobal.GlobalRecord(newGlobalIndex1, newGlobalIndex2), // Add Record to struct
+    
+            _groupName, //name of Group
+            0 // The group file count
+        );
+
+        // Add to Stitch Order & Increment index
+        _groupCountMapping[_ein] = _groupOrderMapping.addToSortOrder(_groupOrderMapping[0].prev, _groupCountMapping[_ein], 0);
+
+    }
+    
+    /**
+     * @dev Function to rename an existing group for the user / ein
+     * @param self is the pointer to the Group Struct (IceFMS Library) passed
+     * @param _groupIndex the index of the group
+     * @param _groupCount is the count of the number of groups for that specific user
+     * @param _groupName describes the new name of the group
+     */
+    function renameGroup(
+        Group storage self,
+        uint _groupIndex, 
+        uint _groupCount,
+        string calldata _groupName
+    )
+    external {
+        // Check Restrictions
+        condNonReservedGroup(_groupIndex);
+        condValidItem(_groupIndex, _groupCount);
+
+        // Replace the group name
+        self.name = _groupName;
+    }
+    
+    /**
+     * @dev Function to delete an existing group for the user / ein
+     * @param self is the mapping of all pointer to the Group Struct (IceFMS Library) passed for a user's FMS
+     * @param _ein is the EIN of the user
+     * @param _groupIndex describes the associated index of the group for the user / ein
+     * @param _groupOrderMapping is the mapping of the Groups Struct (IceFMS Library) of the primary user's FMS
+     * @param _groupCountMapping is the mapping of the file count of all the users
+     * @param _totalSharesMapping is the mapping of the entire shares
+     * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
+     */
+    function deleteGroup(
+        mapping (uint => Group) storage self,
+        uint _ein,
+        
+        uint _groupIndex,
+        mapping (uint => IceSort.SortOrder) storage _groupOrderMapping, 
+        mapping (uint => uint) storage _groupCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _totalSharesMapping,
+        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
+        mapping (uint => uint) storage _shareCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+    )
+    external 
+    returns (uint currentGroupIndex) {
+        // Check Restrictions
+        condGroupEmpty(self[_groupIndex]); // Check that Group contains no Files
+        condNonReservedGroup(_groupIndex);
+        condValidItem(_groupIndex, _groupCountMapping[_ein]);
+        
+        _userMetaMapping[_ein].condGroupsOpFree();
+
+        // Set Group Atomicity
+        _userMetaMapping[_ein].lockGroups = true;
+
+        // Check if the group exists or not
+        currentGroupIndex = _groupCountMapping[_ein];
+
+        // Remove item from sharing of other users
+        IceGlobal.Association storage globalItem = self[_groupIndex].rec.getGlobalItemViaRecord(_globalItems);
+        _totalSharesMapping.removeAllShares(
+            _ein,
+            globalItem, 
+            _totalShareOrderMapping, 
+            _shareCountMapping, 
+            _userMetaMapping
+        );
+        
+        // Deactivate from global record
+        globalItem.deleteGlobalRecord();
+
+        // Swap Index mapping & remap the latest group ID if this is not the last group
+        self[_groupIndex] = self[currentGroupIndex];
+        _groupCountMapping[_ein] = _groupOrderMapping.stichSortOrder(_groupIndex, currentGroupIndex, 0);
+
+        // Delete the latest group now
+        delete (self[currentGroupIndex]);
+
+        // Reset Group Atomicity
+        _userMetaMapping[_ein].lockGroups = false;
+    }
+    
+    /**
      * @dev Function to check that Group Order is valid
      * @param self is the particular group in question
      */
@@ -579,16 +845,501 @@ library IceFMS {
         );
     }
     
-    // 4. USER META FUNCTIONS
     /**
-     * @dev Function to check that a file exists for the current EIN
+     * @dev Function to check that index 0 is not modified as this is Reserved in the Group Struct (IceFMS Library) for root folder
+     * @param _index The index to check
      */
-    function condDoesFileExists(uint _fileCount, uint _fileIndex)
-    public pure {
+    function condNonReservedGroup(uint _index)
+    internal pure {
         require (
-            (_fileIndex <= _fileCount),
-            "File not Found"
+            (_index > 0),
+            "Reserved Item"
         );
+    }
+    
+    // 4. TRANSFER FUNCTIONS
+    /**
+     * @dev Function to check file transfer conditions before initiating a file transfer 
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the EIN which is transferring the file 
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _fileIndex is the index where the file is stored with respect to the user who is transferring the file
+     * @param _fileCountMapping is the mapping of the file count of all the users
+     * @param _totalGroupsMapping is the entire mapping of the groups of the Ice FMS
+     * @param _blacklist is the entire mapping of the Blacklist for all users
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
+     * @param _identityRegistry is the pointer to the ERC-1484 Identity Registry
+     */
+    function doInitiateFileTransferChecks(
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN, 
+        uint _transfereeEIN, 
+        uint _fileIndex, 
+        
+        mapping (uint => uint) storage _fileCountMapping,
+        mapping (uint => mapping(uint => Group)) storage _totalGroupsMapping,
+        mapping (uint => mapping(uint => bool)) storage _blacklist,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping,
+        
+        IdentityRegistryInterface _identityRegistry
+    )
+    external view {
+        IceGlobal.condEINExists(_transfereeEIN, _identityRegistry); // Check Valid EIN
+        IceGlobal.condUniqueEIN(_transfererEIN, _transfereeEIN); // Check EINs and Unique
+        condValidItem(_fileIndex, _fileCountMapping[_transfererEIN]); // Check if the item exists
+        self[_transfererEIN][_fileIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the File is not stamped
+        condItemMarkedForTransfer(self[_transfererEIN][_fileIndex]); // Check if the File is not marked for transfer
+        // Check if the Group is not stamped
+        _totalGroupsMapping[_transfererEIN][self[_transfererEIN][_fileIndex].associatedGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem();
+        _blacklist[_transfereeEIN].condNotInList(_transfererEIN); // Check if The transfee hasn't blacklisted the file owner
+        _userMetaMapping[_transfererEIN].condTransfersOpFree(); // Check if Transfers are not locked for current user
+        _userMetaMapping[_transfereeEIN].condTransfersOpFree(); // Check if the transfers are not locked for recipient user
+    }
+    
+    /**
+     * @dev Function to do file transfer(Part 1) from previous (current) owner to new owner
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     * @param _fileIndex is the index where file is stored
+     * @param _totalFilesOrderMapping is the entire mapping of the files order of the Ice FMS
+     * @param _fileCountMapping is the mapping of the file count of all the users
+     * @return nextTransfereeIndex is the index number where the file is stored in the recipient user's File Struct mapping 
+     */
+    function doFileTransferPart1 (
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN, 
+        uint _transfereeEIN, 
+        uint _fileIndex, 
+        
+        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalFilesOrderMapping, 
+        mapping (uint => uint) storage _fileCountMapping
+    )
+    external 
+    returns (uint nextTransfereeIndex) {
+        // Check Constraints
+        IceGlobal.condCheckUnderflow(_fileCountMapping[_transfererEIN]);
+        
+        // Get Indexes
+        uint currentTransfereeIndex = _fileCountMapping[_transfereeEIN];
+        nextTransfereeIndex =  currentTransfereeIndex.add(1);
+
+        // Transfer the file to the transferee & later Delete it for transferer
+        self[_transfereeEIN][nextTransfereeIndex] = self[_transfererEIN][_fileIndex];
+
+        // Change file properties and transfer history
+        uint8 tc = self[_transfereeEIN][nextTransfereeIndex].fileMeta.transferCount.add(1);
+
+        self[_transfereeEIN][nextTransfereeIndex].transferHistory[tc] = _transfereeEIN;
+        self[_transfereeEIN][nextTransfereeIndex].fileMeta.markedForTransfer = false;
+        self[_transfereeEIN][nextTransfereeIndex].fileMeta.transferCount = tc;
+
+        // add to transferee sort order & Increment index
+        _fileCountMapping[_transfereeEIN] = _totalFilesOrderMapping[_transfereeEIN].addToSortOrder(
+            _totalFilesOrderMapping[_transfereeEIN][0].prev, 
+            currentTransfereeIndex, 
+            0
+        );
+    }
+    
+    /**
+     * @dev Function to do file transfer(Part 2) from previous (current) owner to new owner
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     * @param _fileIndex is the index where file is stored
+     * @param _toRecipientGroup is the intended group of the recipient user where the file should go
+     * @param _recipientGroupCount is the number of groups present in the recipient's user FMS system
+     * @param _nextTransfereeIndex is the index number where the file is stored in the recipient user's File Struct mapping
+     * @param _totalGroupsMapping is the entire mapping of all the groups in Ice FMS
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     */
+    function doFileTransferPart2 (
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfereeEIN, 
+        uint _fileIndex, 
+        uint _toRecipientGroup,
+        uint _recipientGroupCount,
+        uint _nextTransfereeIndex,
+        
+        mapping (uint => mapping(uint => Group)) storage _totalGroupsMapping,
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
+    )
+    external {
+        // Check Constraints
+        condValidItem(_toRecipientGroup, _recipientGroupCount); // Check if the group exists
+        
+        // Add File to transferee group
+        (self[_transfereeEIN][_nextTransfereeIndex].associatedGroupIndex, self[_transfereeEIN][_nextTransfereeIndex].associatedGroupFileIndex) = addFileToGroup(
+            _totalGroupsMapping[_transfereeEIN][_toRecipientGroup], 
+            _toRecipientGroup, 
+            _nextTransfereeIndex
+        );
+        
+        // Get global association
+        IceGlobal.Association storage globalItem = self[_transfereeEIN][_fileIndex].rec.getGlobalItemViaRecord(_globalItems);
+
+        // Update global file association
+        globalItem.ownerInfo.EIN = _transfereeEIN;
+        globalItem.ownerInfo.index = _nextTransfereeIndex;
+    }
+    
+    /**
+     * @dev Function to initiate requested file transfer in a permissioned manner
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _transfers is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     */
+    function doPermissionedFileTransfer(
+        File storage self,
+        uint _transfereeEIN,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfers,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
+    )
+    external {
+        _initiatePermissionedFileTransfer (
+            self,
+            _transfereeEIN,
+            
+            _transfers,
+            _transferOrderMapping,
+            _transferCountMapping,
+            
+            _globalItems
+        );
+    }
+    
+    /**
+     * @dev Private Function to initiate requested file transfer
+     * @param self is the pointer to the File Struct (IceFMS Library) passed
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _transfers is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     */
+    function _initiatePermissionedFileTransfer(
+        File storage self,
+        uint _transfereeEIN,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfers,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
+    )
+    internal {
+        // Check constraints
+        self.rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check Item is file
+        IceGlobal.condCheckOverflow(_transferCountMapping[_transfereeEIN]); // Check for Transfer Overflow 
+        
+        // Map it to transferee mapping of transfers
+        uint nextTransferIndex = _transferCountMapping[_transfereeEIN] + 1;
+
+        // Mark the file for transfer
+        self.fileMeta.markedForTransfer = true;
+        self.transferEIN = _transfereeEIN;
+        self.transferIndex = nextTransferIndex;
+
+        // Create New Transfer
+        _transfers[nextTransferIndex] = self.rec;
+
+        // Update sort order and index
+        _transferCountMapping[_transfereeEIN] = _transferOrderMapping.addToSortOrder(_transferOrderMapping[0].prev, _transferCountMapping[_transfereeEIN], 0);
+    }
+    
+    /**
+     * @dev Function to accept file transfer (part 1) from a user
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _fileIndex is the index where file is stored
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
+     */
+    function acceptFileTransferPart1(
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN, 
+        uint _transfereeEIN,
+        uint _fileIndex, 
+        
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+    )
+    external {
+        // Check Restrictions
+        condMarkedForTransferee(self[_transfererEIN][_fileIndex], _transfereeEIN); // Check if the file is marked for transfer to the recipient
+        _userMetaMapping[_transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the sender of the file
+        _userMetaMapping[_transfereeEIN].condTransfersOpFree(); // Check that the transfers are not locked for the recipient of the file
+
+        // Set Transfers Atomiticy
+        _userMetaMapping[_transfererEIN].lockTransfers = true;
+        _userMetaMapping[_transfereeEIN].lockTransfers = true;
+        
+        // Set file to normal so that transfer
+        self[_transfererEIN][_fileIndex].fileMeta.markedForTransfer = false;
+    }
+    
+    /**
+     * @dev Function to accept file transfer (part 2) from a user
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _transferSpecificIndex is the index of the transfer mapping of the recipient which contains transfer info for that file
+     * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
+     */
+    function acceptFileTransferPart2(
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN, 
+        uint _transfereeEIN,
+        
+        uint _transferSpecificIndex, 
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfersMapping,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+    )
+    external {
+        // Finally remove the file from Tranferee Mapping
+        removeFileFromTransfereeMapping(
+            self,
+            
+            _transfereeEIN,
+            _transferSpecificIndex,
+            
+            _transfersMapping,
+            _transferOrderMapping,
+            _transferCountMapping,
+            
+            _globalItems
+        );
+        
+        // Reset Transfers Atomiticy
+        _userMetaMapping[_transfererEIN].lockTransfers = false;
+        _userMetaMapping[_transfereeEIN].lockTransfers = false;
+    }
+    
+    /**
+     * @dev Function to cancel file transfer inititated by the current owner
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _fileIndex is the index where file is stored
+     * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _transfererUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferer
+     * @param _transfereeUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferee
+     */
+    function revokeFileTransfer(
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN,
+        uint _transfereeEIN,
+        uint _fileIndex,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfersMapping,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        
+        IceGlobal.UserMeta storage _transfererUserMeta,
+        IceGlobal.UserMeta storage _transfereeUserMeta
+    )
+    external {
+        // Check constraints
+        condMarkedForTransferee(self[_transfererEIN][_fileIndex], _transfereeEIN);
+        
+        // Logic
+        _cancelFileTransfer(
+            self,
+        
+            _transfererEIN,
+            _transfereeEIN,
+            _fileIndex,
+            
+            _transfersMapping,
+            _transferOrderMapping, 
+            _transferCountMapping,
+            
+            _globalItems,
+            
+            _transfererUserMeta,
+            _transfereeUserMeta
+        );
+    }
+    
+    /**
+     * @dev Function to cancel file transfer inititated by the recipient
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _fileIndex is the index where file is stored
+     * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _transfererUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferer
+     * @param _transfereeUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferee
+     */
+    function cancelFileTransfer(
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN,
+        uint _transfereeEIN,
+        uint _fileIndex,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfersMapping,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        
+        IceGlobal.UserMeta storage _transfererUserMeta,
+        IceGlobal.UserMeta storage _transfereeUserMeta
+    )
+    external {
+        // Check constraints
+        condMarkedForTransferee(self[_transfererEIN][_fileIndex], _transfereeEIN);
+        
+        // Logic
+        _cancelFileTransfer(
+            self,
+        
+            _transfererEIN,
+            _transfereeEIN,
+            _fileIndex,
+            
+            _transfersMapping,
+            _transferOrderMapping, 
+            _transferCountMapping,
+            
+            _globalItems,
+            
+            _transfererUserMeta,
+            _transfereeUserMeta
+        );
+    }
+    
+    /**
+     * @dev Private Function to cancel file transfer inititated by the current owner or the recipient
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN to which the file will be transferred
+     * @param _fileIndex is the index where file is stored
+     * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _transfererUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferer
+     * @param _transfereeUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferee
+     */
+    function _cancelFileTransfer (
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfererEIN,
+        uint _transfereeEIN,
+        uint _fileIndex,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfersMapping,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
+        
+        IceGlobal.UserMeta storage _transfererUserMeta,
+        IceGlobal.UserMeta storage _transfereeUserMeta
+    )
+    private {
+        // Check Restrictions
+        _transfererUserMeta.condTransfersOpFree();
+        _transfereeUserMeta.condTransfersOpFree(); 
+
+        // Set Transfers Atomiticy
+        _transfererUserMeta.lockTransfers = true;
+        _transfereeUserMeta.lockTransfers = true;
+
+        // Cancel file transfer
+        self[_transfererEIN][_fileIndex].fileMeta.markedForTransfer = false;
+
+        // Remove file from  transferee
+        uint transferSpecificIndex = self[_transfererEIN][_fileIndex].transferIndex;
+        removeFileFromTransfereeMapping(
+            self,
+            _transfereeEIN,
+            transferSpecificIndex,
+            
+            _transfersMapping,
+            _transferOrderMapping,
+            _transferCountMapping,
+            
+            _globalItems
+        );
+        
+        // Reset Transfers Atomiticy
+        _transfererUserMeta.lockTransfers = false;
+        _transfereeUserMeta.lockTransfers = false;
+    }
+    
+    /**
+     * @dev Private Function to remove file from Transfers mapping of Transferee after file is transferred to them
+     * @param _transfereeEIN is the new owner EIN
+     * @param _transferSpecificIndex is the index of the association mapping of transfers
+     */
+    function removeFileFromTransfereeMapping(
+        mapping (uint => mapping(uint => File)) storage self,
+        
+        uint _transfereeEIN, 
+        uint _transferSpecificIndex,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _transfersMapping,
+        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
+        mapping (uint => uint) storage _transferCountMapping,
+        
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
+    )
+    internal {
+        // Check Restrictions
+        _transfersMapping[_transferSpecificIndex].getGlobalItemViaRecord(_globalItems).condItemIsFile();
+        
+        // Retrive the swapped item record and change the transferIndex to remap correctly
+        IceGlobal.Association memory item = _transfersMapping[_transferSpecificIndex].getGlobalItemViaRecord(_globalItems);
+
+        // Get Cureent Transfer Index
+        uint currentTransferIndex = _transferCountMapping[_transfereeEIN];
+
+        require (
+            (currentTransferIndex > 0),
+            "Index Not Found"
+        );
+
+        // Remove the file from transferer, ie swap mapping and stich sort order
+        _transfersMapping[_transferSpecificIndex] = _transfersMapping[currentTransferIndex];
+        _transferCountMapping[_transfereeEIN] = _transferOrderMapping.stichSortOrder(_transferSpecificIndex, currentTransferIndex, 0);
+ 
+        //Only File is supported
+        self[item.ownerInfo.EIN][item.ownerInfo.index].transferIndex = _transferSpecificIndex;
     }
     
     // 5. STRING / BYTE CONVERSION

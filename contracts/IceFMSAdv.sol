@@ -30,12 +30,24 @@ library IceFMSAdv {
     * DEFINE FUNCTIONS
     *************** */
     // 1. SHARING FUNCTIONS
+    /**
+     * @dev Function to share an item to other users, always called by owner of the Item
+     * @param self is the mappings of all pointer to the GlobalRecord Struct (IceGlobal Library) which forms shares in Ice Contract
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
+     * @param _blacklist is the entire mapping of the Blacklist for all users
+     * @param _rec is the GlobalRecord Struct (IceGlobal Library)
+     * @param _ein is the primary user who initiates sharing of the item
+     * @param _toEINs is the array of the users with whom the item will be shared
+     */
     function shareItemToEINs(
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage self, 
         mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems, 
-        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _shareOrder, 
-        mapping (uint => uint) storage _shareCount,
-        mapping (uint => IceGlobal.UserMeta) storage _usermeta,
+        mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
+        mapping (uint => uint) storage _shareCountMapping,
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping,
         mapping (uint => mapping(uint => bool)) storage _blacklist, 
         IceGlobal.GlobalRecord storage _rec, 
         uint _ein, 
@@ -52,9 +64,9 @@ library IceFMSAdv {
                 _shareItemToEIN(
                     self[_toEINs[i]], 
                     _globalItems, 
-                    _shareOrder[_toEINs[i]], 
-                    _shareCount, 
-                    _usermeta[_toEINs[i]],
+                    _totalShareOrderMapping[_toEINs[i]], 
+                    _shareCountMapping, 
+                    _userMetaMapping[_toEINs[i]],
                     _rec, 
                     _toEINs[i]
                 );
@@ -62,6 +74,16 @@ library IceFMSAdv {
         }
     }
     
+    /**
+     * @dev Function to share an item to a specific user, always called by owner of the Item
+     * @param self is the mappings of all shares associated with the recipient user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
+     * @param _shareOrder is the mapping of the shares order using SortOrder Struct (IceSort Library) of the recipient user
+     * @param _shareCount is the mapping of all share count
+     * @param _usermeta is the of that recipient's UserMeta Struct (IceGlobal Library)
+     * @param _rec is the GlobalRecord Struct (IceGlobal Library)
+     * @param _toEIN is the ein of the recipient user 
+     */
     function _shareItemToEIN(
         mapping (uint => IceGlobal.GlobalRecord) storage self, 
         mapping (uint => mapping (uint => IceGlobal.Association)) storage _globalItems, 
@@ -79,20 +101,24 @@ library IceFMSAdv {
         // Set Lock
         _usermeta.lockSharings = true;
 
-        // Create Sharing
-        uint curIndex = _shareCount[_toEIN];
-        uint nextIndex = curIndex.add(1);
-        
-        // no need to require as share can be multiple
-        // and thus should not hamper other sharings
-        if (nextIndex > curIndex) {
-            self[nextIndex] = _rec;
-
-            // Add to share order & global mapping
-            _shareCount[_toEIN] = _shareOrder.addToSortOrder(_shareOrder[0].prev, _shareCount[_toEIN], 0);
+        // Check if the item is already shared or not and do the operation accordingly
+        if (!_rec.getGlobalItemViaRecord(_globalItems).sharedToEINMapping[_toEIN]) {
+            // Create Sharing
+            uint curIndex = _shareCount[_toEIN];
+            uint nextIndex = curIndex.add(1);
             
-            IceGlobal.Association storage globalItem = self[nextIndex].getGlobalItemViaRecord(_globalItems);
-            globalItem.addToGlobalItemsMapping(uint8(IceGlobal.AsscProp.sharedTo), _toEIN, nextIndex);
+            // no need to require as share can be multiple
+            // and thus should not hamper other sharings
+            if (nextIndex > curIndex) {
+                self[nextIndex] = _rec;
+    
+                // Add to share order & global mapping
+                _shareCount[_toEIN] = _shareOrder.addToSortOrder(_shareOrder[0].prev, _shareCount[_toEIN], 0);
+                
+                IceGlobal.Association storage globalItem = self[nextIndex].getGlobalItemViaRecord(_globalItems);
+                globalItem.addToGlobalItemsMapping(uint8(IceGlobal.AsscProp.sharedTo), _toEIN, nextIndex);
+            }
+            
         }
 
         // Reset Lock
@@ -101,6 +127,12 @@ library IceFMSAdv {
 
     /**
      * @dev Function to remove all shares of an Item, always called by owner of the Item
+     * @param self is the mappings of all pointer to the GlobalRecord Struct (IceGlobal Library) which forms shares in Ice Contract
+     * @param _ein is the ein of the primary user
+     * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
+     * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function removeAllShares(
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage self,
@@ -117,7 +149,7 @@ library IceFMSAdv {
     
             // Logic
             // get and pass all EINs, remove share takes care of locking
-            uint[32] memory fromEINs = _globalItemIndividual.sharedTo.getHistoralEINsForGlobalItems(_globalItemIndividual.sharedToCount);
+            uint[] memory fromEINs = _globalItemIndividual.sharedTo.getHistoralEINsForGlobalItems(_globalItemIndividual.sharedToCount);
             
             // Remove item from share
             removeShareFromEINs(
@@ -134,11 +166,17 @@ library IceFMSAdv {
     
     /**
      * @dev Function to remove a shared item from the multiple user's mapping, always called by owner of the Item
+     * @param self is the mappings of all pointer to the GlobalRecord Struct (IceGlobal Library) which forms shares in Ice Contract
+     * @param _ein is the ein of the primary user
+     * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
+     * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function removeShareFromEINs(
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage self,
         uint _ein,
-        uint[32] memory _fromEINs,
+        uint[] memory _fromEINs,
         IceGlobal.Association storage _globalItemIndividual,
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _shareOrderMapping, 
         mapping (uint => uint) storage _shareCountMapping,
@@ -146,26 +184,34 @@ library IceFMSAdv {
     )
     public {
         // Adjust for valid loop
-        for (uint i=0; i < _globalItemIndividual.sharedToCount; i++) {
-            
-            // call share for each EIN you want to remove the share with which is unique
-            if ((_ein != _fromEINs[i])) {
-                
+        uint scount = 0;
+        
+        while (scount < _fromEINs.length) {
+            // call share for each EIN you want to remove the share
+            if (_ein != _fromEINs[scount]) {
                 // remove individual share 
                 _removeShareFromEIN(
-                    self[_fromEINs[i]], 
-                    _fromEINs[i],
+                    self[_fromEINs[scount]], 
+                    _fromEINs[scount],
                     _globalItemIndividual, 
-                    _shareOrderMapping[_fromEINs[i]], 
+                    _shareOrderMapping[_fromEINs[scount]], 
                     _shareCountMapping, 
-                    _userMetaMapping[_fromEINs[i]]
+                    _userMetaMapping[_fromEINs[scount]]
                 );
             }
+            
+            scount = scount.add(1);
         }
     }
     
     /**
      * @dev Private Function to remove a shared item from the user's mapping
+     * @param self is the mappings of all shares associated with the recipient user
+     * @param _fromEIN is the ein of the recipient user
+     * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
+     * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the recipient user
      */
     function _removeShareFromEIN(
         mapping (uint => IceGlobal.GlobalRecord) storage self,
@@ -189,18 +235,24 @@ library IceFMSAdv {
         // no need to require as share can be multiple
         // and thus should not hamper other sharings removals
         if (curIndex > 0) {
-            uint8 mappedIndex = _globalItemIndividual.sharedTo.findItemOwnerInGlobalItems(_globalItemIndividual.sharedToCount, _fromEIN);
+            uint8 mappedIndex;
+            bool itemFound;
+            
+            (mappedIndex, itemFound) = _globalItemIndividual.sharedTo.findItemOwnerInGlobalItems(_globalItemIndividual.sharedToCount, _fromEIN);
             
             // Only proceed if mapping if found 
-            if (mappedIndex > 0) {
+            if (itemFound) {
                 uint _itemIndex = _globalItemIndividual.sharedTo[mappedIndex].index;
                 
                 // Remove the share from global items mapping
                 _globalItemIndividual.removeFromGlobalItemsMapping(uint8(IceGlobal.AsscProp.sharedTo), mappedIndex);
                 
-                // Swap the shares, then Reove from share order & stich
+                // Swap the shares, then Remove from share order & stich
                 self[_itemIndex] = self[curIndex];
                 _shareCountMapping[_fromEIN] = _shareOrderMapping.stichSortOrder(_itemIndex, curIndex, 0);
+                
+                // Delete the latest shares now
+                delete (self[curIndex]);
             }
         }
 
@@ -210,6 +262,12 @@ library IceFMSAdv {
     
     /**
      * @dev Function to remove shared item by the user to whom the item is shared
+     * @param self is the mappings of all shares associated with the recipient user (ie Sharee)
+     * @param _shareeEIN is the ein of the recipient user
+     * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
+     * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
+     * @param _shareCountMapping is the mapping of all share count
+     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the recipient user
      */
     function removeSharingItemBySharee(
         mapping (uint => IceGlobal.GlobalRecord) storage self,
@@ -230,4 +288,8 @@ library IceFMSAdv {
             _specificUserMeta
         );
     }
+    
+    // 2. STAMPING FUNCTIONS
+    
+    
 }

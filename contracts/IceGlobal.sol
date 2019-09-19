@@ -3,6 +3,8 @@ pragma solidity ^0.5.1;
 import "./SafeMath.sol";
 import "./SafeMath8.sol";
 
+import "./interfaces/IdentityRegistryInterface.sol";
+
 /**
  * @title Ice Protocol Global Items Libray
  * @author Harsh Rajat
@@ -49,6 +51,8 @@ library IceGlobal {
         uint8 stampedToCount; // the count of stamping
 
         mapping (uint8 => ItemOwner) sharedTo; // to contain share to
+        mapping (uint => bool) sharedToEINMapping; // contains EIN Mapping of shared to
+        
         mapping (uint8 => ItemOwner) stampedTo; // to have stamping reqs
     }
     
@@ -131,6 +135,36 @@ library IceGlobal {
         i1 = self.i1;
         i2 = self.i2;
     }
+    
+    /**
+     * @dev Function to reserve and return global item slot
+     * @param index1 is the initial first index of global item
+     * @param index2 is the initial second index of global item 
+     * @return globalIndex1 The reserved first index of global item
+     * @return globalIndex2 The reserved second index of global item
+     */
+    function reserveGlobalItemSlot(
+        uint index1,
+        uint index2
+    )
+    external pure
+    returns (
+        uint globalIndex1,
+        uint globalIndex2
+    ) {
+        // Increment global Item, this starts from 0, 0
+        globalIndex1 = index1;
+        globalIndex2 = index2;
+        
+        if ((globalIndex2 + 1) == 0) {
+            // This is loopback, Increment newIndex1
+            globalIndex1 = globalIndex1.add(1);
+            globalIndex2 = 0;
+        }
+        else {
+             globalIndex2 = globalIndex2 + 1;
+        }
+    }
 
     /**
      * @dev Function to add item to global items
@@ -191,20 +225,25 @@ library IceGlobal {
         uint8 _transferCount
     ) 
     external view 
-    returns (uint[32] memory EINs){
+    returns (uint[] memory EINs){
         uint8 i = 0;
-        while (_transferCount != 0) {
-            EINs[i] = self[_transferCount].EIN;
+        uint8 tc = _transferCount;
+        
+        while (tc != 0) {
+            EINs[i] = self[tc].EIN;
             
-            _transferCount.sub(1);
+            i = i.add(1);
+            tc = tc.sub(1);
         }
     }
     
     /**
      * @dev Function to find the relevant mapping index of item mapped for a given EIN
+     * @param self is the mapping of ItemOwner to users
      * @param _count is the count of relative mapping of global item Association
      * @param _searchForEIN is the non-owner EIN to search
      * @return mappedIndex is the index which is where the relative mapping points to for those items
+     * @return ownerFound indicates if the owner was found or not
      */
     function findItemOwnerInGlobalItems(
         mapping (uint8 => ItemOwner) storage self, 
@@ -212,19 +251,23 @@ library IceGlobal {
         uint256 _searchForEIN
     ) 
     external view 
-    returns (uint8 mappedIndex) {
+    returns (
+        uint8 mappedIndex,
+        bool ownerFound
+    ) {
         // Logic
         mappedIndex = 0;
         uint8 count = _count;
         
-        while (count != 0) {
+        while (count > 0) {
             if (self[count].EIN == _searchForEIN) {
                 mappedIndex = count;
+                ownerFound = true;
                 
                 count = 1;
             }
             
-            count.sub(1);
+            count = count.sub(1);
         }
     }
     
@@ -262,8 +305,12 @@ library IceGlobal {
         );
             
         if (_ofType == uint8(AsscProp.sharedTo)) {
+            // Logic
             self.sharedTo[newCount] = mappedItem;
             self.sharedToCount = newCount;
+            
+            // Add the EIN which is getting shared
+            self.sharedToEINMapping[_toEIN] = true;
         }
         else if (_ofType == uint8(AsscProp.stampedTo)) {
             self.stampedTo[newCount] = mappedItem;
@@ -290,6 +337,11 @@ library IceGlobal {
         // Just swap and deduct
         if (_ofType == uint8(AsscProp.sharedTo)) {
             newCount = self.sharedToCount.sub(1);
+            
+            // Remove the EIN which is getting unshared
+            self.sharedToEINMapping[self.sharedTo[_mappedIndex].EIN] = false;
+            
+            // Logic Operation
             self.sharedTo[_mappedIndex] = self.sharedTo[self.sharedToCount];
             self.sharedToCount = newCount;
         }
@@ -299,7 +351,39 @@ library IceGlobal {
             self.stampedToCount = newCount;
         }
     }
+    
+    /**
+     * @dev Private Function to check that only unique EINs can have access
+     * @param _ein is the EIN of the user
+     * @param _identityRegistry is the IdentityRegistry pointer (ERC-1484)
+     */
+    function condEINExists(
+        uint _ein,
+        IdentityRegistryInterface _identityRegistry
+    )
+    external view {
+        require (
+            (_identityRegistry.identityExists(_ein) == true),
+            "EIN not Found"
+        );
+    }
 
+    /**
+     * @dev Private Function to check that only unique EINs can have access
+     * @param _ein1 The First EIN
+     * @param _ein2 The Second EIN
+     */
+    function condValidEIN(
+        uint _ein1, 
+        uint _ein2
+    )
+    external pure {
+        require (
+            (_ein1 != _ein2),
+            "Same EINs"
+        );
+    }
+    
     /**
      * @dev Private Function to check that only unique EINs can have access
      * @param _ein1 The First EIN
@@ -316,7 +400,6 @@ library IceGlobal {
         );
     }
     
-    
     /**
      * @dev Function to check that only owner of EIN can access this
      * @param self is the Association Struct (IceGlobal library) which contains item properties
@@ -326,7 +409,7 @@ library IceGlobal {
         Association storage self, 
         uint _ein
     )
-    public view {
+    external view {
         require (
             (self.ownerInfo.EIN == _ein),
             "Only File Owner"
@@ -334,18 +417,55 @@ library IceGlobal {
     }
     
     /**
-     * @dev Function to check that a file hasn't been marked for stamping
+     * @dev Function to check that a item hasn't been marked for stamping
      * @param self is the Association Struct (IceGlobal library) which contains item properties
      */
     function condUnstampedItem(Association storage self)
-    public view {
-        // Check if the group file exists or not
+    external view {
+        // Check if the item is stamped or not
         require (
             (self.isStamped == false),
             "Item Stamped"
         );
     }
     
+    /**
+     * @dev Function to check that an item is file or not
+     * @param self is the Association Struct (IceGlobal library) which contains item properties
+     */
+    function condItemIsFile(Association storage self)
+    external view {
+        // Check if the item is File
+        require (
+            (self.isFile == true),
+            "Item is not File"
+        );
+    }
+    
+    /**
+     * @dev Function to check that overflow doesn't occur
+     * @param index is the current index which needs to be checked
+     */
+    function condCheckOverflow(uint index) 
+    external pure { 
+        require (
+            (index + 1 > index),
+            "Limit Reached - Overflow"
+        );
+    }
+    
+    /**
+     * @dev Function to check that Underflow doesn't occur
+     * @param index is the current index which needs to be checked
+     */
+    function condCheckUnderflow(uint index) 
+    external pure { 
+        require (
+            (index - 1 < index),
+            "Limit Reached - Underflow"
+        );
+    }
+     
     // 2. WHITE / BLACK LIST
     /**
      * @dev Function to check if user is in a particular list (blacklist or whitelist) of the primary user
@@ -443,7 +563,7 @@ library IceGlobal {
      * @param _targetEIN is the EIN of the user who is getting checked
      */
     function condNotInList(
-        mapping(uint => bool) storage self, 
+        mapping (uint => bool) storage self, 
         uint _targetEIN
     )
     public view {
@@ -460,7 +580,7 @@ library IceGlobal {
      * @param self is thee 
      */
     function condFilesOpFree(UserMeta storage self)
-    public view {
+    external view {
         require (
           (self.lockFiles == false),
           "Files Locked"
@@ -472,7 +592,7 @@ library IceGlobal {
      * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
      */
     function condGroupsOpFree(UserMeta storage self)
-    public view {
+    external view {
         require (
           (self.lockGroups == false),
           "Groups Locked"
@@ -484,7 +604,7 @@ library IceGlobal {
      * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
      */
     function condSharingsOpFree(UserMeta storage self)
-    public view {
+    external view {
         require (
           (self.lockSharings == false),
           "Sharing Locked"
@@ -496,7 +616,7 @@ library IceGlobal {
      * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
      */
     function condTransfersOpFree(UserMeta storage self)
-    public view {
+    external view {
         require (
           (self.lockTransfers == false),
           "Transfers Locked"

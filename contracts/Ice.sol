@@ -34,7 +34,9 @@ contract Ice {
     
     using IceFMS for IceFMS.File;
     using IceFMS for mapping (uint => IceFMS.File);
+    using IceFMS for mapping (uint => mapping (uint => IceFMS.File));
     using IceFMS for IceFMS.Group;
+    using IceFMS for mapping (uint => IceFMS.Group);
     using IceFMS for uint;
     
     using IceFMSAdv for mapping (uint => IceGlobal.GlobalRecord);
@@ -59,7 +61,7 @@ contract Ice {
      */
     mapping (uint => mapping(uint => IceGlobal.Association)) globalItems;
     uint public globalIndex1; // store the first index of association to retrieve files
-    uint public globalIndex2; // store the first index of association to retrieve files
+    uint public globalIndex2; // store the second index of association to retrieve files
 
     /* for each user (EIN), look up the Transitioon State they have
      * stored on a given index.
@@ -84,9 +86,9 @@ contract Ice {
     /* for each user (EIN), look up the incoming transfer request
      * stored on a given index.
      */
-    mapping (uint => mapping(uint => IceGlobal.Association)) transfers;
+    mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) public transfers;
     mapping (uint => mapping(uint => IceSort.SortOrder)) public transferOrder; // Store round robin order of transfers
-    mapping (uint => uint) public transferIndex; // store the maximum transfer request count reached to provide looping functionality
+    mapping (uint => uint) public transferCount; // store the maximum transfer request count reached to provide looping functionality
 
     /* for each user (EIN), look up the incoming sharing files
      * stored on a given index.
@@ -123,96 +125,49 @@ contract Ice {
     /* ***************
     * DEFINE EVENTS
     *************** */
+    // When Item is hidden 
+    event ItemHidden(uint EIN, uint fileIndex, bool status);
+    
+    // When Item is Shared
+    event ItemShareChange(uint EIN, uint fileIndex);
+    
     // When File is created
-    event FileCreated(
-        uint EIN,
-        uint fileIndex,
-        string fileName
-    );
+    event FileCreated(uint EIN, uint fileIndex, string fileName);
 
     // When File is renamed
-    event FileRenamed(
-        uint EIN,
-        uint fileIndex,
-        string fileName
-    );
+    event FileRenamed(uint EIN, uint fileIndex, string fileName);
 
     // When File is moved
-    event FileMoved(
-        uint EIN,
-        uint fileIndex,
-        uint groupIndex,
-        uint groupFileIndex
-    );
+    event FileMoved(uint EIN, uint fileIndex, uint groupIndex, uint groupFileIndex);
 
     // When File is deleted
-    event FileDeleted(
-        uint EIN,
-        uint fileIndex
-    );
+    event FileDeleted(uint EIN, uint fileIndex);
 
     // When Group is created
-    event GroupCreated(
-        uint EIN,
-        uint groupIndex,
-        string groupName
-    );
+    event GroupCreated(uint EIN, uint groupIndex, string groupName);
 
     // When Group is renamed
-    event GroupRenamed(
-        uint EIN,
-        uint groupIndex,
-        string groupName
-    );
+    event GroupRenamed(uint EIN, uint groupIndex, string groupName);
 
     // When Group Status is changed
-    event GroupDeleted(
-        uint EIN,
-        uint groupIndex,
-        uint groupReplacedIndex
-    );
+    event GroupDeleted(uint EIN, uint groupIndex, uint groupReplacedIndex);
 
     // When Transfer is initiated from owner
-    event FileTransferInitiated(
-        uint indexed EIN,
-        uint indexed transfereeEIN,
-        uint indexed fileID
-    );
+    event FileTransferInitiated(uint indexed EIN, uint indexed transfereeEIN, uint indexed fileID);
 
     // When whitelist is updated
-    event AddedToWhitelist(
-        uint EIN,
-        uint recipientEIN
-    );
-
-    event RemovedFromWhitelist(
-        uint EIN,
-        uint recipientEIN
-    );
+    event AddedToWhitelist(uint EIN, uint recipientEIN);
+    event RemovedFromWhitelist(uint EIN, uint recipientEIN);
 
     // When blacklist is updated
-    event AddedToBlacklist(
-        uint EIN,
-        uint recipientEIN
-    );
-
-    event RemovedFromBlacklist(
-        uint EIN,
-        uint recipientEIN
-    );
-
-    // Notice Events
-    event Notice(
-        uint indexed EIN,
-        string indexed notice,
-        uint indexed statusType
-    );
+    event AddedToBlacklist(uint EIN, uint recipientEIN);
+    event RemovedFromBlacklist(uint EIN, uint recipientEIN);
 
     /* ***************
     * DEFINE CONSTRUCTORS AND RELATED FUNCTIONS
     *************** */
     // CONSTRUCTOR / FUNCTIONS
-    address snowflakeAddress = 0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For local use
+    address snowflakeAddress = 0xC155f98Fa02AeED743a2658a4B076701376a27ee; //0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; // For local use
     //address snowflakeAddress = 0xB0D5a36733886a4c5597849a05B315626aF5222E; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For rinkeby
     
     constructor (/*address snowflakeAddress*/) public {
@@ -281,6 +236,9 @@ contract Ice {
         
         // Logic
         globalItems[_index1][_index2].isHidden = _isHidden;
+        
+        // Trigger Event
+        emit ItemHidden(ein, globalItems[_index1][_index2].ownerInfo.EIN, _isHidden); 
     }
 
     /**
@@ -317,32 +275,6 @@ contract Ice {
         atIndex = _mappedItem.index;
     }
     
-    /**
-     * @dev Private Function to reserve global item slot
-     * @return i1 The reserved first index of global item
-     * @return i2 The reserved second index of global item
-     */
-    function _reserveGlobalItemSlot() 
-    internal 
-    returns (
-        IceGlobal.GlobalRecord memory rec
-    ){
-        // Increment global Item, this starts from 0, 0
-        uint i1 = globalIndex1;
-        uint i2 = globalIndex2;
-        
-        if ((i2 + 1) == 0) {
-            // This is loopback, Increment newIndex1
-            globalIndex1 = globalIndex1.add(1);
-            globalIndex2 = 0;
-        }
-        else {
-             globalIndex2 = globalIndex2 + 1;
-        }
-        
-        rec = IceGlobal.GlobalRecord(i1, i2);
-    }
-
     // 2. FILE FUNCTIONS
     /**
      * @dev Function to get the desired amount of files indexes (max 20 at times) of an EIN, the 0 indicates 
@@ -420,12 +352,12 @@ contract Ice {
      * @dev Function to get file tranfer owner info of an EIN
      * @param _ein is the owner EIN
      * @param _fileIndex is index of the file
-     * @param _transferIndex is index to poll
+     * @param _transferCount is index to poll
      */
-    function getFileTransferOwners(uint _ein, uint _fileIndex, uint _transferIndex)
+    function getFileTransferOwners(uint _ein, uint _fileIndex, uint _transferCount)
     external view
     returns (uint recipientEIN) {
-        recipientEIN = files[_ein][_fileIndex].getFileTransferOwners(_transferIndex);
+        recipientEIN = files[_ein][_fileIndex].getFileTransferOwners(_transferCount);
     }
 
     // /**
@@ -474,7 +406,10 @@ contract Ice {
         // OP 0 - Normal | 1 - Avatar
         if (_op == 0) {
             // Reserve Global Index
-            rec = _reserveGlobalItemSlot();
+            (globalIndex1, globalIndex2) = IceGlobal.reserveGlobalItemSlot(globalIndex1, globalIndex2);
+        
+            // Create the record
+            rec = IceGlobal.GlobalRecord(globalIndex1, globalIndex2);
         
             // Create File Next Index
             nextIndex = fileCount[ein] + 1;
@@ -614,7 +549,7 @@ contract Ice {
         );
     }
 
-    // 4. GROUP FILES FUNCTIONS
+    // 3. GROUP FILES FUNCTIONS
     /**
      * @dev Function to get all the files of an EIN associated with a group
      * @param _ein is the owner EIN
@@ -623,13 +558,19 @@ contract Ice {
      * @param _limit is the limit of file indexes requested
      * @param _asc is the order by which the files will be presented
      */
-    function getGroupFileIndexes(uint _ein, uint _groupIndex, uint _seedPointer, uint16 _limit, bool _asc)
+    function getGroupFileIndexes(
+        uint _ein, 
+        uint _groupIndex, 
+        uint _seedPointer, 
+        uint16 _limit, 
+        bool _asc
+    )
     external view
     returns (uint[20] memory groupFileIndexes) {
         return groups[_ein][_groupIndex].groupFilesOrder.getIndexes(_seedPointer, _limit, _asc);
     }
 
-    // 3. GROUP FUNCTIONS
+    // 4. GROUP FUNCTIONS
     /**
      * @dev Function to return group info for an EIN
      * @param _ein the EIN of the user
@@ -637,21 +578,17 @@ contract Ice {
      * @return index is the index of the group
      * @return name is the name associated with the group
      */
-    function getGroup(uint _ein, uint _groupIndex)
+    function getGroup(
+        uint _ein, 
+        uint _groupIndex
+    )
     external view
-    returns (uint index, string memory name) {
-        // Check constraints
-        _groupIndex.condValidItem(groupCount[_ein]);
-
-        // Logic flow
-        index = _groupIndex;
-
-        if (_groupIndex == 0) {
-            name = "Root";
-        }
-        else {
-            name = groups[_ein][_groupIndex].name;
-        }
+    returns (
+        uint index, 
+        string memory name
+    ) {
+        // Logic
+        (index, name) = groups[_ein][_groupIndex].getGroup(_groupIndex, groupCount[_ein]);
     }
 
     /**
@@ -669,7 +606,7 @@ contract Ice {
     }
 
     /**
-     * @dev Create a new Group for the user
+     * @dev Function to create a new Group for the user
      * @param _groupName describes the name of the group
      */
     function createGroup(string memory _groupName)
@@ -677,63 +614,45 @@ contract Ice {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
         
-        // Check Restrictions
-        usermeta[ein].condGroupsOpFree();
-
-        // Set Group Atomicity
-        usermeta[ein].lockGroups = true;
-
-        // Reserve Global Index
-        IceGlobal.GlobalRecord memory rec = _reserveGlobalItemSlot();
-
-        // Check if this is unitialized, if so, initialize it, reserved value of 0 is skipped as that's root
-        uint currentGroupIndex = groupCount[ein];
-        uint nextGroupIndex = currentGroupIndex + 1;
-        
-        // Add to Global Items as well
-        globalItems.addItemToGlobalItems(rec.i1, rec.i2, ein, nextGroupIndex, false, false, false);
-        
-        // Assign it to User (EIN)
-        groups[ein][nextGroupIndex] = IceFMS.Group(
-            rec, // Add Record to struct
-    
-            _groupName, //name of Group
-            0 // The group file count
+        // Logic
+        uint nextGroupIndex;
+        (globalIndex1, globalIndex2, nextGroupIndex) = groups[ein].createGroup(
+            ein, 
+            _groupName, 
+            groupOrder[ein], 
+            groupCount, 
+            globalItems,
+            globalIndex1,
+            globalIndex2,
+            usermeta[ein]
         );
-
-        // Add to Stitch Order & Increment index
-        groupCount[ein] = groupOrder[ein].addToSortOrder(groupOrder[ein][0].prev, currentGroupIndex, 0);
-
+        
         // Trigger Event
         emit GroupCreated(ein, nextGroupIndex, _groupName);
-
-        // Reset Group Atomicity
-        usermeta[ein].lockGroups = false;
     }
 
     /**
-     * @dev Rename an existing Group for the user / ein
+     * @dev Function to rename an existing Group for the user / ein
      * @param _groupIndex describes the associated index of the group for the user / ein
      * @param _groupName describes the new name of the group
      */
-    function renameGroup(uint _groupIndex, string calldata _groupName)
+    function renameGroup(
+        uint _groupIndex, 
+        string calldata _groupName
+    )
     external  {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
-        // Check Restrictions
-        _isNonReservedItem(_groupIndex);
-        _groupIndex.condValidItem(groupCount[ein]);
-
-        // Replace the group name
-        groups[ein][_groupIndex].name = _groupName;
-
+        // Logic
+        groups[ein][_groupIndex].renameGroup(_groupIndex, groupCount[ein], _groupName);
+        
         // Trigger Event
         emit GroupRenamed(ein, _groupIndex, _groupName);
     }
 
     /**
-     * @dev Delete an existing group for the user / ein
+     * @dev Function to delete an existing group for the user / ein
      * @param _groupIndex describes the associated index of the group for the user / ein
      */
     function deleteGroup(uint _groupIndex)
@@ -741,43 +660,24 @@ contract Ice {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
 
-        // Check Restrictions
-        _isGroupFileFree(ein, _groupIndex); // Check that Group contains no Files
-        _isNonReservedItem(_groupIndex);
-        _groupIndex.condValidItem(groupCount[ein]);
-        usermeta[ein].condGroupsOpFree();
-
-        // Set Group Atomicity
-        usermeta[ein].lockGroups = true;
-
-        // Check if the group exists or not
-        uint currentGroupIndex = groupCount[ein];
-
-        // Remove item from sharing of other users
-        IceGlobal.Association storage globalItem = groups[ein][_groupIndex].rec.getGlobalItemViaRecord(globalItems);
-        shares.removeAllShares(
+        // Logic
+        uint currentGroupIndex = groups[ein].deleteGroup(
             ein,
-            globalItem, 
-            shareOrder, 
-            shareCount, 
+            
+            _groupIndex,
+            groupOrder[ein], 
+            groupCount, 
+            
+            shares,
+            shareOrder,
+            shareCount,
+            
+            globalItems,
             usermeta
         );
         
-        // Deactivate from global record
-        globalItem.deleteGlobalRecord();
-
-        // Swap Index mapping & remap the latest group ID if this is not the last group
-        groups[ein][_groupIndex] = groups[ein][currentGroupIndex];
-        groupCount[ein] = groupOrder[ein].stichSortOrder(_groupIndex, currentGroupIndex, 0);
-
-        // Delete the latest group now
-        delete (groups[ein][currentGroupIndex]);
-
         // Trigger Event
         emit GroupDeleted(ein, _groupIndex, currentGroupIndex);
-
-        // Reset Group Atomicity
-        usermeta[ein].lockGroups = false;
     }
 
     // 4. SHARING FUNCTIONS
@@ -809,7 +709,11 @@ contract Ice {
      * @param _itemIndex is the index of the item on the owner's mapping
      * @param _isFile indicates if the item is file or group 
      */
-    function removeShareFromEINs(uint[32] memory _fromEINs, uint _itemIndex, bool _isFile)
+    function removeShareFromEINs(
+        uint[] memory _fromEINs, 
+        uint _itemIndex, 
+        bool _isFile
+    )
     public {
         // Get user EIN
         uint ein = identityRegistry.getEIN(msg.sender);
@@ -822,7 +726,7 @@ contract Ice {
         }
         else {
             _itemIndex.condValidItem(groupCount[ein]);
-            rec = files[ein][_itemIndex].rec;
+            rec = groups[ein][_itemIndex].rec;
         }
         
         shares.removeShareFromEINs(
@@ -857,300 +761,347 @@ contract Ice {
     
     // 5. STAMPING FUNCTIONS
     
-    // // 6. TRANSFER FILE FUNCTIONS
-    // /**
-    //  * @dev Function to intiate file transfer to another EIN(user)
-    //  * @param _fileIndex is the index of file for the original user's EIN
-    //  * @param _transfereeEIN is the recipient user's EIN
-    //  */
-    // function initiateFileTransfer(uint _fileIndex, uint _transfereeEIN)
-    // external {
-    //     // Get user EIN
-    //     uint ein = identityRegistry.getEIN(msg.sender);
+    // 6. TRANSFER FILE FUNCTIONS
+    /**
+     * @dev Function to intiate file transfer to another EIN(user)
+     * @param _fileIndex is the index of file for the original user's EIN
+     * @param _transfereeEIN is the recipient user's EIN
+     */
+    function initiateFileTransfer(
+        uint _fileIndex, 
+        uint _transfereeEIN
+    )
+    external {
+        // Get user EIN
+        uint transfererEIN = identityRegistry.getEIN(msg.sender);
+        
+        // Check Restrictions
+        IceFMS.doInitiateFileTransferChecks(
+            files,
+            
+            transfererEIN,
+            _transfereeEIN,
+            _fileIndex,
+            
+            fileCount,
+            groups,
+            blacklist,
+            
+            globalItems,
+            usermeta,
+            
+            identityRegistry
+        );
+        
+        // Set Transfers Atomiticy
+        usermeta[transfererEIN].lockTransfers = true;
+        usermeta[_transfereeEIN].lockTransfers = true;
 
-    //     // Check Restrictions
-    //     _isValidEIN(_transfereeEIN); // Check Valid EIN
-    //     IceGlobal.condUniqueEIN(ein, _transfereeEIN); // Check EINs and Unique
-    //     // Do later _isUnstampedItem(files[ein][_fileIndex].rec); // Check if the File is not stamped
-    //     // Do later _isUnstampedItem(groups[ein][files[ein][_fileIndex].associatedGroupIndex].rec); // Check if the Group is not stamped
-    //     blacklist[_transfereeEIN].condNotInList(ein); // Check if The transfee hasn't blacklisted the file owner
-    //     usermeta[ein].condTransfersOpFree(); // Check if Transfers are not locked for current user
-    //     usermeta[_transfereeEIN].condTransfersOpFree(); // Check if the transfers are not locked for recipient user
+        // Check and change flow if white listed
+        if (whitelist[_transfereeEIN][transfererEIN] == true) {
+            // Directly transfer file, 0 is always root group
+            _doDirectFileTransfer(transfererEIN, _transfereeEIN, _fileIndex, 0);
+        }
+        else {
+            // Request based file Transfers
+            files[transfererEIN][_fileIndex].doPermissionedFileTransfer(
+                _transfereeEIN,
+                
+                transfers[_transfereeEIN],
+                transferOrder[_transfereeEIN],
+                transferCount,
+                
+                globalItems
+            );
+            
+            // Trigger Event
+            emit FileTransferInitiated(transfererEIN, _transfereeEIN, _fileIndex);
+        }
 
-    //     // Set Transfers Atomiticy
-    //     usermeta[ein].lockTransfers = true;
-    //     usermeta[_transfereeEIN].lockTransfers = true;
-
-    //     // Check and change flow if white listed
-    //     if (whitelist[_transfereeEIN][ein] == true) {
-    //         // Directly transfer file, 0 is always root group
-    //         _doFileTransfer(ein, _fileIndex, _transfereeEIN, 0);
-    //     }
-    //     else {
-    //       // Request based file Transfers
-    //       _initiateRequestedFileTransfer(ein, _fileIndex, _transfereeEIN);
-    //     }
-
-    //     // Reset Transfers Atomiticy
-    //     usermeta[ein].lockTransfers = false;
-    //     usermeta[_transfereeEIN].lockTransfers = false;
-    // }
-
-    // /**
-    //  * @dev Function to accept file transfer from a user
-    //  * @param _transfererEIN is the previous(current) owner EIN
-    //  * @param _fileIndex is the index where file is stored
-    //  * @param _transferSpecificIndex is the file mapping stored no the recipient transfers mapping
-    //  * @param _groupIndex is the index of the group where the file is suppose to be for the recipient
-    //  */
-    // function acceptFileTransfer(uint _transfererEIN, uint _fileIndex, uint _transferSpecificIndex, uint _groupIndex)
-    // external {
-    //     // Get user EIN | Transferee initiates this
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-
-    //     // Check Restrictions
-    //     _isMarkedForTransferee(_transfererEIN, _fileIndex, ein); // Check if the file is marked for transfer to the recipient
-    //     usermeta[_transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the sender of the file
-    //     usermeta[ein].condTransfersOpFree(); // Check that the transfers are not locked for the recipient of the file
-
-    //     // Set Transfers Atomiticy
-    //     usermeta[_transfererEIN].lockTransfers = true;
-    //     usermeta[ein].lockTransfers = true;
-
-    //     // Check if the item is marked for transfer
-    //     require (
-    //         (files[_transfererEIN][_fileIndex].markedForTransfer == true),
-    //         "Can't proceed, item is not marked for Transfer."
-    //     );
-
-    //     // Do file transfer
-    //     _doFileTransfer(_transfererEIN, _fileIndex, ein, _groupIndex);
-
-    //     // Finally remove the file from Tranferee Mapping
-    //     _removeFileFromTransfereeMapping(ein, _transferSpecificIndex);
-
-    //     // Reset Transfers Atomiticy
-    //     usermeta[_transfererEIN].lockTransfers = false;
-    //     usermeta[ein].lockTransfers = false;
-    // }
-
-    // /**
-    //  * @dev Function to cancel file transfer inititated by the current owner
-    //  * @param _fileIndex is the index where file is stored
-    //  * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
-    //  */
-    // function cancelFileTransfer(uint _fileIndex, uint _transfereeEIN)
-    // external {
-    //     // Get user EIN | Transferee initiates this
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-
-    //     // Check Restrictions
-    //     usermeta[_transfereeEIN].condTransfersOpFree(); 
-    //     usermeta[ein].condTransfersOpFree();
-
-    //     // Set Transfers Atomiticy
-    //     usermeta[ein].lockTransfers = true;
-    //     usermeta[_transfereeEIN].lockTransfers = true;
-
-    //     // Check if the item is marked for transfer
-    //     require (
-    //         (files[ein][_fileIndex].markedForTransfer == true),
-    //         "Transfer Prohibited"
-    //     );
-
-    //     // Cancel file transfer
-    //     files[ein][_fileIndex].markedForTransfer = false;
-
-    //     // Remove file from  transferee
-    //     uint transferSpecificIndex = files[ein][_fileIndex].transferIndex;
-    //     _removeFileFromTransfereeMapping(_transfereeEIN, transferSpecificIndex);
-
-    //     // Reset Transfers Atomiticy
-    //     usermeta[ein].lockTransfers = false;
-    //     usermeta[_transfereeEIN].lockTransfers = false;
-    // }
+        // Reset Transfers Atomiticy
+        usermeta[transfererEIN].lockTransfers = false;
+        usermeta[_transfereeEIN].lockTransfers = false;
+    }
     
-    // /**
-    //  * @dev Private Function to initiate requested file transfer
-    //  * @param _transfererEIN is the owner EIN
-    //  * @param _fileIndex is the index where file is stored
-    //  * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
-    //  */
-    // function _initiateRequestedFileTransfer(uint _transfererEIN, uint _fileIndex, uint _transfereeEIN)
-    // internal {
-    //      // Map it to transferee mapping of transfers
-    //     // Add to transfers of TransfereeEIN User, 0 is always reserved
-    //     uint currentTransferIndex = transferIndex[_transfereeEIN];
-    //     uint nextTransferIndex = currentTransferIndex + 1;
+    /**
+     * @dev Private Function to do file transfer from previous (current) owner to new owner
+     * @param _transfererEIN is the previous(current) owner EIN
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     * @param _fileIndex is the index where file is stored in the owner
+     * @param _toRecipientGroup is the index of the group where the file is suppose to be for the recipient
+     */
+    function _doDirectFileTransfer(
+        uint _transfererEIN, 
+        uint _transfereeEIN, 
+        uint _fileIndex, 
+        uint _toRecipientGroup
+    )
+    internal {
+         // Set Transfers Atomiticy
+        usermeta[_transfererEIN].lockTransfers = true;
+        usermeta[_transfereeEIN].lockTransfers = true;
 
-    //     require (
-    //         (nextTransferIndex > currentTransferIndex),
-    //         "Limit reached on number of transfers, can't transfer more files to that EIN (User) till they clear it up."
-    //     );
+        // Logic
+        uint nextTransfereeIndex = files.doFileTransferPart1 (
+            _transfererEIN,
+            _transfereeEIN,
+            _fileIndex,
+            
+            fileOrder,
+            fileCount
+        );
+        
+        files.doFileTransferPart2 (
+            _transfereeEIN, 
+            _fileIndex, 
+            _toRecipientGroup,
+            groupCount[_transfereeEIN],
+            nextTransfereeIndex,
+            
+            groups,
+            globalItems
+        );
 
-    //     // Mark the file for transfer
-    //     files[_transfererEIN][_fileIndex].markedForTransfer = true;
-    //     files[_transfererEIN][_fileIndex].transferEIN = _transfereeEIN;
-    //     files[_transfereeEIN][_fileIndex].transferIndex = nextTransferIndex;
+        // Delete File
+        _deleteFileAnyOwner(_transfererEIN, _fileIndex);
 
-    //     // Get Item Association Index
-    //     IceGlobal.Association storage globalItem = files[_transfererEIN][_fileIndex].rec.getGlobalItemViaRecord(globalItems);
-
-    //     // Check Item is file
-    //     require (
-    //         (globalItem.isFile == true),
-    //         "Non-Transferable"
-    //     );
-
-    //     // Create New Transfer
-    //     transfers[_transfereeEIN][nextTransferIndex] = globalItem;
-
-    //     // Update sort order and index
-    //     transferIndex[_transfereeEIN] = transferOrder[_transfererEIN].addToSortOrder(currentTransferIndex, 0);
-
-    //     // Trigger Event
-    //     emit FileTransferInitiated(_transfererEIN, _transfereeEIN, _fileIndex);
-    // }
+        // Reset Transfers Atomiticy
+        usermeta[_transfererEIN].lockTransfers = false;
+        usermeta[_transfereeEIN].lockTransfers = false;
+    }
     
-    // /**
-    //  * @dev Private Function to do file transfer from previous (current) owner to new owner
-    //  * @param _transfererEIN is the previous(current) owner EIN
-    //  * @param _fileIndex is the index where file is stored
-    //  * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
-    //  * @param _groupIndex is the index of the group where the file is suppose to be for the recipient
-    //  */
-    // function _doFileTransfer(uint _transfererEIN, uint _fileIndex, uint _transfereeEIN, uint _groupIndex)
-    // internal {
-    //     // Get Indexes
-    //     uint currentTransfererIndex = fileCount[_transfererEIN];
-    //     uint currentTransfereeIndex = fileCount[_transfereeEIN];
+    /**
+     * @dev Function to accept file transfer from a user
+     * @param _atRecipientTransferIndex is the file mapping stored no the recipient transfers mapping
+     * @param _toRecipientGroup is the index of the group where the file is suppose to be for the recipient
+     */
+    function acceptFileTransfer(
+        uint _atRecipientTransferIndex,
+        uint _toRecipientGroup
+    )
+    external {
+        // Get user EIN | Transferee initiates this
+        uint transfereeEIN = identityRegistry.getEIN(msg.sender);
+        
+        // Get owner info
+        IceGlobal.ItemOwner memory ownerInfo = transfers[transfereeEIN][_atRecipientTransferIndex].getGlobalItemViaRecord(globalItems).ownerInfo;
+        
+        uint transfererEIN = ownerInfo.EIN;
+        uint fileIndex = ownerInfo.index;
+        
+        // Accept File Transfer Part 1
+        files.acceptFileTransferPart1(
+            transfererEIN, 
+            transfereeEIN,
+            fileIndex,
+            
+            usermeta
+        );
+        
+        // Do file transfer
+        _doDirectFileTransfer(transfererEIN, transfereeEIN, fileIndex, _toRecipientGroup);
+        
+        // Accept File Transfer Part 2
+        files.acceptFileTransferPart2(
+            transfererEIN, 
+            transfereeEIN,
+            
+            _atRecipientTransferIndex,
+        
+            transfers[transfereeEIN],
+            transferOrder[transfereeEIN],
+            transferCount,
+            
+            globalItems,
+            usermeta
+        );
+        
+        // // Check Restrictions
+        // _isMarkedForTransferee(_transfererEIN, _fileIndex, transfererEIN); // Check if the file is marked for transfer to the recipient
+        // usermeta[_transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the sender of the file
+        // usermeta[transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the recipient of the file
 
-    //     uint prevTransfererIndex = currentTransfererIndex - 1;
-    //     require (
-    //         (prevTransfererIndex >= 0),
-    //         "No file found in the transferer db"
-    //     );
+        // // Set Transfers Atomiticy
+        // usermeta[_transfererEIN].lockTransfers = true;
+        // usermeta[transfererEIN].lockTransfers = true;
 
-    //     uint nextTransfereeIndex =  currentTransfereeIndex + 1;
-    //     require (
-    //         (nextTransfereeIndex > currentTransfereeIndex),
-    //         "Trasnferee User has run out of transfer slots."
-    //     );
+        // // Check if the item is marked for transfer
+        
+        // require (
+        //     (files[_transfererEIN][_fileIndex].fileMeta.markedForTransfer == true),
+        //     "Can't proceed, item is not marked for Transfer."
+        // );
 
-    //     // Transfer the file to the transferee & Delete it for transferer
-    //     files[_transfereeEIN][nextTransfereeIndex] = files[_transfererEIN][_fileIndex];
-    //     _deleteFileAnyOwner(_transfererEIN, _fileIndex);
+        // // Do file transfer
+        // _doDirectFileTransfer(_transfererEIN, transfererEIN, _fileIndex, _groupIndex);
 
-    //     // Change file properties and transfer history
-    //     uint8 tc = files[_transfereeEIN][nextTransfereeIndex].transferCount;
-    //     tc = tc + 1;
-    //     require (
-    //         (tc > 0),
-    //         "Transfers Full"
-    //     );
+        // // Finally remove the file from Tranferee Mapping
+        // files.removeFileFromTransfereeMapping(
+        //     transfererEIN,
+        //     _transferSpecificIndex,
+            
+        //     transfers[transfererEIN],
+        //     transferOrder[transfererEIN],
+        //     transferCount
+        // );
+        
+        // // Reset Transfers Atomiticy
+        // usermeta[_transfererEIN].lockTransfers = false;
+        // usermeta[transfererEIN].lockTransfers = false;
+    }
 
-    //     files[_transfereeEIN][nextTransfereeIndex].transferHistory[tc] = _transfereeEIN;
-    //     files[_transfereeEIN][nextTransfereeIndex].markedForTransfer = false;
-    //     files[_transfereeEIN][nextTransfereeIndex].transferCount = tc;
+    /**
+     * @dev Function to revoke file transfer inititated by the current owner of that file
+     * @param _transfereeEIN is the EIN of the user to whom the file needs to be transferred
+     * @param _fileIndex is the index where file is stored
+     */
+    function revokeFileTransfer(
+        uint _transfereeEIN,
+        uint _fileIndex
+    )
+    external {
+        // Get user EIN | Transferer initiates this
+        uint transfererEIN = identityRegistry.getEIN(msg.sender);
 
-    //     // add to transferee sort order & Increment index
-    //     fileCount[_transfereeEIN] = fileOrder[_transfereeEIN].addToSortOrder(currentTransfereeIndex, 0);
+        // Logic
+        files.revokeFileTransfer(
+            transfererEIN,
+            _transfereeEIN,
+            _fileIndex,
+            
+            transfers[_transfereeEIN],
+            transferOrder[_transfereeEIN],
+            transferCount,
+            
+            globalItems,
+            
+            usermeta[transfererEIN],
+            usermeta[transfererEIN]
+        );
 
-    //     // Add File to transferee group
-    //     groups[_transfereeEIN][_groupIndex].addFileToGroup(_groupIndex, fileCount[_transfereeEIN]);
+        // Check Restrictions
+        // usermeta[_transfereeEIN].condTransfersOpFree(); 
+        // usermeta[ein].condTransfersOpFree();
 
-    //     // Get global association
-    //     IceGlobal.Association storage globalItem = files[_transfereeEIN][_fileIndex].rec.getGlobalItemViaRecord(globalItems);
+        // // Set Transfers Atomiticy
+        // usermeta[ein].lockTransfers = true;
+        // usermeta[_transfereeEIN].lockTransfers = true;
 
-    //     // Update global file association
-    //     globalItem.ownerInfo.EIN = _transfereeEIN;
-    //     globalItem.ownerInfo.index = nextTransfereeIndex;
-    // }
+        // // Check if the item is marked for transfer
+        // require (
+        //     (files[ein][_fileIndex].fileMeta.markedForTransfer == true),
+        //     "Transfer Prohibited"
+        // );
 
-    // /**
-    //  * @dev Private Function to remove file from Transfers mapping of Transferee after file is transferred to them
-    //  * @param _transfereeEIN is the new owner EIN
-    //  * @param _transferSpecificIndex is the index of the association mapping of transfers
-    //  */
-    // function _removeFileFromTransfereeMapping(uint _transfereeEIN, uint _transferSpecificIndex)
-    // internal {
-    //     // Get Cureent Transfer Index
-    //     uint currentTransferIndex = transferIndex[_transfereeEIN];
+        // // Cancel file transfer
+        // files[ein][_fileIndex].fileMeta.markedForTransfer = false;
 
-    //     require (
-    //         (currentTransferIndex > 0),
-    //         "Index Not Found"
-    //     );
-
-    //     // Remove the file from transferer, ie swap mapping and stich sort order
-    //     transfers[_transfereeEIN][_transferSpecificIndex] = transfers[_transfereeEIN][currentTransferIndex];
-    //     transferIndex[_transfereeEIN] = transferOrder[_transfereeEIN].stichSortOrder(_transferSpecificIndex, currentTransferIndex, 0);
-
-    //     // Retrive the swapped item record and change the transferIndex to remap correctly
-    //     IceGlobal.Association memory item = transfers[_transfereeEIN][_transferSpecificIndex];
-
-    //     if (item.isFile == true) {
-    //         //Only File is supported
-    //         files[item.ownerInfo.EIN][item.ownerInfo.index].transferIndex = _transferSpecificIndex;
-    //     }
-    // }
-
+        // // Remove file from  transferee
+        // uint transferSpecificIndex = files[ein][_fileIndex].transferIndex;
+        // files.removeFileFromTransfereeMapping(
+        //     _transfereeEIN,
+        //     transferSpecificIndex,
+            
+        //     transfers[_transfereeEIN],
+        //     transferOrder[_transfereeEIN],
+        //     transferCount
+        // );
+        
+        // // Reset Transfers Atomiticy
+        // usermeta[ein].lockTransfers = false;
+        // usermeta[_transfereeEIN].lockTransfers = false;
+    }
+    
+    /**
+     * @dev Function to revoke file transfer inititated by the current owner of that file
+     * @param _atRecipientTransferIndex is the file mapping stored no the recipient transfers mapping
+     */
+    function cancelFileTransfer(
+        uint _atRecipientTransferIndex
+    )
+    external {
+        // Get user EIN | Transferee initiates this
+        uint transfereeEIN = identityRegistry.getEIN(msg.sender);
+        
+        // Get owner info
+        IceGlobal.ItemOwner memory ownerInfo = transfers[transfereeEIN][_atRecipientTransferIndex].getGlobalItemViaRecord(globalItems).ownerInfo;
+        
+        uint transfererEIN = ownerInfo.EIN;
+        uint fileIndex = ownerInfo.index;
+        
+        // Logic
+        files.revokeFileTransfer(
+            transfererEIN,
+            transfererEIN,
+            fileIndex,
+            
+            transfers[transfererEIN],
+            transferOrder[transfererEIN],
+            transferCount,
+            
+            globalItems,
+            
+            usermeta[transfererEIN],
+            usermeta[transfererEIN]
+        );
+    }
+    
     // 7. WHITELIST / BLACKLIST FUNCTIONS
     /**
      * @dev Add a non-owner user to whitelist
      * @param _nonOwnerEIN is the ein of the recipient
      */
-    // function addToWhitelist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
+    function addToWhitelist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        whitelist[ein].addToWhitelist(_nonOwnerEIN, blacklist[ein]);
 
-    //     // Trigger Event
-    //     emit AddedToWhitelist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit AddedToWhitelist(ein, _nonOwnerEIN);
+    }
 
-    // /**
-    //  * @dev Remove a non-owner user from whitelist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function removeFromWhitelist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
+    /**
+     * @dev Remove a non-owner user from whitelist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function removeFromWhitelist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        whitelist[ein].removeFromWhitelist(_nonOwnerEIN, blacklist[ein]);
 
-    //     // Trigger Event
-    //     emit RemovedFromWhitelist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit RemovedFromWhitelist(ein, _nonOwnerEIN);
+    }
 
-    // /**
-    //  * @dev Remove a non-owner user to blacklist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function addToBlacklist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
+    /**
+     * @dev Remove a non-owner user to blacklist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function addToBlacklist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        blacklist[ein].addToBlacklist(_nonOwnerEIN, whitelist[ein]);
 
-    //     // Trigger Event
-    //     emit AddedToBlacklist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit AddedToBlacklist(ein, _nonOwnerEIN);
+    }
 
-    // /**
-    //  * @dev Remove a non-owner user from blacklist
-    //  * @param _nonOwnerEIN is the ein of the recipient
-    //  */
-    // function removeFromBlacklist(uint _nonOwnerEIN)
-    // external {
-    //     // Logic
-    //     uint ein = identityRegistry.getEIN(msg.sender);
-    //     blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
+    /**
+     * @dev Remove a non-owner user from blacklist
+     * @param _nonOwnerEIN is the ein of the recipient
+     */
+    function removeFromBlacklist(uint _nonOwnerEIN)
+    external {
+        // Logic
+        uint ein = identityRegistry.getEIN(msg.sender);
+        blacklist[ein].removeFromBlacklist(_nonOwnerEIN, whitelist[ein]);
 
-    //     // Trigger Event
-    //     emit RemovedFromBlacklist(ein, _nonOwnerEIN);
-    // }
+        // Trigger Event
+        emit RemovedFromBlacklist(ein, _nonOwnerEIN);
+    }
 
     // *. GENERAL CONTRACT HELPERS
     /** @dev Private Function to append two strings together
@@ -1161,60 +1112,6 @@ contract Ice {
     internal pure
     returns (string memory) {
         return string(abi.encodePacked(a, b));
-    }
-
-    /* ***************
-    * DEFINE MODIFIERS AS INTERNAL VIEW FUNTIONS
-    *************** */
-    /**
-     * @dev Private Function to check that only unique EINs can have access
-     * @param _ein1 The First EIN
-     * @param _ein2 The Second EIN
-     */
-    function _isUnqEIN(uint _ein1, uint _ein2)
-    internal pure {
-        require (
-            (_ein1 != _ein2),
-            "Same EINs"
-        );
-    }
-    
-    /**
-     * @dev Private Function to check that a file has been marked for transferee EIN
-     * @param _fileIndex The index of the file
-     */
-    function _isMarkedForTransferee(uint _fileOwnerEIN, uint _fileIndex, uint _transfereeEIN)
-    internal view {
-        // Check if the group file exists or not
-        require (
-            (files[_fileOwnerEIN][_fileIndex].transferEIN == _transfereeEIN),
-            "File not marked for Transfers"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that Rooot ID = 0 is not modified as this is root
-     * @param _index The index to check
-     */
-    function _isNonReservedItem(uint _index)
-    internal pure {
-        require (
-            (_index > 0),
-            "Reserved Item"
-        );
-    }
-
-    /**
-     * @dev Private Function to check that Group Order is valid
-     * @param _ein is the EIN of the target user
-     * @param _groupIndex The index of the group order
-     */
-    function _isGroupFileFree(uint _ein, uint _groupIndex)
-    internal view {
-        require (
-            (groups[_ein][_groupIndex].groupFilesCount == 0),
-            "Group has Files"
-        );
     }
 
     // *. FOR DEBUGGING CONTRACT
@@ -1237,7 +1134,7 @@ contract Ice {
    }
 
     // Get Indexes with Names for EIN
-    // _for = 1 is Files, 2 is GroupFiles, 3 is Groups
+    // _for = 1 is Files, 2 is GroupFiles, 3 is Groups, 4 is shares
     function debugIndexesWithNames(uint _ein, uint _groupIndex, uint _seedPointer, uint16 _limit, bool _asc, uint8 _for)
     external view
     returns (uint[20] memory _indexes, string memory _names) {
