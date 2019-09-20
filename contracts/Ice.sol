@@ -760,6 +760,7 @@ contract Ice {
     }
     
     // 5. STAMPING FUNCTIONS
+    function initiateStampingOfItem
     
     // 6. TRANSFER FILE FUNCTIONS
     /**
@@ -915,39 +916,6 @@ contract Ice {
             globalItems,
             usermeta
         );
-        
-        // // Check Restrictions
-        // _isMarkedForTransferee(_transfererEIN, _fileIndex, transfererEIN); // Check if the file is marked for transfer to the recipient
-        // usermeta[_transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the sender of the file
-        // usermeta[transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the recipient of the file
-
-        // // Set Transfers Atomiticy
-        // usermeta[_transfererEIN].lockTransfers = true;
-        // usermeta[transfererEIN].lockTransfers = true;
-
-        // // Check if the item is marked for transfer
-        
-        // require (
-        //     (files[_transfererEIN][_fileIndex].fileMeta.markedForTransfer == true),
-        //     "Can't proceed, item is not marked for Transfer."
-        // );
-
-        // // Do file transfer
-        // _doDirectFileTransfer(_transfererEIN, transfererEIN, _fileIndex, _groupIndex);
-
-        // // Finally remove the file from Tranferee Mapping
-        // files.removeFileFromTransfereeMapping(
-        //     transfererEIN,
-        //     _transferSpecificIndex,
-            
-        //     transfers[transfererEIN],
-        //     transferOrder[transfererEIN],
-        //     transferCount
-        // );
-        
-        // // Reset Transfers Atomiticy
-        // usermeta[_transfererEIN].lockTransfers = false;
-        // usermeta[transfererEIN].lockTransfers = false;
     }
 
     /**
@@ -964,7 +932,7 @@ contract Ice {
         uint transfererEIN = identityRegistry.getEIN(msg.sender);
 
         // Logic
-        files.revokeFileTransfer(
+        files.cancelFileTransfer(
             transfererEIN,
             _transfereeEIN,
             _fileIndex,
@@ -978,48 +946,19 @@ contract Ice {
             usermeta[transfererEIN],
             usermeta[transfererEIN]
         );
-
-        // Check Restrictions
-        // usermeta[_transfereeEIN].condTransfersOpFree(); 
-        // usermeta[ein].condTransfersOpFree();
-
-        // // Set Transfers Atomiticy
-        // usermeta[ein].lockTransfers = true;
-        // usermeta[_transfereeEIN].lockTransfers = true;
-
-        // // Check if the item is marked for transfer
-        // require (
-        //     (files[ein][_fileIndex].fileMeta.markedForTransfer == true),
-        //     "Transfer Prohibited"
-        // );
-
-        // // Cancel file transfer
-        // files[ein][_fileIndex].fileMeta.markedForTransfer = false;
-
-        // // Remove file from  transferee
-        // uint transferSpecificIndex = files[ein][_fileIndex].transferIndex;
-        // files.removeFileFromTransfereeMapping(
-        //     _transfereeEIN,
-        //     transferSpecificIndex,
-            
-        //     transfers[_transfereeEIN],
-        //     transferOrder[_transfereeEIN],
-        //     transferCount
-        // );
-        
-        // // Reset Transfers Atomiticy
-        // usermeta[ein].lockTransfers = false;
-        // usermeta[_transfereeEIN].lockTransfers = false;
     }
     
     /**
      * @dev Function to revoke file transfer inititated by the current owner of that file
      * @param _atRecipientTransferIndex is the file mapping stored no the recipient transfers mapping
      */
-    function cancelFileTransfer(
+    function rejectFileTransfer(
         uint _atRecipientTransferIndex
     )
-    external {
+    external 
+    returns (
+        uint, uint
+    ){
         // Get user EIN | Transferee initiates this
         uint transfereeEIN = identityRegistry.getEIN(msg.sender);
         
@@ -1030,13 +969,13 @@ contract Ice {
         uint fileIndex = ownerInfo.index;
         
         // Logic
-        files.revokeFileTransfer(
+        files.cancelFileTransfer(
             transfererEIN,
-            transfererEIN,
+            transfereeEIN,
             fileIndex,
             
-            transfers[transfererEIN],
-            transferOrder[transfererEIN],
+            transfers[transfereeEIN],
+            transferOrder[transfereeEIN],
             transferCount,
             
             globalItems,
@@ -1131,7 +1070,7 @@ contract Ice {
         addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("myportrait.jpg"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), bytes22("0x00"), 2, 3, false, "", 0);
         addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("index.html"), IceFMS.stringToBytes32("9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr"), bytes22("0x00"), 2, 3, false, "", 1);
         addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("skills.txt"), IceFMS.stringToBytes32("qRj9YgBiAU332sQmTecWfmvvsPdZXuYrLgCT"), bytes22("0x00"), 2, 3, false, "", 2);
-   }
+  }
 
     // Get Indexes with Names for EIN
     // _for = 1 is Files, 2 is GroupFiles, 3 is Groups, 4 is shares

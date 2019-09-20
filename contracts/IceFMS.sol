@@ -1139,59 +1139,7 @@ library IceFMS {
     }
     
     /**
-     * @dev Function to cancel file transfer inititated by the current owner
-     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
-     * @param _transfererEIN is the previous(current) owner EIN
-     * @param _transfereeEIN is the EIN to which the file will be transferred
-     * @param _fileIndex is the index where file is stored
-     * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
-     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
-     * @param _transferCountMapping is the mapping of the entire transfer count for every user
-     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _transfererUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferer
-     * @param _transfereeUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferee
-     */
-    function revokeFileTransfer(
-        mapping (uint => mapping(uint => File)) storage self,
-        
-        uint _transfererEIN,
-        uint _transfereeEIN,
-        uint _fileIndex,
-        
-        mapping (uint => IceGlobal.GlobalRecord) storage _transfersMapping,
-        mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
-        mapping (uint => uint) storage _transferCountMapping,
-        
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        
-        IceGlobal.UserMeta storage _transfererUserMeta,
-        IceGlobal.UserMeta storage _transfereeUserMeta
-    )
-    external {
-        // Check constraints
-        condMarkedForTransferee(self[_transfererEIN][_fileIndex], _transfereeEIN);
-        
-        // Logic
-        _cancelFileTransfer(
-            self,
-        
-            _transfererEIN,
-            _transfereeEIN,
-            _fileIndex,
-            
-            _transfersMapping,
-            _transferOrderMapping, 
-            _transferCountMapping,
-            
-            _globalItems,
-            
-            _transfererUserMeta,
-            _transfereeUserMeta
-        );
-    }
-    
-    /**
-     * @dev Function to cancel file transfer inititated by the recipient
+     * @dev Function to cancel file transfer inititated by the current owner and / or recipient
      * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
      * @param _transfererEIN is the previous(current) owner EIN
      * @param _transfereeEIN is the EIN to which the file will be transferred
@@ -1304,8 +1252,13 @@ library IceFMS {
     
     /**
      * @dev Private Function to remove file from Transfers mapping of Transferee after file is transferred to them
+     * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
      * @param _transfereeEIN is the new owner EIN
      * @param _transferSpecificIndex is the index of the association mapping of transfers
+     * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
+     * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
+     * @param _transferCountMapping is the mapping of the entire transfer count for every user
+     * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
      */
     function removeFileFromTransfereeMapping(
         mapping (uint => mapping(uint => File)) storage self,

@@ -3026,7 +3026,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-09-19T20:50:20.871Z",
+  "updatedAt": "2019-09-20T17:29:33.627Z",
   "devdoc": {
     "author": "Harsh Rajat",
     "details": "This Contract forms File Storage / Stamping / Encryption part of Hydro Protocols",
