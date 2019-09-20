@@ -3,7 +3,7 @@ pragma solidity ^0.5.1;
 import "./SafeMath.sol";
 import "./SafeMath8.sol";
 
-import "./interfaces/IdentityRegistryInterface.sol";
+import "./IdentityRegistryInterface.sol";
 
 /**
  * @title Ice Protocol Global Items Libray

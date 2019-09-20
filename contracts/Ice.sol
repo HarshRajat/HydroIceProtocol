@@ -1,7 +1,7 @@
 pragma solidity ^0.5.1;
 
-import "./interfaces/SnowflakeInterface.sol";
-import "./interfaces/IdentityRegistryInterface.sol";
+import "./SnowflakeInterface.sol";
+import "./IdentityRegistryInterface.sol";
 
 import "./SafeMath.sol";
 
@@ -760,7 +760,7 @@ contract Ice {
     }
     
     // 5. STAMPING FUNCTIONS
-    function initiateStampingOfItem
+    //function initiateStampingOfItem
     
     // 6. TRANSFER FILE FUNCTIONS
     /**
