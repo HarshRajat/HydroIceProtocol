@@ -24,6 +24,7 @@ library IceFMS {
     using IceGlobal for mapping (uint => bool);
     using IceGlobal for mapping (uint8 => IceGlobal.ItemOwner);
     using IceGlobal for mapping (uint => mapping (uint => IceGlobal.Association));
+    using IceGlobal for uint;
     
     using IceSort for mapping (uint => IceSort.SortOrder);
     using IceSort for IceSort.SortOrder;
@@ -373,7 +374,7 @@ library IceFMS {
     )
     public {
         // Check Restrictions
-        condValidItem(_fileIndex, _fileCountMapping[_ein]); // Check if the file exists first
+        _fileIndex.condValidItem(_fileCountMapping[_ein]); // Check if the file exists first
         _globalItemIndividual.condUnstampedItem(); // Check if the file is unstamped, can't delete a stamped file
         _fileGroupOrder.condValidSortOrder(self[_fileIndex].associatedGroupFileIndex); //Check if sort order is valid
         condItemMarkedForTransfer(self[_fileIndex]);// Check if the File is not marked for transfer
@@ -543,22 +544,6 @@ library IceFMS {
     }
     
     /**
-     * @dev Function to check if an item exists
-     * @param _itemIndex the index of the item
-     * @param _itemCount is the count of that mapping
-     */
-    function condValidItem(
-        uint _itemIndex, 
-        uint _itemCount
-    )
-    public pure {
-        require (
-            (_itemIndex <= _itemCount),
-            "Item Not Found"
-        );
-    }
-    
-    /**
      * @dev Function to check that a file has been marked for transfer
      */
     function condItemMarkedForTransfer(
@@ -620,7 +605,7 @@ library IceFMS {
         string memory name
     ) {
         // Check constraints
-        condValidItem(_groupIndex, _groupCount);
+        _groupIndex.condValidItem(_groupCount);
     
         // Logic flow
         index = _groupIndex;
@@ -729,7 +714,7 @@ library IceFMS {
         nextGroupIndex = _groupCountMapping[_ein].add(1);
         
         // Add to Global Items as well
-        _globalItems.addItemToGlobalItems(newGlobalIndex1, newGlobalIndex2, _ein, nextGroupIndex, false, false, false);
+        _globalItems.addItemToGlobalItems(newGlobalIndex1, newGlobalIndex2, _ein, nextGroupIndex, false, false, 0);
         
         // Assign it to User (EIN)
         groups[nextGroupIndex] = IceFMS.Group(
@@ -760,7 +745,7 @@ library IceFMS {
     external {
         // Check Restrictions
         condNonReservedGroup(_groupIndex);
-        condValidItem(_groupIndex, _groupCount);
+        _groupIndex.condValidItem(_groupCount);
 
         // Replace the group name
         self.name = _groupName;
@@ -799,7 +784,7 @@ library IceFMS {
         // Check Restrictions
         condGroupEmpty(self[_groupIndex]); // Check that Group contains no Files
         condNonReservedGroup(_groupIndex);
-        condValidItem(_groupIndex, _groupCountMapping[_ein]);
+        _groupIndex.condValidItem(_groupCountMapping[_ein]);
         
         _userMetaMapping[_ein].condGroupsOpFree();
 
@@ -857,7 +842,7 @@ library IceFMS {
         );
     }
     
-    // 4. TRANSFER FUNCTIONS
+    // 5. TRANSFER FUNCTIONS
     /**
      * @dev Function to check file transfer conditions before initiating a file transfer 
      * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
@@ -890,7 +875,7 @@ library IceFMS {
     external view {
         IceGlobal.condEINExists(_transfereeEIN, _identityRegistry); // Check Valid EIN
         IceGlobal.condUniqueEIN(_transfererEIN, _transfereeEIN); // Check EINs and Unique
-        condValidItem(_fileIndex, _fileCountMapping[_transfererEIN]); // Check if the item exists
+        _fileIndex.condValidItem(_fileCountMapping[_transfererEIN]); // Check if the item exists
         self[_transfererEIN][_fileIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); // Check if the File is not stamped
         condItemMarkedForTransfer(self[_transfererEIN][_fileIndex]); // Check if the File is not marked for transfer
         // Check if the Group is not stamped
@@ -972,7 +957,7 @@ library IceFMS {
     )
     external {
         // Check Constraints
-        condValidItem(_toRecipientGroup, _recipientGroupCount); // Check if the group exists
+        _toRecipientGroup.condValidItem(_recipientGroupCount); // Check if the group exists
         
         // Add File to transferee group
         (self[_transfereeEIN][_nextTransfereeIndex].associatedGroupIndex, self[_transfereeEIN][_nextTransfereeIndex].associatedGroupFileIndex) = addFileToGroup(
@@ -1295,12 +1280,17 @@ library IceFMS {
         self[item.ownerInfo.EIN][item.ownerInfo.index].transferIndex = _transferSpecificIndex;
     }
     
-    // 5. STRING / BYTE CONVERSION
-    function stringToBytes32(string memory source) 
+    // 6. STRING / BYTE CONVERSION
+    /**
+     * @dev Helper Function to convert string to bytes32 format
+     * @param _source is the string which needs to be converted
+     * @return result is the bytes32 representation of that string
+     */
+    function stringToBytes32(string memory _source) 
     public pure 
     returns (bytes32 result) {
-        bytes memory tempEmptyStringTest = bytes(source);
-        string memory tempSource = source;
+        bytes memory tempEmptyStringTest = bytes(_source);
+        string memory tempSource = _source;
         
         if (tempEmptyStringTest.length == 0) {
             return 0x0;
@@ -1311,13 +1301,18 @@ library IceFMS {
         }
     }
     
-    function bytes32ToString(bytes32 x) 
+    /**
+     * @dev Helper Function to convert bytes32 to string format
+     * @param _x is the bytes32 format which needs to be converted
+     * @return result is the string representation of that bytes32 string
+     */
+    function bytes32ToString(bytes32 _x) 
     public pure 
-    returns (string memory) {
+    returns (string memory result) {
         bytes memory bytesString = new bytes(32);
         uint charCount = 0;
         for (uint j = 0; j < 32; j++) {
-            byte char = byte(bytes32(uint(x) * 2 ** (8 * j)));
+            byte char = byte(bytes32(uint(_x) * 2 ** (8 * j)));
             if (char != 0) {
                 bytesString[charCount] = char;
                 charCount++;
@@ -1327,6 +1322,7 @@ library IceFMS {
         for (uint j = 0; j < charCount; j++) {
             bytesStringTrimmed[j] = bytesString[j];
         }
-        return string(bytesStringTrimmed);
+        
+        result = string(bytesStringTrimmed);
     }
 }

@@ -28,8 +28,9 @@ contract Ice {
     using IceGlobal for mapping (uint => bool);
     using IceGlobal for mapping (uint8 => IceGlobal.ItemOwner);
     using IceGlobal for mapping (uint => mapping (uint => IceGlobal.Association));
+    using IceGlobal for uint;
     
-    using IceSort for mapping(uint => IceSort.SortOrder);
+    using IceSort for mapping (uint => IceSort.SortOrder);
     using IceSort for IceSort.SortOrder;
     
     using IceFMS for IceFMS.File;
@@ -37,7 +38,6 @@ contract Ice {
     using IceFMS for mapping (uint => mapping (uint => IceFMS.File));
     using IceFMS for IceFMS.Group;
     using IceFMS for mapping (uint => IceFMS.Group);
-    using IceFMS for uint;
     
     using IceFMSAdv for mapping (uint => IceGlobal.GlobalRecord);
     using IceFMSAdv for mapping (uint => mapping(uint => IceGlobal.GlobalRecord));
@@ -107,9 +107,9 @@ contract Ice {
     /* for each user (EIN), look up the incoming sharing files
      * stored on a given index.
      */
-    mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) public stampingsRequest;
-    mapping (uint => mapping(uint => IceSort.SortOrder)) public stampingsRequestOrder; // Store round robin order of stamping requests
-    mapping (uint => uint) public stampingsRequestCount; // store the maximum file index reached to provide looping functionality
+    mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) public stampingsReq;
+    mapping (uint => mapping(uint => IceSort.SortOrder)) public stampingReqOrder; // Store round robin order of stamping requests
+    mapping (uint => uint) public stampingReqCount; // store the maximum file index reached to provide looping functionality
 
     /* for each user (EIN), have a whitelist and blacklist
      * association which can handle certain functions automatically.
@@ -151,9 +151,29 @@ contract Ice {
 
     // When Group Status is changed
     event GroupDeleted(uint EIN, uint groupIndex, uint groupReplacedIndex);
+    
+    // When Sharing is initiated
+    
+    // When Sharing is accepted
+    
+    // When Sharing is removed
+    
+    // When Stamping is initiated
+    
+    // When Stamping is accepted by the recipient
+    
+    // When Stamping is rejected by the recipient
+    
+    // When Stamping is revoked by the owner
 
-    // When Transfer is initiated from owner
+    // When Transfer is initiated
     event FileTransferInitiated(uint indexed EIN, uint indexed transfereeEIN, uint indexed fileID);
+
+    // When Transfer is accepted by the recipient
+    
+    // When Transfer is rejected by the recipient
+    
+    // When Transfer is revoked by the owner
 
     // When whitelist is updated
     event AddedToWhitelist(uint EIN, uint recipientEIN);
@@ -167,10 +187,10 @@ contract Ice {
     * DEFINE CONSTRUCTORS AND RELATED FUNCTIONS
     *************** */
     // CONSTRUCTOR / FUNCTIONS
-    address snowflakeAddress = 0xC155f98Fa02AeED743a2658a4B076701376a27ee; //0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; // For local use
+    // address snowflakeAddress = 0xC155f98Fa02AeED743a2658a4B076701376a27ee; //0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; // For local use
     //address snowflakeAddress = 0xB0D5a36733886a4c5597849a05B315626aF5222E; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For rinkeby
     
-    constructor (/*address snowflakeAddress*/) public {
+    constructor (address snowflakeAddress) public {
         snowflake = SnowflakeInterface(snowflakeAddress);
         identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
     }
@@ -180,16 +200,15 @@ contract Ice {
     *************** */
     // 1. GLOBAL ITEMS FUNCTIONS
     /**
-     * @dev Function to get global items
+     * @dev Function to get global items info from the entire File Management System of Ice
      * @param _index1 is the first index of item
      * @param _index2 is the second index of item
      * @return ownerEIN is the EIN of the user who owns the item
-     * itemRecord is the record of that item in relation to the individual user
-     * isFile indicates if the item is file or group
-     * isHidden indicates if the item is hidder or visible
-     * deleted indicates if the item is already deleted from the individual user perspective
-     * sharedToCount is the count of sharing the item has
-     * pendingStampingCount is the count of pending stamping requests
+     * @return itemRecord is the record of that item in relation to the individual user
+     * @return isFile indicates if the item is file or group
+     * @return isHidden indicates if the item is hidder or visible
+     * @return deleted indicates if the item is already deleted from the individual user perspective
+     * @return sharedToCount is the count of sharing the item has
      */
     function getGlobalItems(
         uint _index1, 
@@ -202,18 +221,42 @@ contract Ice {
         bool isFile, 
         bool isHidden, 
         bool deleted, 
-        uint8 sharedToCount, 
-        uint8 pendingStampingCount
+        uint sharedToCount
     ) {
-        ownerEIN = globalItems[_index1][_index2].ownerInfo.EIN;
-        itemRecord = globalItems[_index1][_index2].ownerInfo.index;
-
-        isFile = globalItems[_index1][_index2].isFile;
-        isHidden = globalItems[_index1][_index2].isHidden;
-        deleted = globalItems[_index1][_index2].deleted;
-
-        sharedToCount = globalItems[_index1][_index2].sharedToCount;
-        pendingStampingCount = globalItems[_index1][_index2].stampedToCount;
+        // Logic
+        (ownerEIN, itemRecord, isFile, isHidden, deleted, sharedToCount) = globalItems[_index1][_index2].getGlobalItems();
+    }
+    
+    /**
+     * @dev Function to get global items stamping info from the entire File Management System of Ice
+     * @param _index1 is the first index of item
+     * @param _index2 is the second index of item
+     * @return stampingRecipient is the EIN of the recipient for whom stamping is requested / denied / completed
+     * @return stampingRecipientIndex is the item index mapped in the mapping of stampingsReq of that recipient
+     * @return stampingInitiated either returns 0 (false) or timestamp when the stamping was initiated
+     * @return stampingCompleted either returns 0 (false) or timestamp when the stamping was completed
+     * @return stampingRejected indicates if the stamping was rejected by the recipient
+     */
+    function getGlobalItemsStampingInfo(
+        uint _index1, 
+        uint _index2
+    )
+    external view
+    returns (
+        uint stampingRecipient,
+        uint stampingRecipientIndex,
+        uint32 stampingInitiated,
+        uint32 stampingCompleted,
+        bool stampingRejected
+    ) {
+        // Logic
+        (
+            stampingRecipient, 
+            stampingRecipientIndex, 
+            stampingInitiated, 
+            stampingCompleted, 
+            stampingRejected
+        ) = globalItems[_index1][_index2].getGlobalItemsStampingInfo();
     }
     
     /**
@@ -248,7 +291,8 @@ contract Ice {
      * @param _ofType indicates the type. 0 - shares, 1 - stampings
      * @param _mappedIndex is the index
      * @return mappedToEIN is the user (EIN)
-     * @return atIndex is the specific index in question
+     * @return atIndex is the specific index in question, only returns on shares types
+     * @return timestamp is the time when the file was stamped by the EIN, only returns on stamping types
      */
     function getGlobalItemsMapping(
         uint _index1, 
@@ -261,18 +305,15 @@ contract Ice {
         uint mappedToEIN, 
         uint atIndex
     ) {
-        IceGlobal.ItemOwner memory _mappedItem;
-
         // Allocalte based on type.
         if (_ofType == uint8(IceGlobal.AsscProp.sharedTo)) {
-            _mappedItem = globalItems[_index1][_index2].sharedTo[_mappedIndex];
+            mappedToEIN = globalItems[_index1][_index2].sharedTo[_mappedIndex].EIN;
+            atIndex = globalItems[_index1][_index2].sharedTo[_mappedIndex].index;
         }
         else if (_ofType == uint8(IceGlobal.AsscProp.stampedTo)) {
-            _mappedItem = globalItems[_index1][_index2].stampedTo[_mappedIndex];
+            mappedToEIN = globalItems[_index1][_index2].stampingRecipient.EIN;
+            atIndex = globalItems[_index1][_index2].stampingRecipient.index; 
         }
-
-        mappedToEIN = _mappedItem.EIN;
-        atIndex = _mappedItem.index;
     }
     
     // 2. FILE FUNCTIONS
@@ -415,7 +456,7 @@ contract Ice {
             nextIndex = fileCount[ein] + 1;
             
             // Add to globalItems
-            globalItems.addItemToGlobalItems(rec.i1, rec.i2, ein, nextIndex, true, false, false);
+            globalItems.addItemToGlobalItems(rec.i1, rec.i2, ein, nextIndex, true, false, 0);
         }
         
         // Finally create the file object (EIN)
@@ -739,7 +780,6 @@ contract Ice {
         );
     }
     
-    
     /**
      * @dev Function to remove shared item by the user to whom the item is shared
      * @param _itemIndex is the index of the item in shares
@@ -760,7 +800,159 @@ contract Ice {
     }
     
     // 5. STAMPING FUNCTIONS
-    //function initiateStampingOfItem
+    /**
+     * @dev Function to initiate stamping of an item by the owner of that item
+     * @param _itemIndex is the index of the item (File or Group)
+     * @param _isFile indicates if the item is File or Group
+     * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
+     */
+    function initiateStampingOfItem(
+        uint _itemIndex,
+        bool _isFile,
+        uint _recipientEIN
+    )
+    external {
+        // Logic
+        if (_isFile) {
+            stampingsReq[_recipientEIN].initiateStampingOfItem(
+                stampingReqOrder[_recipientEIN],
+                stampingReqCount,
+                
+                identityRegistry.getEIN(msg.sender),
+                _recipientEIN,
+                _itemIndex,
+                fileCount[identityRegistry.getEIN(msg.sender)],
+                
+                files[identityRegistry.getEIN(msg.sender)][_itemIndex].rec.getGlobalItemViaRecord(globalItems),
+                files[identityRegistry.getEIN(msg.sender)][_itemIndex].rec,
+                
+                blacklist,
+                usermeta[identityRegistry.getEIN(msg.sender)],
+                identityRegistry
+            );
+        }
+        else {
+            stampingsReq[_recipientEIN].initiateStampingOfItem(
+                stampingReqOrder[_recipientEIN],
+                stampingReqCount,
+                
+                identityRegistry.getEIN(msg.sender),
+                _recipientEIN,
+                _itemIndex,
+                groupCount[identityRegistry.getEIN(msg.sender)],
+                
+                groups[identityRegistry.getEIN(msg.sender)][_itemIndex].rec.getGlobalItemViaRecord(globalItems),
+                groups[identityRegistry.getEIN(msg.sender)][_itemIndex].rec,
+                
+                blacklist,
+                usermeta[identityRegistry.getEIN(msg.sender)],
+                identityRegistry
+            );
+        }
+        
+        // Trigger Event
+        
+    }
+    
+    /**
+     * @dev Function to accept stamping of an item by the intended recipient
+     * @param _stampingReqIndex is the index of the item present in the Stamping Requests mapping of the recipient
+     */
+    function acceptStamping(
+        uint _stampingReqIndex
+    )
+    external {
+        // Get user EIN
+        uint recipientEIN = identityRegistry.getEIN(msg.sender);
+        
+        // Logic 
+        stampings[recipientEIN].acceptStamping(
+            stampingOrder[recipientEIN],
+            stampingCount,
+            
+            stampingsReq[recipientEIN],
+            stampingReqOrder[recipientEIN],
+            stampingReqCount,
+            
+            stampingsReq[recipientEIN][_stampingReqIndex].getGlobalItemViaRecord(globalItems),
+            
+            recipientEIN,
+            _stampingReqIndex,
+            
+            usermeta[recipientEIN]
+        );
+        
+        // Trigger Event
+        
+    }
+    
+    /**
+     * @dev Function to revoke stamping of an item only by the owner 
+     * @param _ownerItemIndex is the index of the item (File or Group) in relation to the owner of the item 
+     * @param _isFile indicates if the item is File or Group
+     */
+    function revokeStamping(
+        uint _ownerItemIndex,
+        bool _isFile
+    )
+    external {
+        // Get user EIN
+        uint ownerEIN = identityRegistry.getEIN(msg.sender);
+        
+        // Get recipient info
+        IceGlobal.Association storage globalItem = files[ownerEIN][_ownerItemIndex].rec.getGlobalItemViaRecord(globalItems);
+        
+        if (_isFile == false) {
+            globalItem = groups[ownerEIN][_ownerItemIndex].rec.getGlobalItemViaRecord(globalItems);
+        }
+        
+        uint recipientEIN = globalItem.stampingRecipient.EIN;
+        uint recipientItemIndex = globalItem.stampingRecipient.index;
+        
+        // Logic
+        stampingsReq[recipientEIN].cancelStamping(
+              stampingReqOrder[recipientEIN],
+              stampingReqCount,
+              recipientEIN,
+              recipientItemIndex,
+              globalItem,
+              usermeta
+        );
+        
+        // Trigger Event
+        
+    }
+    
+    /**
+     * @dev Function to reject stamping of an item only by the recipient
+     * @param _recipientItemIndex is the index of the item present in the Stamping Requests mapping of the recipient
+     */
+    function rejectStamping(
+        uint _recipientItemIndex
+    )
+    external {
+        // Get user EIN
+        uint recipientEIN = identityRegistry.getEIN(msg.sender);
+        
+        // Logic
+        IceGlobal.Association storage globalItem = stampingsReq[recipientEIN][_recipientItemIndex].getGlobalItemViaRecord(globalItems);
+        
+        // Reject Stamping
+        stampingsReq[recipientEIN].cancelStamping(
+              stampingReqOrder[recipientEIN],
+              stampingReqCount,
+              recipientEIN,
+              _recipientItemIndex,
+              globalItem,
+              usermeta
+        );
+        
+        // Map the rejected flag for the owner
+        globalItem.stampingRejected = true;
+        
+        // Trigger Event
+        
+    }
     
     // 6. TRANSFER FILE FUNCTIONS
     /**
@@ -1043,18 +1235,24 @@ contract Ice {
     }
 
     // *. GENERAL CONTRACT HELPERS
-    /** @dev Private Function to append two strings together
+    /** 
+     * @dev Private Function to append two strings together
      * @param a the first string
      * @param b the second string
      */
-    function _append(string memory a, string memory b)
+    function _append(
+        string memory a, 
+        string memory b
+    )
     internal pure
     returns (string memory) {
         return string(abi.encodePacked(a, b));
     }
 
     // *. FOR DEBUGGING CONTRACT
-    // To Build Groups & File System for users
+    /** 
+     * @dev Function To Build Groups & File System for users
+     */
     function debugBuildFS()
     public {
         createGroup("A.Images");
@@ -1065,18 +1263,96 @@ contract Ice {
 
         // Create Files
         // addFile(_op, _protocol, _protocolMeta, _name, _hash, _hashExtraInfo, _hashFunction, _hashSize, _encrypted, _encryptedHash, _groupIndex)
-        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("index.jpg"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), bytes22("0x00"), 2, 3, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("family.pdf"), IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr9iwDnp9q7"), bytes22("0x00"), 2, 3, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("myportrait.jpg"), IceFMS.stringToBytes32("L4ZCr9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), bytes22("0x00"), 2, 3, false, "", 0);
-        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("index.html"), IceFMS.stringToBytes32("9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr"), bytes22("0x00"), 2, 3, false, "", 1);
-        addFile(0, 1, bytes("0x00"), IceFMS.stringToBytes32("skills.txt"), IceFMS.stringToBytes32("qRj9YgBiAU332sQmTecWfmvvsPdZXuYrLgCT"), bytes22("0x00"), 2, 3, false, "", 2);
-  }
+        addFile(
+            0, 
+            1, 
+            bytes("0x00"), 
+            IceFMS.stringToBytes32("index.jpg"), 
+            IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), 
+            bytes22("0x00"), 
+            2, 
+            3, 
+            false, 
+            "", 
+            0
+        );
+        addFile(
+            0, 
+            1, 
+            bytes("0x00"), 
+            IceFMS.stringToBytes32("family.pdf"), 
+            IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr9iwDnp9q7"), 
+            bytes22("0x00"), 
+            2, 
+            3, 
+            false, 
+            "", 
+            0
+        );
+        addFile(
+            0, 
+            1, 
+            bytes("0x00"), 
+            IceFMS.stringToBytes32("myportrait.jpg"), 
+            IceFMS.stringToBytes32("L4ZCr9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), 
+            bytes22("0x00"), 
+            2, 
+            3, 
+            false, 
+            "", 
+            0
+        );
+        addFile(
+            0, 
+            1, 
+            bytes("0x00"), 
+            IceFMS.stringToBytes32("index.html"), 
+            IceFMS.stringToBytes32("9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr"), 
+            bytes22("0x00"), 
+            2, 
+            3, 
+            false, 
+            "", 
+            1
+        );
+        addFile(
+            0, 
+            1, 
+            bytes("0x00"), 
+            IceFMS.stringToBytes32("skills.txt"), 
+            IceFMS.stringToBytes32("qRj9YgBiAU332sQmTecWfmvvsPdZXuYrLgCT"), 
+            bytes22("0x00"), 
+            2, 
+            3, 
+            false, 
+            "", 
+            2
+        );
+    }
 
     // Get Indexes with Names for EIN
-    // _for = 1 is Files, 2 is GroupFiles, 3 is Groups, 4 is shares
-    function debugIndexesWithNames(uint _ein, uint _groupIndex, uint _seedPointer, uint16 _limit, bool _asc, uint8 _for)
+    /** 
+     * @dev Function to debug indexes and Ice FMS protocol along with names of the items (returns max 20 items)
+     * @param _ein is the ein of the intended user
+     * @param _groupIndex is the index associated with the group, only applicable when debugging GroupFiles
+     * @param _seedPointer indicates from what point the items should be queried
+     * @param _limit indicates how many items needs to be returned
+     * @param _asc indicates whether to return the items in ascending order or descending from the _seedPointer provided along with _limit
+     * @param _for indicates what to debug | 1 is Files, 2 is GroupFiles, 3 is Groups, 4 is shares, 5 is stamping requests, 6 is stampings
+     */
+    function debugIndexesWithNames(
+        uint _ein, 
+        uint _groupIndex, 
+        uint _seedPointer, 
+        uint16 _limit, 
+        bool _asc, 
+        uint8 _for
+    )
     external view
-    returns (uint[20] memory _indexes, string memory _names) {
+    returns (
+        uint[20] memory _indexes, 
+        string memory _names
+    ) {
 
         if (_for == 1) {
             _indexes = fileOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
@@ -1089,6 +1365,12 @@ contract Ice {
         }
         else if (_for == 4) {
             _indexes = shareOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+        }
+        else if (_for == 5) {
+            _indexes = stampingReqOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+        }
+        else if (_for == 6) {
+            _indexes = stampingOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
         }
 
         uint16 i = 0;
@@ -1106,6 +1388,28 @@ contract Ice {
             }
             else if (_for == 4) {
                 IceGlobal.GlobalRecord memory record = shares[_ein][_indexes[i]];
+                IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
+                
+                if (globalItems[record.i1][record.i2].isFile == true) {
+                    name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
+                } 
+                else {
+                    name = groups[owner.EIN][owner.index].name;
+                }
+            }
+            else if (_for == 5) {
+                IceGlobal.GlobalRecord memory record = stampingsReq[_ein][_indexes[i]];
+                IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
+                
+                if (globalItems[record.i1][record.i2].isFile == true) {
+                    name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
+                } 
+                else {
+                    name = groups[owner.EIN][owner.index].name;
+                }
+            }
+            else if (_for == 6) {
+                IceGlobal.GlobalRecord memory record = stampings[_ein][_indexes[i]];
                 IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
                 
                 if (globalItems[record.i1][record.i2].isFile == true) {

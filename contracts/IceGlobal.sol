@@ -34,6 +34,12 @@ library IceGlobal {
         uint EIN; // the EIN of the owner
         uint index; // the key at which the item is stored
     }
+    
+    /* To define stamping info of a given Item. */
+    struct ItemStamping {
+        uint EIN; // the EIN
+        uint32 timestamp;  // to store the timestamp of the block when file is stamped by the EIN 
+    }
 
     /* To define global file association with EIN
      * Combining EIN and itemIndex and properties will give access to
@@ -41,19 +47,20 @@ library IceGlobal {
      */
     struct Association {
         ItemOwner ownerInfo; // To Store Iteminfo
+        ItemOwner stampingRecipient;  // to store stamping recipient
 
         bool isFile; // whether the Item is File or Group
         bool isHidden; // Whether the item is hidden or not
-        bool isStamped; // Whether the item is stamped atleast once
         bool deleted; // whether the association is deleted
 
+        uint32 stampingInitiated; // Whether the item stamping is initiated, contains 0 or the timestamp
+        uint32 stampingCompleted; // Whether the stamping is completed, contains 0 or the timestamp
+        bool stampingRejected; // Whether the staping is rejected by recipient
+        
         uint8 sharedToCount; // the count of sharing
-        uint8 stampedToCount; // the count of stamping
 
         mapping (uint8 => ItemOwner) sharedTo; // to contain share to
         mapping (uint => bool) sharedToEINMapping; // contains EIN Mapping of shared to
-        
-        mapping (uint8 => ItemOwner) stampedTo; // to have stamping reqs
     }
     
     /* To define state and flags for Individual things,
@@ -62,8 +69,9 @@ library IceGlobal {
      struct UserMeta {
         bool lockFiles;
         bool lockGroups;
-        bool lockTransfers;
         bool lockSharings;
+        bool lockStampings;
+        bool lockTransfers;
         
         bool hasAvatar;
      }
@@ -73,7 +81,7 @@ library IceGlobal {
     *************** */
     // 1. GLOBAL ITEMS
     /**
-     * @dev Function to get global items from the entire File Management System
+     * @dev Function to get global items info from the entire File Management System of Ice
      * @param self is the Association Struct (IceGlobal) which keeps tracks of item properties
      * @return ownerEIN is the EIN of the owner
      * @return itemRecord is the item index mapped for the specific user
@@ -81,7 +89,6 @@ library IceGlobal {
      * @return isHidden indicates if the item has been hidden
      * @return deleted indicates if the item has been deleted
      * @return sharedToCount is sharing count of that item
-     * @return stampingReqsCount is the number of stamping request for the file
      */
     function getGlobalItems(Association storage self)
     external view
@@ -91,8 +98,7 @@ library IceGlobal {
         bool isFile, 
         bool isHidden, 
         bool deleted, 
-        uint sharedToCount, 
-        uint stampingReqsCount
+        uint sharedToCount
     ) {
         ownerEIN = self.ownerInfo.EIN;
         itemRecord = self.ownerInfo.index;
@@ -102,7 +108,32 @@ library IceGlobal {
         deleted = self.deleted;
 
         sharedToCount = self.sharedToCount;
-        stampingReqsCount = self.stampedToCount;
+    }
+    
+    /**
+     * @dev Function to get global items stamping info from the entire File Management System of Ice
+     * @param self is the Association Struct (IceGlobal) which keeps tracks of item properties
+     * @return stampingRecipient is the EIN of the recipient for whom stamping is requested / denied / completed
+     * @return stampingRecipientIndex is the item index mapped in the mapping of stampingsReq of that recipient
+     * @return stampingInitiated either returns 0 (false) or timestamp when the stamping was initiated
+     * @return stampingCompleted either returns 0 (false) or timestamp when the stamping was completed
+     * @return stampingRejected indicates if the stamping was rejected by the recipient
+     */
+    function getGlobalItemsStampingInfo(Association storage self)
+    external view
+    returns (
+        uint stampingRecipient,
+        uint stampingRecipientIndex,
+        uint32 stampingInitiated,
+        uint32 stampingCompleted,
+        bool stampingRejected
+    ) {
+        stampingRecipient = self.stampingRecipient.EIN;
+        stampingRecipientIndex = self.stampingRecipient.index;
+        
+        stampingInitiated = self.stampingInitiated;
+        stampingCompleted = self.stampingCompleted;
+        stampingRejected = self.stampingRejected;
     }
     
     /**
@@ -175,7 +206,7 @@ library IceGlobal {
      * @param _itemIndex is the index at which the item exists on the user mapping
      * @param _isFile indicates if the item is a File or a Group
      * @param _isHidden indicates if the item has been hidden
-     * @param _isStamped indicates if the item has been stamped or not
+     * @param _stampingInitiated indicates if the item has been stamped or not
      */
     function addItemToGlobalItems(
         mapping (uint => mapping(uint => Association)) storage self, 
@@ -185,7 +216,7 @@ library IceGlobal {
         uint _itemIndex, 
         bool _isFile, 
         bool _isHidden, 
-        bool _isStamped
+        uint32 _stampingInitiated
     )
     external {
         // Add item to global item, no stiching it
@@ -194,14 +225,21 @@ library IceGlobal {
                 _ownerEIN, // Owner EIN
                 _itemIndex // Item stored at what index for that EIN
             ),
-
+            
+            ItemOwner ( // This is to store stamping info for recipient
+                0, // recipient EIN, defaults to 0
+                0 // timestamp, defaults to 0
+            ),
+            
             _isFile, // Item is file or group
             _isHidden, // whether stamping is initiated or not
-            _isStamped, // whether file is stamped or not
             false, // Item is deleted or still exists
 
-            0, // the count of shared EINs
-            0 // the count of stamping requests
+            _stampingInitiated, // whether file is stamped or not
+            0, // whether stamping is completed by recipient, defaults to 0
+            false, // whether stamping is rejected by recipient, defaults to false
+            
+            0 // the count of shared EINs
         );
     }
 
@@ -299,13 +337,14 @@ library IceGlobal {
         }
         
         newCount = currentCount.add(1);
-        ItemOwner memory mappedItem = ItemOwner (
-            _toEIN,
-            _itemIndex
-        );
             
         if (_ofType == uint8(AsscProp.sharedTo)) {
             // Logic
+            ItemOwner memory mappedItem = ItemOwner (
+                _toEIN,
+                _itemIndex
+            );
+            
             self.sharedTo[newCount] = mappedItem;
             self.sharedToCount = newCount;
             
@@ -313,8 +352,11 @@ library IceGlobal {
             self.sharedToEINMapping[_toEIN] = true;
         }
         else if (_ofType == uint8(AsscProp.stampedTo)) {
-            self.stampedTo[newCount] = mappedItem;
-            self.stampedToCount = newCount;
+            // Logic
+            self.stampingRecipient = ItemOwner (
+                _toEIN,
+                _itemIndex
+            );
         }
     }
 
@@ -346,9 +388,10 @@ library IceGlobal {
             self.sharedToCount = newCount;
         }
         else if (_ofType == uint8(AsscProp.stampedTo)) {
-            newCount = self.sharedToCount.sub(1);
-            self.sharedTo[_mappedIndex] = self.stampedTo[self.stampedToCount];
-            self.stampedToCount = newCount;
+            self.stampingRecipient = ItemOwner (
+                0, // recipient EIN, defaults to 0
+                0 // index, defaults to 0
+            );
         }
     }
     
@@ -424,8 +467,34 @@ library IceGlobal {
     external view {
         // Check if the item is stamped or not
         require (
-            (self.isStamped == false),
-            "Item Stamped"
+            (self.stampingInitiated == 0),
+            "Item Stamping Initiated"
+        );
+    }
+    
+    /**
+     * @dev Function to check that a item has been marked for stamping
+     * @param self is the Association Struct (IceGlobal library) which contains item properties
+     */
+    function condStampedItem(Association storage self)
+    external view {
+        // Check if the item stamping is Initiated
+        require (
+            (self.stampingInitiated != 0),
+            "Item Stamping Not Initiated"
+        );
+    }
+    
+    /**
+     * @dev Function to check that a item is only marked by stamping from owner
+     * @param self is the Association Struct (IceGlobal library) which contains item properties
+     */
+    function condUncompleteStamping(Association storage self)
+    external view {
+        // Check if the item is stamped or not
+        require (
+            (self.stampingCompleted == 0),
+            "Item Stamping is Completed"
         );
     }
     
@@ -439,6 +508,22 @@ library IceGlobal {
         require (
             (self.isFile == true),
             "Item is not File"
+        );
+    }
+    
+    /**
+     * @dev Function to check if an item exists
+     * @param _itemIndex the index of the item
+     * @param _itemCount is the count of that mapping
+     */
+    function condValidItem(
+        uint _itemIndex, 
+        uint _itemCount
+    )
+    public pure {
+        require (
+            (_itemIndex <= _itemCount),
+            "Item Not Found"
         );
     }
     
@@ -608,6 +693,18 @@ library IceGlobal {
         require (
           (self.lockSharings == false),
           "Sharing Locked"
+        );
+    }
+    
+    /**
+     * @dev Function to check that operation of Transfers is currently locked or not
+     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
+     */
+    function condStampingsOpFree(UserMeta storage self)
+    external view {
+        require (
+          (self.lockStampings == false),
+          "Stamping Locked"
         );
     }
 

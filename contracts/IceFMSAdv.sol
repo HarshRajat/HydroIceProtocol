@@ -17,7 +17,9 @@ library IceFMSAdv {
     using IceGlobal for IceGlobal.GlobalRecord;
     using IceGlobal for IceGlobal.Association;
     using IceGlobal for IceGlobal.UserMeta;
+    using IceGlobal for mapping (uint => bool);
     using IceGlobal for mapping (uint8 => IceGlobal.ItemOwner);
+    using IceGlobal for uint;
     
     using IceSort for mapping (uint => IceSort.SortOrder);
     
@@ -290,6 +292,220 @@ library IceFMSAdv {
     }
     
     // 2. STAMPING FUNCTIONS
+    /**
+     * @dev Function to initiate stamping of an item by the owner of that item
+     * @param self is the mappings of stamping requests associated with the recipient user
+     * @param _stampingReqOrderMapping is the mapping of the stamping request order using SortOrder Struct (IceSort Library) of the recipient
+     * @param _stampingReqCountMapping is the mapping of all stamping requests count
+     * @param _ownerEIN is the owner EIN of the user who has initiated the stamping of the item
+     * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
+     * @param _itemIndex is the index of the item (File or Group)
+     * @param _itemCount is the count of the number of items (File or Group) the owner has 
+     * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
+     * @param _record is the GlobalRecord Struct (IceGlobal Library) of the item in question
+     * @param _blacklist is the entire mapping of the Blacklist for all users
+     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the owner
+     * @param _identityRegistry is the pointer to the ERC-1484 Identity Registry
+     */
+    function initiateStampingOfItem(
+        mapping (uint => IceGlobal.GlobalRecord) storage self,
+        mapping (uint => IceSort.SortOrder) storage _stampingReqOrderMapping, 
+        mapping (uint => uint) storage _stampingReqCountMapping,
+        
+        uint _ownerEIN,
+        uint _recipientEIN,
+        uint _itemIndex,
+        uint _itemCount,
+        
+        IceGlobal.Association storage _globalItem,
+        IceGlobal.GlobalRecord storage _record,
+        
+        mapping (uint => mapping(uint => bool)) storage _blacklist, 
+        IceGlobal.UserMeta storage _specificUserMeta,
+        IdentityRegistryInterface _identityRegistry
+    )
+    external {
+        // Check Constraints
+        _itemIndex.condValidItem(_itemCount); // Check if item is valid
+        _globalItem.condUnstampedItem(); // Check if the file is unstamped
+        IceGlobal.condEINExists(_recipientEIN, _identityRegistry); // Check Valid EIN
+        IceGlobal.condUniqueEIN(_ownerEIN, _recipientEIN); // Check EINs and Unique
+        _blacklist[_recipientEIN].condNotInList(_ownerEIN); // Check if The recipient hasn't blacklisted the file owner
+        _specificUserMeta.condStampingsOpFree();
+        
+        // Lock Usermeta
+        _specificUserMeta.lockStampings = true;
+        
+        // Logic
+        // Flip the switch to indicate stamping is initiated, flush out any rejected message as well 
+        _globalItem.stampingInitiated = uint32(now);
+        _globalItem.stampingRejected = false;
+       
+        // Add reference of Item for the recipient
+        uint nextStampingReqIndex = _stampingReqCountMapping[_recipientEIN].add(1);
+        self[nextStampingReqIndex] = _record;
+        
+        // Add to Stitch Order & Increment index
+        _stampingReqCountMapping[_recipientEIN] = _stampingReqOrderMapping.addToSortOrder(
+            _stampingReqOrderMapping[0].prev, 
+            _stampingReqCountMapping[_recipientEIN], 
+            0
+        );       
+        
+        // Add the recipient to indicate who should stamp the file and where it is in stamping request mapping
+        _globalItem.addToGlobalItemsMapping(uint8(IceGlobal.AsscProp.stampedTo), _recipientEIN, nextStampingReqIndex);
+        
+        // Unlock Usermeta
+        _specificUserMeta.lockStampings = false;
+    }
     
+    /**
+     * @dev Function to accept stamping of an item by the intended recipient
+     * @param self is the mappings of completed stamping associated with the recipient user
+     * @param _stampingOrderMapping is the mapping of the completed stamping order using SortOrder Struct (IceSort Library) of the recipient
+     * @param _stampingCountMapping is the mapping of completed stamping count
+     * @param _stampingsReq is the mappings of stamping requests associated with the recipient user
+     * @param _stampingReqOrderMapping is the mapping of the stamping request order using SortOrder Struct (IceSort Library) of the recipient
+     * @param _stampingReqCountMapping is the mapping of all stamping requests count
+     * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
+     * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
+     * @param _stampingReqIndex is the index of the item present in the Stamping Requests mapping of the recipient
+     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the recipient
+     */
+    function acceptStamping(
+        mapping (uint => IceGlobal.GlobalRecord) storage self,
+        mapping (uint => IceSort.SortOrder) storage _stampingOrderMapping, 
+        mapping (uint => uint) storage _stampingCountMapping,
+        
+        mapping (uint => IceGlobal.GlobalRecord) storage _stampingsReq,
+        mapping (uint => IceSort.SortOrder) storage _stampingReqOrderMapping, 
+        mapping (uint => uint) storage _stampingReqCountMapping,
+        
+        IceGlobal.Association storage _globalItem,
+        
+        uint _recipientEIN,
+        uint _stampingReqIndex,
+        
+        IceGlobal.UserMeta storage _specificUserMeta
+    )
+    external {
+        // Check constraints
+        _stampingReqIndex.condValidItem(_stampingReqCountMapping[_recipientEIN]); // Check if item is valid
+        _specificUserMeta.condStampingsOpFree(); // Check if Stamping for recipient is not locked 
+        
+        // Lock Usermeta
+        _specificUserMeta.lockStampings = true;
+        
+        // Logic
+        // Add to Stamping Mapping of the user
+        uint nextIndex = _stampingCountMapping[_recipientEIN].add(1);
+        
+        // Swap the stamping request, then Remove from stamping request order & stich for recipient
+        self[nextIndex] = _stampingsReq[_stampingReqIndex];
+        _stampingCountMapping[_recipientEIN] = _stampingOrderMapping.addToSortOrder(_stampingOrderMapping[0].prev, _stampingCountMapping[_recipientEIN], 0);
+        
+        // Swap the stamping request, then Remove from stamping request order & stich for recipient
+        _removeStampingReq (
+            _stampingsReq,
+            _stampingReqOrderMapping,
+            _stampingReqCountMapping,
+            _recipientEIN,
+            _stampingReqIndex,
+            _globalItem
+        );
+        
+        // Update the stamping flags
+        _globalItem.stampingCompleted = uint32(now);
+        
+        // Unlock Usermeta
+        _specificUserMeta.lockStampings = false;
+    }
     
+    /**
+     * @dev Function to cancel stamping of an item by either the owner or the recipient
+     * @param self is the mappings of stamping requests associated with the recipient user
+     * @param _stampingReqOrderMapping is the mapping of the stamping request order using SortOrder Struct (IceSort Library) of the recipient
+     * @param _stampingReqCountMapping is the mapping of all stamping requests count
+     * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
+     * @param _recipientItemIndex is the index of the item present in the Stamping Requests mapping of the recipient
+     * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
+     * @param _userMetaMapping is the mapping of all user meta for the Ice FMS
+     */
+    function cancelStamping(
+        mapping (uint => IceGlobal.GlobalRecord) storage self,
+        mapping (uint => IceSort.SortOrder) storage _stampingReqOrderMapping, 
+        mapping (uint => uint) storage _stampingReqCountMapping,
+    
+        uint _recipientEIN,
+        uint _recipientItemIndex,
+        
+        IceGlobal.Association storage _globalItem,
+        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+    )
+    external {
+        // Check constraints
+        _recipientItemIndex.condValidItem(_stampingReqCountMapping[_recipientEIN]); // Check if item is valid
+        _globalItem.condStampedItem(); // Check if the item has initiated stamping
+        _globalItem.condUncompleteStamping(); // Check if the item hasn't completed stamping 
+        _userMetaMapping[_globalItem.ownerInfo.EIN].condStampingsOpFree(); // Check if Stamping for owner is not locked 
+        _userMetaMapping[_recipientEIN].condStampingsOpFree(); // Check if Stamping for recipient is not locked 
+        
+        // Lock Usermeta
+        _userMetaMapping[_globalItem.ownerInfo.EIN].lockStampings = true;
+        _userMetaMapping[_recipientEIN].lockStampings = true;
+        
+        // Logic
+        uint curIndex = _stampingReqCountMapping[_recipientEIN];
+        
+        // Swap the stamping request, then Remove from stamping request order & stich for recipient
+        _removeStampingReq (
+            self,
+            _stampingReqOrderMapping,
+            _stampingReqCountMapping,
+            _recipientEIN,
+            _recipientItemIndex,
+            _globalItem
+        );
+        
+        // Reset the stamping flag
+        _globalItem.stampingInitiated = 0;
+        
+        // Delete the latest shares now
+        delete (self[curIndex]);
+        
+        // Unlock Usermeta
+        _userMetaMapping[_globalItem.ownerInfo.EIN].lockStampings = false;
+        _userMetaMapping[_recipientEIN].lockStampings = false;
+    }
+    
+    /**
+     * @dev Private Function to remove stamping of an item
+     * @param self is the mappings of stamping requests associated with the recipient user
+     * @param _stampingReqOrderMapping is the mapping of the stamping request order using SortOrder Struct (IceSort Library) of the recipient
+     * @param _stampingReqCountMapping is the mapping of all stamping requests count
+     * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
+     * @param _recipientItemIndex is the index of the item present in the Stamping Requests mapping of the recipient
+     * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
+     */
+    function _removeStampingReq(
+        mapping (uint => IceGlobal.GlobalRecord) storage self,
+        mapping (uint => IceSort.SortOrder) storage _stampingReqOrderMapping, 
+        mapping (uint => uint) storage _stampingReqCountMapping,
+        
+        uint _recipientEIN,
+        uint _recipientItemIndex,
+        
+        IceGlobal.Association storage _globalItem
+    )
+    private {
+        // Logic
+        uint curIndex = _stampingReqCountMapping[_recipientEIN];
+        
+        // Swap the stamping request, then Remove from stamping request order & stich for recipient
+        self[_recipientItemIndex] = self[curIndex];
+        _stampingReqCountMapping[_recipientEIN] = _stampingReqOrderMapping.stichSortOrder(_recipientItemIndex, curIndex, 0);
+        
+        // Lastly update the remapped item stamping request index stored in the association struct
+        _globalItem.stampingRecipient.index = curIndex;
+    }
 }

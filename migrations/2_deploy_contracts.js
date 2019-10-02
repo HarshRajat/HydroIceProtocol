@@ -35,7 +35,7 @@ async function doDeploy(deployer, network) {
 	await deployer.deploy(IceFMS);
     await deployer.link(IceFMS, Ice);
 
-    await deployer.deploy(Ice)
+    await deployer.deploy(Ice, "0xC155f98Fa02AeED743a2658a4B076701376a27ee")
         .then(() => console.log(Ice.address))
 }
 

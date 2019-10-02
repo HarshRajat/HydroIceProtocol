@@ -55207,7 +55207,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-09-20T17:29:33.833Z",
+  "updatedAt": "2019-10-01T23:18:52.562Z",
   "devdoc": {
     "methods": {
       "isOwner()": {
