@@ -43,11 +43,6 @@ contract Ice {
     using IceFMSAdv for mapping (uint => mapping(uint => IceGlobal.GlobalRecord));
     
     /* ***************
-    * DEFINE ENUM
-    *************** */
-    enum NoticeType {info, warning, error}
-    
-    /* ***************
     * DEFINE STRUCTURES
     *************** */
     // Done in Libraries
@@ -152,28 +147,38 @@ contract Ice {
     // When Group Status is changed
     event GroupDeleted(uint EIN, uint groupIndex, uint groupReplacedIndex);
     
-    // When Sharing is initiated
+    // When Sharing is completed
+    event SharingCompleted(uint EIN, uint index1, uint index2, uint recipientEIN);
     
-    // When Sharing is accepted
+    // When Sharing is rejected
+    event SharingRejected(uint EIN, uint index1, uint index2, uint recipientEIN);
     
     // When Sharing is removed
-    
+    event SharingRemoved(uint EIN, uint index1, uint index2, uint recipientEIN);
+   
     // When Stamping is initiated
+    event StampingInitiated(uint EIN, uint index1, uint index2, uint recipientEIN);
     
     // When Stamping is accepted by the recipient
+    event StampingAccepted(uint EIN, uint index1, uint index2, uint recipientEIN);
     
     // When Stamping is rejected by the recipient
+    event StampingRejected(uint EIN, uint index1, uint index2, uint recipientEIN);
     
     // When Stamping is revoked by the owner
-
+    event StampingRevoked(uint EIN, uint index1, uint index2, uint recipientEIN);
+    
     // When Transfer is initiated
-    event FileTransferInitiated(uint indexed EIN, uint indexed transfereeEIN, uint indexed fileID);
+    event FileTransferInitiated(uint EIN, uint index1, uint index2, uint recipientEIN);
 
     // When Transfer is accepted by the recipient
-    
+    event FileTransferAccepted(uint EIN, uint index1, uint index2, uint recipientEIN);
+
     // When Transfer is rejected by the recipient
-    
+    event FileTransferRejected(uint EIN, uint index1, uint index2, uint recipientEIN);
+
     // When Transfer is revoked by the owner
+    event FileTransferRevoked(uint EIN, uint index1, uint index2, uint recipientEIN);
 
     // When whitelist is updated
     event AddedToWhitelist(uint EIN, uint recipientEIN);
@@ -187,9 +192,6 @@ contract Ice {
     * DEFINE CONSTRUCTORS AND RELATED FUNCTIONS
     *************** */
     // CONSTRUCTOR / FUNCTIONS
-    // address snowflakeAddress = 0xC155f98Fa02AeED743a2658a4B076701376a27ee; //0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; // For local use
-    //address snowflakeAddress = 0xB0D5a36733886a4c5597849a05B315626aF5222E; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For rinkeby
-    
     constructor (address snowflakeAddress) public {
         snowflake = SnowflakeInterface(snowflakeAddress);
         identityRegistry = IdentityRegistryInterface(snowflake.identityRegistryAddress());
@@ -830,6 +832,14 @@ contract Ice {
                 usermeta[identityRegistry.getEIN(msg.sender)],
                 identityRegistry
             );
+            
+            // Trigger Event
+            emit StampingInitiated(
+                identityRegistry.getEIN(msg.sender), 
+                files[identityRegistry.getEIN(msg.sender)][_itemIndex].rec.i1, 
+                files[identityRegistry.getEIN(msg.sender)][_itemIndex].rec.i2, 
+                _recipientEIN
+            );
         }
         else {
             stampingsReq[_recipientEIN].initiateStampingOfItem(
@@ -848,10 +858,15 @@ contract Ice {
                 usermeta[identityRegistry.getEIN(msg.sender)],
                 identityRegistry
             );
+        
+            // Trigger Event
+            emit StampingInitiated(
+                identityRegistry.getEIN(msg.sender), 
+                groups[identityRegistry.getEIN(msg.sender)][_itemIndex].rec.i1, 
+                groups[identityRegistry.getEIN(msg.sender)][_itemIndex].rec.i2, 
+                _recipientEIN
+            );
         }
-        
-        // Trigger Event
-        
     }
     
     /**
@@ -883,7 +898,12 @@ contract Ice {
         );
         
         // Trigger Event
-        
+        emit StampingAccepted(
+            identityRegistry.getEIN(msg.sender), 
+            stampingsReq[recipientEIN][_stampingReqIndex].i1, 
+            stampingsReq[recipientEIN][_stampingReqIndex].i2, 
+            recipientEIN
+        );
     }
     
     /**
@@ -909,6 +929,14 @@ contract Ice {
         uint recipientEIN = globalItem.stampingRecipient.EIN;
         uint recipientItemIndex = globalItem.stampingRecipient.index;
         
+        // Trigger Event
+        emit StampingRevoked(
+            ownerEIN, 
+            stampingsReq[recipientEIN][recipientItemIndex].i1, 
+            stampingsReq[recipientEIN][recipientItemIndex].i2, 
+            recipientEIN
+        );
+        
         // Logic
         stampingsReq[recipientEIN].cancelStamping(
               stampingReqOrder[recipientEIN],
@@ -918,9 +946,6 @@ contract Ice {
               globalItem,
               usermeta
         );
-        
-        // Trigger Event
-        
     }
     
     /**
@@ -937,6 +962,14 @@ contract Ice {
         // Logic
         IceGlobal.Association storage globalItem = stampingsReq[recipientEIN][_recipientItemIndex].getGlobalItemViaRecord(globalItems);
         
+        // Trigger Event
+        emit StampingRejected(
+            globalItem.ownerInfo.EIN, 
+            stampingsReq[recipientEIN][_recipientItemIndex].i1, 
+            stampingsReq[recipientEIN][_recipientItemIndex].i2, 
+            recipientEIN
+        );
+        
         // Reject Stamping
         stampingsReq[recipientEIN].cancelStamping(
               stampingReqOrder[recipientEIN],
@@ -949,9 +982,6 @@ contract Ice {
         
         // Map the rejected flag for the owner
         globalItem.stampingRejected = true;
-        
-        // Trigger Event
-        
     }
     
     // 6. TRANSFER FILE FUNCTIONS
@@ -995,7 +1025,10 @@ contract Ice {
             // Directly transfer file, 0 is always root group
             _doDirectFileTransfer(transfererEIN, _transfereeEIN, _fileIndex, 0);
         }
-        else {
+        else {            
+            // Trigger Event
+            emit FileTransferInitiated(transfererEIN, files[transfererEIN][_fileIndex].rec.i1, files[transfererEIN][_fileIndex].rec.i2, _transfereeEIN);
+
             // Request based file Transfers
             files[transfererEIN][_fileIndex].doPermissionedFileTransfer(
                 _transfereeEIN,
@@ -1006,9 +1039,6 @@ contract Ice {
                 
                 globalItems
             );
-            
-            // Trigger Event
-            emit FileTransferInitiated(transfererEIN, _transfereeEIN, _fileIndex);
         }
 
         // Reset Transfers Atomiticy
@@ -1033,6 +1063,9 @@ contract Ice {
          // Set Transfers Atomiticy
         usermeta[_transfererEIN].lockTransfers = true;
         usermeta[_transfereeEIN].lockTransfers = true;
+        
+        // Trigger Event
+        emit FileTransferAccepted(_transfererEIN, files[_transfererEIN][_fileIndex].rec.i1, files[_transfererEIN][_fileIndex].rec.i2, _transfereeEIN);
 
         // Logic
         uint nextTransfereeIndex = files.doFileTransferPart1 (
@@ -1138,6 +1171,9 @@ contract Ice {
             usermeta[transfererEIN],
             usermeta[transfererEIN]
         );
+         
+        // Trigger Event
+        emit FileTransferRevoked(transfererEIN, files[transfererEIN][_fileIndex].rec.i1, files[transfererEIN][_fileIndex].rec.i2, _transfereeEIN);
     }
     
     /**
@@ -1175,6 +1211,9 @@ contract Ice {
             usermeta[transfererEIN],
             usermeta[transfererEIN]
         );
+        
+        // Trigger Event
+        emit FileTransferRejected(transfererEIN, files[transfererEIN][fileIndex].rec.i1, files[transfererEIN][fileIndex].rec.i2, transfereeEIN);
     }
     
     // 7. WHITELIST / BLACKLIST FUNCTIONS

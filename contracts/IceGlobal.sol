@@ -34,12 +34,6 @@ library IceGlobal {
         uint EIN; // the EIN of the owner
         uint index; // the key at which the item is stored
     }
-    
-    /* To define stamping info of a given Item. */
-    struct ItemStamping {
-        uint EIN; // the EIN
-        uint32 timestamp;  // to store the timestamp of the block when file is stamped by the EIN 
-    }
 
     /* To define global file association with EIN
      * Combining EIN and itemIndex and properties will give access to

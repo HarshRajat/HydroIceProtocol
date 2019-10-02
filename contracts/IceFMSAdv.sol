@@ -23,7 +23,18 @@ library IceFMSAdv {
     
     using IceSort for mapping (uint => IceSort.SortOrder);
     
+    /* ***************
+    * DEFINE EVENTS | DUPLICATE / TRICK - https://blog.aragon.org/library-driven-development-in-solidity-2bebcaf88736/
+    *************** */
+    // When Sharing is completed
+    event SharingCompleted(uint EIN, uint index1, uint index2, uint recipientEIN);
     
+    // When Sharing is rejected
+    event SharingRejected(uint EIN, uint index1, uint index2, uint recipientEIN);
+    
+    // When Sharing is removed
+    event SharingRemoved(uint EIN, uint index1, uint index2, uint recipientEIN);
+   
     /* ***************
     * DEFINE STRUCTURES
     *************** */
@@ -72,6 +83,13 @@ library IceFMSAdv {
                     _rec, 
                     _toEINs[i]
                 );
+                
+                // Trigger Event
+                emit SharingCompleted(_ein, _rec.i1, _rec.i2, _toEINs[i]);
+            }
+            else {
+                // Trigger Event
+                emit SharingRejected(_ein, _rec.i1, _rec.i2, _toEINs[i]);
             }
         }
     }
@@ -252,6 +270,9 @@ library IceFMSAdv {
                 // Swap the shares, then Remove from share order & stich
                 self[_itemIndex] = self[curIndex];
                 _shareCountMapping[_fromEIN] = _shareOrderMapping.stichSortOrder(_itemIndex, curIndex, 0);
+                
+                // Trigger Event
+                emit SharingRejected(_globalItemIndividual.ownerInfo.EIN, self[curIndex].i1, self[curIndex].i2, _fromEIN);
                 
                 // Delete the latest shares now
                 delete (self[curIndex]);
