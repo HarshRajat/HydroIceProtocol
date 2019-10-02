@@ -49,7 +49,6 @@ library IceFMSAdv {
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
      * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      * @param _blacklist is the entire mapping of the Blacklist for all users
      * @param _rec is the GlobalRecord Struct (IceGlobal Library)
      * @param _ein is the primary user who initiates sharing of the item
@@ -60,7 +59,6 @@ library IceFMSAdv {
         mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems, 
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
         mapping (uint => uint) storage _shareCountMapping,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping,
         mapping (uint => mapping(uint => bool)) storage _blacklist, 
         IceGlobal.GlobalRecord storage _rec, 
         uint _ein, 
@@ -79,7 +77,6 @@ library IceFMSAdv {
                     _globalItems, 
                     _totalShareOrderMapping[_toEINs[i]], 
                     _shareCountMapping, 
-                    _userMetaMapping[_toEINs[i]],
                     _rec, 
                     _toEINs[i]
                 );
@@ -100,7 +97,6 @@ library IceFMSAdv {
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
      * @param _shareOrder is the mapping of the shares order using SortOrder Struct (IceSort Library) of the recipient user
      * @param _shareCount is the mapping of all share count
-     * @param _usermeta is the of that recipient's UserMeta Struct (IceGlobal Library)
      * @param _rec is the GlobalRecord Struct (IceGlobal Library)
      * @param _toEIN is the ein of the recipient user 
      */
@@ -109,18 +105,11 @@ library IceFMSAdv {
         mapping (uint => mapping (uint => IceGlobal.Association)) storage _globalItems, 
         mapping (uint => IceSort.SortOrder) storage _shareOrder, 
         mapping (uint => uint) storage _shareCount, 
-        IceGlobal.UserMeta storage _usermeta, 
         IceGlobal.GlobalRecord storage _rec, 
         uint _toEIN
     )
     internal {
-        // Check Restrictions
-        _usermeta.condSharingsOpFree(); // Check if sharing operations are locked
-        
         // Logic
-        // Set Lock
-        _usermeta.lockSharings = true;
-
         // Check if the item is already shared or not and do the operation accordingly
         if (!_rec.getGlobalItemViaRecord(_globalItems).sharedToEINMapping[_toEIN]) {
             // Create Sharing
@@ -140,9 +129,6 @@ library IceFMSAdv {
             }
             
         }
-
-        // Reset Lock
-        _usermeta.lockSharings = false;
     }
 
     /**
@@ -152,21 +138,16 @@ library IceFMSAdv {
      * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
      * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function removeAllShares(
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage self,
         uint _ein,
         IceGlobal.Association storage _globalItemIndividual,
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _shareOrderMapping, 
-        mapping (uint => uint) storage _shareCountMapping,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        mapping (uint => uint) storage _shareCountMapping
     ) 
     external {
         if (_globalItemIndividual.sharedToCount > 0) {
-            // Check Restriction
-            _userMetaMapping[_ein].condSharingsOpFree(); // Check if sharing operations are locked or not for the owner
-    
             // Logic
             // get and pass all EINs, remove share takes care of locking
             uint[] memory fromEINs = _globalItemIndividual.sharedTo.getHistoralEINsForGlobalItems(_globalItemIndividual.sharedToCount);
@@ -178,8 +159,7 @@ library IceFMSAdv {
                 fromEINs,
                 _globalItemIndividual, 
                 _shareOrderMapping, 
-                _shareCountMapping, 
-                _userMetaMapping
+                _shareCountMapping
             );
         }
     }
@@ -191,7 +171,6 @@ library IceFMSAdv {
      * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
      * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function removeShareFromEINs(
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage self,
@@ -199,8 +178,7 @@ library IceFMSAdv {
         uint[] memory _fromEINs,
         IceGlobal.Association storage _globalItemIndividual,
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _shareOrderMapping, 
-        mapping (uint => uint) storage _shareCountMapping,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        mapping (uint => uint) storage _shareCountMapping
     )
     public {
         // Adjust for valid loop
@@ -215,8 +193,7 @@ library IceFMSAdv {
                     _fromEINs[scount],
                     _globalItemIndividual, 
                     _shareOrderMapping[_fromEINs[scount]], 
-                    _shareCountMapping, 
-                    _userMetaMapping[_fromEINs[scount]]
+                    _shareCountMapping
                 );
             }
             
@@ -231,24 +208,16 @@ library IceFMSAdv {
      * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
      * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the recipient user
      */
     function _removeShareFromEIN(
         mapping (uint => IceGlobal.GlobalRecord) storage self,
         uint _fromEIN,
         IceGlobal.Association storage _globalItemIndividual,
         mapping (uint => IceSort.SortOrder) storage _shareOrderMapping, 
-        mapping (uint => uint) storage _shareCountMapping,
-        IceGlobal.UserMeta storage _specificUserMeta
+        mapping (uint => uint) storage _shareCountMapping
     )
     internal {
-        // Check Restrictions
-        _specificUserMeta.condSharingsOpFree(); // Check if sharing operations are locked
-        
         // Logic
-        // Set Lock
-        _specificUserMeta.lockSharings = true;
-
         // Create Sharing
         uint curIndex = _shareCountMapping[_fromEIN];
 
@@ -278,9 +247,6 @@ library IceFMSAdv {
                 delete (self[curIndex]);
             }
         }
-
-        // Reset Lock
-        _specificUserMeta.lockSharings = false;
     }
     
     /**
@@ -290,15 +256,13 @@ library IceFMSAdv {
      * @param _globalItemIndividual is the Association Struct (IceGlobal Library) that contains additional info about file
      * @param _shareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the recipient user
      */
     function removeSharingItemBySharee(
         mapping (uint => IceGlobal.GlobalRecord) storage self,
         uint _shareeEIN,
         IceGlobal.Association storage _globalItemIndividual,
         mapping (uint => IceSort.SortOrder) storage _shareOrderMapping, 
-        mapping (uint => uint) storage _shareCountMapping,
-        IceGlobal.UserMeta storage _specificUserMeta
+        mapping (uint => uint) storage _shareCountMapping
     ) 
     external {
         // Logic
@@ -307,8 +271,7 @@ library IceFMSAdv {
             _shareeEIN,
             _globalItemIndividual, 
             _shareOrderMapping, 
-            _shareCountMapping, 
-            _specificUserMeta
+            _shareCountMapping
         );
     }
     
@@ -325,7 +288,6 @@ library IceFMSAdv {
      * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
      * @param _record is the GlobalRecord Struct (IceGlobal Library) of the item in question
      * @param _blacklist is the entire mapping of the Blacklist for all users
-     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the owner
      * @param _identityRegistry is the pointer to the ERC-1484 Identity Registry
      */
     function initiateStampingOfItem(
@@ -341,8 +303,7 @@ library IceFMSAdv {
         IceGlobal.Association storage _globalItem,
         IceGlobal.GlobalRecord storage _record,
         
-        mapping (uint => mapping(uint => bool)) storage _blacklist, 
-        IceGlobal.UserMeta storage _specificUserMeta,
+        mapping (uint => mapping(uint => bool)) storage _blacklist,
         IdentityRegistryInterface _identityRegistry
     )
     external {
@@ -352,10 +313,6 @@ library IceFMSAdv {
         IceGlobal.condEINExists(_recipientEIN, _identityRegistry); // Check Valid EIN
         IceGlobal.condUniqueEIN(_ownerEIN, _recipientEIN); // Check EINs and Unique
         _blacklist[_recipientEIN].condNotInList(_ownerEIN); // Check if The recipient hasn't blacklisted the file owner
-        _specificUserMeta.condStampingsOpFree();
-        
-        // Lock Usermeta
-        _specificUserMeta.lockStampings = true;
         
         // Logic
         // Flip the switch to indicate stamping is initiated, flush out any rejected message as well 
@@ -375,9 +332,6 @@ library IceFMSAdv {
         
         // Add the recipient to indicate who should stamp the file and where it is in stamping request mapping
         _globalItem.addToGlobalItemsMapping(uint8(IceGlobal.AsscProp.stampedTo), _recipientEIN, nextStampingReqIndex);
-        
-        // Unlock Usermeta
-        _specificUserMeta.lockStampings = false;
     }
     
     /**
@@ -391,7 +345,6 @@ library IceFMSAdv {
      * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
      * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
      * @param _stampingReqIndex is the index of the item present in the Stamping Requests mapping of the recipient
-     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) of the recipient
      */
     function acceptStamping(
         mapping (uint => IceGlobal.GlobalRecord) storage self,
@@ -405,17 +358,11 @@ library IceFMSAdv {
         IceGlobal.Association storage _globalItem,
         
         uint _recipientEIN,
-        uint _stampingReqIndex,
-        
-        IceGlobal.UserMeta storage _specificUserMeta
+        uint _stampingReqIndex
     )
     external {
         // Check constraints
         _stampingReqIndex.condValidItem(_stampingReqCountMapping[_recipientEIN]); // Check if item is valid
-        _specificUserMeta.condStampingsOpFree(); // Check if Stamping for recipient is not locked 
-        
-        // Lock Usermeta
-        _specificUserMeta.lockStampings = true;
         
         // Logic
         // Add to Stamping Mapping of the user
@@ -437,9 +384,6 @@ library IceFMSAdv {
         
         // Update the stamping flags
         _globalItem.stampingCompleted = uint32(now);
-        
-        // Unlock Usermeta
-        _specificUserMeta.lockStampings = false;
     }
     
     /**
@@ -450,7 +394,6 @@ library IceFMSAdv {
      * @param _recipientEIN is the recipient EIN of the user who has to stamp the item
      * @param _recipientItemIndex is the index of the item present in the Stamping Requests mapping of the recipient
      * @param _globalItem is the Association Struct (IceGlobal Library) of the item in question
-     * @param _userMetaMapping is the mapping of all user meta for the Ice FMS
      */
     function cancelStamping(
         mapping (uint => IceGlobal.GlobalRecord) storage self,
@@ -460,20 +403,13 @@ library IceFMSAdv {
         uint _recipientEIN,
         uint _recipientItemIndex,
         
-        IceGlobal.Association storage _globalItem,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        IceGlobal.Association storage _globalItem
     )
     external {
         // Check constraints
         _recipientItemIndex.condValidItem(_stampingReqCountMapping[_recipientEIN]); // Check if item is valid
         _globalItem.condStampedItem(); // Check if the item has initiated stamping
-        _globalItem.condUncompleteStamping(); // Check if the item hasn't completed stamping 
-        _userMetaMapping[_globalItem.ownerInfo.EIN].condStampingsOpFree(); // Check if Stamping for owner is not locked 
-        _userMetaMapping[_recipientEIN].condStampingsOpFree(); // Check if Stamping for recipient is not locked 
-        
-        // Lock Usermeta
-        _userMetaMapping[_globalItem.ownerInfo.EIN].lockStampings = true;
-        _userMetaMapping[_recipientEIN].lockStampings = true;
+        _globalItem.condUncompleteStamping(); // Check if the item hasn't completed stamping
         
         // Logic
         uint curIndex = _stampingReqCountMapping[_recipientEIN];
@@ -493,10 +429,6 @@ library IceFMSAdv {
         
         // Delete the latest shares now
         delete (self[curIndex]);
-        
-        // Unlock Usermeta
-        _userMetaMapping[_globalItem.ownerInfo.EIN].lockStampings = false;
-        _userMetaMapping[_recipientEIN].lockStampings = false;
     }
     
     /**

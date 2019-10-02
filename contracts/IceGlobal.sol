@@ -61,12 +61,6 @@ library IceGlobal {
      * used in cases where state change should be atomic
      */
      struct UserMeta {
-        bool lockFiles;
-        bool lockGroups;
-        bool lockSharings;
-        bool lockStampings;
-        bool lockTransfers;
-        
         bool hasAvatar;
      }
     
@@ -649,68 +643,6 @@ library IceGlobal {
         require (
             (self[_targetEIN] == false),
             "EIN in blacklist / whitelist"
-        );
-    }
-    
-    // 3. LOCK CONDITIONS FOR FILE MANAGEMENT SYSTEM OF A USER
-    /**
-     * @dev Function to check that operation of Files is currently locked or not
-     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
-     * @param self is thee 
-     */
-    function condFilesOpFree(UserMeta storage self)
-    external view {
-        require (
-          (self.lockFiles == false),
-          "Files Locked"
-        );
-    }
-
-    /**
-     * @dev Function to check that operation of Groups is currently locked or not
-     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
-     */
-    function condGroupsOpFree(UserMeta storage self)
-    external view {
-        require (
-          (self.lockGroups == false),
-          "Groups Locked"
-        );
-    }
-
-    /**
-     * @dev Function to check that operation of Sharings is currently locked or not
-     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
-     */
-    function condSharingsOpFree(UserMeta storage self)
-    external view {
-        require (
-          (self.lockSharings == false),
-          "Sharing Locked"
-        );
-    }
-    
-    /**
-     * @dev Function to check that operation of Transfers is currently locked or not
-     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
-     */
-    function condStampingsOpFree(UserMeta storage self)
-    external view {
-        require (
-          (self.lockStampings == false),
-          "Stamping Locked"
-        );
-    }
-
-    /**
-     * @dev Function to check that operation of Transfers is currently locked or not
-     * @param self is the UserMeta Struct (IceGlobal library) of the particular user in question
-     */
-    function condTransfersOpFree(UserMeta storage self)
-    external view {
-        require (
-          (self.lockTransfers == false),
-          "Transfers Locked"
         );
     }
 }

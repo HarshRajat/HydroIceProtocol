@@ -295,7 +295,6 @@ library IceFMS {
      * @param _groupOrderMapping is the mapping of the order of files in that group for the primary user's FMS
      * @param _newGroupIndex is the index of the new group where file has to be moved
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) for the primary user
      * @return groupFileIndex is the index of the file stored in that relevant group of the primary user 
      */
     function moveFileToGroup(
@@ -304,8 +303,7 @@ library IceFMS {
         mapping(uint => IceFMS.Group) storage _groupMapping, 
         mapping(uint => IceSort.SortOrder) storage _groupOrderMapping,
         uint _newGroupIndex,
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        IceGlobal.UserMeta storage _specificUserMeta
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
     )
     external 
     returns (uint groupFileIndex){
@@ -319,13 +317,6 @@ library IceFMS {
         // Check if the new group is unstamped, can't move a file from stamped group
         _groupMapping[_newGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem(); 
         
-        _specificUserMeta.condFilesOpFree(); // Check if the files operations are not locked for the user
-        _specificUserMeta.condGroupsOpFree(); // Check if the groups operations are not locked for the user
-
-        // Set Files & Group Atomicity
-        _specificUserMeta.lockFiles = true;
-        _specificUserMeta.lockGroups = true;
-
         // remap the file
         groupFileIndex = remapFileToGroup(
             self, 
@@ -334,10 +325,6 @@ library IceFMS {
             _groupMapping[_newGroupIndex], 
             _newGroupIndex
         );
-
-        // Reset Files & Group Atomicity
-        _specificUserMeta.lockFiles = false;
-        _specificUserMeta.lockGroups = false;
     }
 
     /**
@@ -353,7 +340,6 @@ library IceFMS {
      * @param _totalSharesMapping is the mapping of the entire shares
      * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function deleteFile(
         mapping (uint => File) storage self,
@@ -368,9 +354,7 @@ library IceFMS {
         
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _totalSharesMapping,
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
-        mapping (uint => uint) storage _shareCountMapping,
-        
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        mapping (uint => uint) storage _shareCountMapping
     )
     public {
         // Check Restrictions
@@ -379,18 +363,13 @@ library IceFMS {
         _fileGroupOrder.condValidSortOrder(self[_fileIndex].associatedGroupFileIndex); //Check if sort order is valid
         condItemMarkedForTransfer(self[_fileIndex]);// Check if the File is not marked for transfer
         
-        // Set Files & Group Atomicity
-        _userMetaMapping[_ein].lockFiles = true;
-        _userMetaMapping[_ein].lockGroups = true;
-
         // Delete File Shares and Global Mapping
         _deleteFileMappings(
             _ein, 
             _globalItemIndividual, 
             _totalSharesMapping, 
             _totalShareOrderMapping, 
-            _shareCountMapping, 
-            _userMetaMapping
+            _shareCountMapping
         );
         
         // Delete the latest file now
@@ -405,10 +384,6 @@ library IceFMS {
             _fileCountMapping, 
             _fileGroup
         );
-        
-        // // Reset Files & Group Atomicity
-        _userMetaMapping[_ein].lockFiles = false;
-        _userMetaMapping[_ein].lockGroups = false;
     }
     
     /**
@@ -418,15 +393,13 @@ library IceFMS {
      * @param _totalSharesMapping is the mapping of the entire shares
      * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function _deleteFileMappings(
         uint _ein,
         IceGlobal.Association storage _globalItemIndividual,
         mapping (uint => mapping(uint => IceGlobal.GlobalRecord)) storage _totalSharesMapping,
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
-        mapping (uint => uint) storage _shareCountMapping,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        mapping (uint => uint) storage _shareCountMapping
     ) 
     internal {
         // Remove item from sharing of other users
@@ -434,8 +407,7 @@ library IceFMS {
             _ein,
             _globalItemIndividual, 
             _totalShareOrderMapping, 
-            _shareCountMapping, 
-            _userMetaMapping
+            _shareCountMapping
         );
         
         // Remove from global Record
@@ -539,7 +511,7 @@ library IceFMS {
         // Add File to new group
         (self.associatedGroupIndex, self.associatedGroupFileIndex) = addFileToGroup(_newGroup, _newGroupIndex, _existingFileIndex);
         
-        // The file added hass the asssociated group file index now
+        // The file added has the asssociated group file index now
         groupFileIndex = self.associatedGroupFileIndex;
     }
     
@@ -628,7 +600,6 @@ library IceFMS {
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
      * @param _globalIndex1 is the initial first index of global items
      * @param _globalIndex2 is the initial second index of global items
-     * @param _specificUserMeta is the UserMeta Struct (IceGlobal Library) for the primary user
      * @return newGlobalIndex1 is the new first index of global items
      * @return newGlobalIndex2 is the new second index of global items
      * @return nextGroupIndex is the new count of the group index after creating a group
@@ -643,9 +614,7 @@ library IceFMS {
         
         mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
         uint _globalIndex1,
-        uint _globalIndex2,
-        
-        IceGlobal.UserMeta storage _specificUserMeta
+        uint _globalIndex2
     )
     external 
     returns (
@@ -653,12 +622,7 @@ library IceFMS {
         uint newGlobalIndex2,
         uint nextGroupIndex
     ) {
-        // Check Restrictions
-        _specificUserMeta.condGroupsOpFree();
-
-        // Set Group Atomicity
-        _specificUserMeta.lockGroups = true;
-        
+        // Logic
         (newGlobalIndex1, newGlobalIndex2, nextGroupIndex) = _createGroupInner(
            self, 
            _ein, 
@@ -669,9 +633,6 @@ library IceFMS {
            _globalIndex1, 
            _globalIndex2
         );
-
-        // Reset Group Atomicity
-        _specificUserMeta.lockGroups = false;
     }
     
     /**
@@ -762,7 +723,6 @@ library IceFMS {
      * @param _totalShareOrderMapping is the mapping of the entire shares order using SortOrder Struct (IceSort Library)
      * @param _shareCountMapping is the mapping of all share count
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function deleteGroup(
         mapping (uint => Group) storage self,
@@ -776,8 +736,7 @@ library IceFMS {
         mapping (uint => mapping(uint => IceSort.SortOrder)) storage _totalShareOrderMapping, 
         mapping (uint => uint) storage _shareCountMapping,
         
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
     )
     external 
     returns (uint currentGroupIndex) {
@@ -786,11 +745,6 @@ library IceFMS {
         condNonReservedGroup(_groupIndex);
         _groupIndex.condValidItem(_groupCountMapping[_ein]);
         
-        _userMetaMapping[_ein].condGroupsOpFree();
-
-        // Set Group Atomicity
-        _userMetaMapping[_ein].lockGroups = true;
-
         // Check if the group exists or not
         currentGroupIndex = _groupCountMapping[_ein];
 
@@ -800,8 +754,7 @@ library IceFMS {
             _ein,
             globalItem, 
             _totalShareOrderMapping, 
-            _shareCountMapping, 
-            _userMetaMapping
+            _shareCountMapping
         );
         
         // Deactivate from global record
@@ -813,9 +766,6 @@ library IceFMS {
 
         // Delete the latest group now
         delete (self[currentGroupIndex]);
-
-        // Reset Group Atomicity
-        _userMetaMapping[_ein].lockGroups = false;
     }
     
     /**
@@ -853,7 +803,6 @@ library IceFMS {
      * @param _totalGroupsMapping is the entire mapping of the groups of the Ice FMS
      * @param _blacklist is the entire mapping of the Blacklist for all users
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      * @param _identityRegistry is the pointer to the ERC-1484 Identity Registry
      */
     function doInitiateFileTransferChecks(
@@ -868,7 +817,6 @@ library IceFMS {
         mapping (uint => mapping(uint => bool)) storage _blacklist,
         
         mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping,
         
         IdentityRegistryInterface _identityRegistry
     )
@@ -881,8 +829,6 @@ library IceFMS {
         // Check if the Group is not stamped
         _totalGroupsMapping[_transfererEIN][self[_transfererEIN][_fileIndex].associatedGroupIndex].rec.getGlobalItemViaRecord(_globalItems).condUnstampedItem();
         _blacklist[_transfereeEIN].condNotInList(_transfererEIN); // Check if The transfee hasn't blacklisted the file owner
-        _userMetaMapping[_transfererEIN].condTransfersOpFree(); // Check if Transfers are not locked for current user
-        _userMetaMapping[_transfereeEIN].condTransfersOpFree(); // Check if the transfers are not locked for recipient user
     }
     
     /**
@@ -1051,26 +997,17 @@ library IceFMS {
      * @param _transfererEIN is the previous(current) owner EIN
      * @param _transfereeEIN is the EIN to which the file will be transferred
      * @param _fileIndex is the index where file is stored
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function acceptFileTransferPart1(
         mapping (uint => mapping(uint => File)) storage self,
         
         uint _transfererEIN, 
         uint _transfereeEIN,
-        uint _fileIndex, 
-        
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        uint _fileIndex
     )
     external {
         // Check Restrictions
         condMarkedForTransferee(self[_transfererEIN][_fileIndex], _transfereeEIN); // Check if the file is marked for transfer to the recipient
-        _userMetaMapping[_transfererEIN].condTransfersOpFree(); // Check that the transfers are not locked for the sender of the file
-        _userMetaMapping[_transfereeEIN].condTransfersOpFree(); // Check that the transfers are not locked for the recipient of the file
-
-        // Set Transfers Atomiticy
-        _userMetaMapping[_transfererEIN].lockTransfers = true;
-        _userMetaMapping[_transfereeEIN].lockTransfers = true;
         
         // Set file to normal so that transfer
         self[_transfererEIN][_fileIndex].fileMeta.markedForTransfer = false;
@@ -1079,19 +1016,16 @@ library IceFMS {
     /**
      * @dev Function to accept file transfer (part 2) from a user
      * @param self is the entire mapping of all the pointers to the File Struct (IceFMS Library)
-     * @param _transfererEIN is the previous(current) owner EIN
      * @param _transfereeEIN is the EIN to which the file will be transferred
      * @param _transferSpecificIndex is the index of the transfer mapping of the recipient which contains transfer info for that file
      * @param _transfersMapping is the mapping of all transfers for the transferee's FMS
      * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
      * @param _transferCountMapping is the mapping of the entire transfer count for every user
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _userMetaMapping is the entire mapping of UserMeta Struct (IceGlobal Library)
      */
     function acceptFileTransferPart2(
         mapping (uint => mapping(uint => File)) storage self,
         
-        uint _transfererEIN, 
         uint _transfereeEIN,
         
         uint _transferSpecificIndex, 
@@ -1100,8 +1034,7 @@ library IceFMS {
         mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
         mapping (uint => uint) storage _transferCountMapping,
         
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        mapping (uint => IceGlobal.UserMeta) storage _userMetaMapping
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
     )
     external {
         // Finally remove the file from Tranferee Mapping
@@ -1117,10 +1050,6 @@ library IceFMS {
             
             _globalItems
         );
-        
-        // Reset Transfers Atomiticy
-        _userMetaMapping[_transfererEIN].lockTransfers = false;
-        _userMetaMapping[_transfereeEIN].lockTransfers = false;
     }
     
     /**
@@ -1133,8 +1062,6 @@ library IceFMS {
      * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
      * @param _transferCountMapping is the mapping of the entire transfer count for every user
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _transfererUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferer
-     * @param _transfereeUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferee
      */
     function cancelFileTransfer(
         mapping (uint => mapping(uint => File)) storage self,
@@ -1147,10 +1074,7 @@ library IceFMS {
         mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
         mapping (uint => uint) storage _transferCountMapping,
         
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        
-        IceGlobal.UserMeta storage _transfererUserMeta,
-        IceGlobal.UserMeta storage _transfereeUserMeta
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
     )
     external {
         // Check constraints
@@ -1168,10 +1092,7 @@ library IceFMS {
             _transferOrderMapping, 
             _transferCountMapping,
             
-            _globalItems,
-            
-            _transfererUserMeta,
-            _transfereeUserMeta
+            _globalItems
         );
     }
     
@@ -1185,8 +1106,6 @@ library IceFMS {
      * @param _transferOrderMapping is the mapping of the order of transfers for the transferee user's FMS
      * @param _transferCountMapping is the mapping of the entire transfer count for every user
      * @param _globalItems is the mapping of all items stored by all users in the Ice FMS
-     * @param _transfererUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferer
-     * @param _transfereeUserMeta is the mapping of UserMeta Struct (IceGlobal Library) for the transferee
      */
     function _cancelFileTransfer (
         mapping (uint => mapping(uint => File)) storage self,
@@ -1199,20 +1118,9 @@ library IceFMS {
         mapping (uint => IceSort.SortOrder) storage _transferOrderMapping, 
         mapping (uint => uint) storage _transferCountMapping,
         
-        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems,
-        
-        IceGlobal.UserMeta storage _transfererUserMeta,
-        IceGlobal.UserMeta storage _transfereeUserMeta
+        mapping (uint => mapping(uint => IceGlobal.Association)) storage _globalItems
     )
     private {
-        // Check Restrictions
-        _transfererUserMeta.condTransfersOpFree();
-        _transfereeUserMeta.condTransfersOpFree(); 
-
-        // Set Transfers Atomiticy
-        _transfererUserMeta.lockTransfers = true;
-        _transfereeUserMeta.lockTransfers = true;
-
         // Cancel file transfer
         self[_transfererEIN][_fileIndex].fileMeta.markedForTransfer = false;
 
@@ -1229,10 +1137,6 @@ library IceFMS {
             
             _globalItems
         );
-        
-        // Reset Transfers Atomiticy
-        _transfererUserMeta.lockTransfers = false;
-        _transfereeUserMeta.lockTransfers = false;
     }
     
     /**

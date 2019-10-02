@@ -433,12 +433,6 @@ contract Ice {
         
         // Check constraints
         _groupIndex.condValidItem(groupCount[ein]);
-        usermeta[ein].condFilesOpFree();
-        usermeta[ein].condGroupsOpFree();
-        
-        // Set File & Group Atomicity
-        usermeta[ein].lockFiles = true;
-        usermeta[ein].lockGroups = true;
 
         // To fill with global index if need be
         IceGlobal.GlobalRecord memory rec;
@@ -501,10 +495,6 @@ contract Ice {
         
         // Trigger Event
         emit FileCreated(ein, nextIndex, IceFMS.bytes32ToString(_name));
-
-        // Reset Files & Group Atomicity
-        usermeta[ein].lockFiles = false;
-        usermeta[ein].lockGroups = false;
     }
 
     // /**
@@ -541,7 +531,7 @@ contract Ice {
         uint ein = identityRegistry.getEIN(msg.sender);
 
         // Logic
-        uint groupFileIndex = files[ein][_fileIndex].moveFileToGroup(_fileIndex, groups[ein], groupOrder[ein], _newGroupIndex, globalItems, usermeta[ein]);
+        uint groupFileIndex = files[ein][_fileIndex].moveFileToGroup(_fileIndex, groups[ein], groupOrder[ein], _newGroupIndex, globalItems);
 
         // Trigger Event
         emit FileMoved(ein, _fileIndex, _newGroupIndex, groupFileIndex);
@@ -586,9 +576,7 @@ contract Ice {
             
             shares,
             shareOrder,
-            shareCount,
-            
-            usermeta
+            shareCount
         );
     }
 
@@ -666,8 +654,7 @@ contract Ice {
             groupCount, 
             globalItems,
             globalIndex1,
-            globalIndex2,
-            usermeta[ein]
+            globalIndex2
         );
         
         // Trigger Event
@@ -715,8 +702,7 @@ contract Ice {
             shareOrder,
             shareCount,
             
-            globalItems,
-            usermeta
+            globalItems
         );
         
         // Trigger Event
@@ -738,11 +724,11 @@ contract Ice {
         // Check if item is file or group and accordingly check if Item is valid & Logic
         if (_isFile == true) { 
             _itemIndex.condValidItem(fileCount[ein]);
-            shares.shareItemToEINs(globalItems, shareOrder, shareCount, usermeta, blacklist, files[ein][_itemIndex].rec, ein, _toEINs);
+            shares.shareItemToEINs(globalItems, shareOrder, shareCount, blacklist, files[ein][_itemIndex].rec, ein, _toEINs);
         }
         else {
             _itemIndex.condValidItem(groupCount[ein]);
-            shares.shareItemToEINs(globalItems, shareOrder, shareCount, usermeta, blacklist, groups[ein][_itemIndex].rec, ein, _toEINs);
+            shares.shareItemToEINs(globalItems, shareOrder, shareCount, blacklist, groups[ein][_itemIndex].rec, ein, _toEINs);
         }
     }
 
@@ -777,8 +763,7 @@ contract Ice {
             _fromEINs,
             globalItems[rec.i1][rec.i2], 
             shareOrder, 
-            shareCount, 
-            usermeta
+            shareCount
         );
     }
     
@@ -796,8 +781,7 @@ contract Ice {
             shareeEIN,
             globalItem, 
             shareOrder[shareeEIN], 
-            shareCount, 
-            usermeta[shareeEIN]
+            shareCount
         );
     }
     
@@ -829,7 +813,6 @@ contract Ice {
                 files[identityRegistry.getEIN(msg.sender)][_itemIndex].rec,
                 
                 blacklist,
-                usermeta[identityRegistry.getEIN(msg.sender)],
                 identityRegistry
             );
             
@@ -855,7 +838,6 @@ contract Ice {
                 groups[identityRegistry.getEIN(msg.sender)][_itemIndex].rec,
                 
                 blacklist,
-                usermeta[identityRegistry.getEIN(msg.sender)],
                 identityRegistry
             );
         
@@ -892,9 +874,7 @@ contract Ice {
             stampingsReq[recipientEIN][_stampingReqIndex].getGlobalItemViaRecord(globalItems),
             
             recipientEIN,
-            _stampingReqIndex,
-            
-            usermeta[recipientEIN]
+            _stampingReqIndex
         );
         
         // Trigger Event
@@ -943,8 +923,7 @@ contract Ice {
               stampingReqCount,
               recipientEIN,
               recipientItemIndex,
-              globalItem,
-              usermeta
+              globalItem
         );
     }
     
@@ -976,8 +955,7 @@ contract Ice {
               stampingReqCount,
               recipientEIN,
               _recipientItemIndex,
-              globalItem,
-              usermeta
+              globalItem
         );
         
         // Map the rejected flag for the owner
@@ -1011,15 +989,10 @@ contract Ice {
             blacklist,
             
             globalItems,
-            usermeta,
             
             identityRegistry
         );
         
-        // Set Transfers Atomiticy
-        usermeta[transfererEIN].lockTransfers = true;
-        usermeta[_transfereeEIN].lockTransfers = true;
-
         // Check and change flow if white listed
         if (whitelist[_transfereeEIN][transfererEIN] == true) {
             // Directly transfer file, 0 is always root group
@@ -1040,10 +1013,6 @@ contract Ice {
                 globalItems
             );
         }
-
-        // Reset Transfers Atomiticy
-        usermeta[transfererEIN].lockTransfers = false;
-        usermeta[_transfereeEIN].lockTransfers = false;
     }
     
     /**
@@ -1060,10 +1029,6 @@ contract Ice {
         uint _toRecipientGroup
     )
     internal {
-         // Set Transfers Atomiticy
-        usermeta[_transfererEIN].lockTransfers = true;
-        usermeta[_transfereeEIN].lockTransfers = true;
-        
         // Trigger Event
         emit FileTransferAccepted(_transfererEIN, files[_transfererEIN][_fileIndex].rec.i1, files[_transfererEIN][_fileIndex].rec.i2, _transfereeEIN);
 
@@ -1090,10 +1055,6 @@ contract Ice {
 
         // Delete File
         _deleteFileAnyOwner(_transfererEIN, _fileIndex);
-
-        // Reset Transfers Atomiticy
-        usermeta[_transfererEIN].lockTransfers = false;
-        usermeta[_transfereeEIN].lockTransfers = false;
     }
     
     /**
@@ -1119,9 +1080,7 @@ contract Ice {
         files.acceptFileTransferPart1(
             transfererEIN, 
             transfereeEIN,
-            fileIndex,
-            
-            usermeta
+            fileIndex
         );
         
         // Do file transfer
@@ -1129,7 +1088,6 @@ contract Ice {
         
         // Accept File Transfer Part 2
         files.acceptFileTransferPart2(
-            transfererEIN, 
             transfereeEIN,
             
             _atRecipientTransferIndex,
@@ -1138,8 +1096,7 @@ contract Ice {
             transferOrder[transfereeEIN],
             transferCount,
             
-            globalItems,
-            usermeta
+            globalItems
         );
     }
 
@@ -1166,10 +1123,7 @@ contract Ice {
             transferOrder[_transfereeEIN],
             transferCount,
             
-            globalItems,
-            
-            usermeta[transfererEIN],
-            usermeta[transfererEIN]
+            globalItems
         );
          
         // Trigger Event
@@ -1206,10 +1160,7 @@ contract Ice {
             transferOrder[transfereeEIN],
             transferCount,
             
-            globalItems,
-            
-            usermeta[transfererEIN],
-            usermeta[transfererEIN]
+            globalItems
         );
         
         // Trigger Event
