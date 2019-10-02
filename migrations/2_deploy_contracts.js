@@ -12,6 +12,9 @@ var Ice = artifacts.require("Ice");
 //   deployer.deploy(IceProtocol) /*, "0xB536a9b68e7c1D2Fd6b9851Af2F955099B3A59a9"*/
 // };
 
+// address snowflakeAddress = 0xC155f98Fa02AeED743a2658a4B076701376a27ee; //0xcF1877AC788a303cAcbbfE21b4E8AD08139f54FA; // For local use
+// address snowflakeAddress = 0xB0D5a36733886a4c5597849a05B315626aF5222E; //0xB0D5a36733886a4c5597849a05B315626aF5222E; // For rinkeby
+
 async function doDeploy(deployer, network) {
     await deployer.deploy(IceGlobal);
     await deployer.link(IceGlobal, IceFMS);
@@ -23,11 +26,6 @@ async function doDeploy(deployer, network) {
     await deployer.link(IceSort, IceFMSAdv);
 	await deployer.link(IceSort, Ice);
 
-    // await deployer.deploy(IceUtil);
-    // await deployer.link(IceUtil, IceFMS);
-    // await deployer.link(IceUtil, IceFMSAdv);
-    // await deployer.link(IceUtil, Ice);
-
     await deployer.deploy(IceFMSAdv);
 	await deployer.link(IceFMSAdv, IceFMS);
 	await deployer.link(IceFMSAdv, Ice);
@@ -35,7 +33,7 @@ async function doDeploy(deployer, network) {
 	await deployer.deploy(IceFMS);
     await deployer.link(IceFMS, Ice);
 
-    await deployer.deploy(Ice, "0xC155f98Fa02AeED743a2658a4B076701376a27ee")
+    await deployer.deploy(Ice, "0xB0D5a36733886a4c5597849a05B315626aF5222E")
         .then(() => console.log(Ice.address))
 }
 

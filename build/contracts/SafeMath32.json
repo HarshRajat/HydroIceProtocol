@@ -3276,7 +3276,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.11",
-  "updatedAt": "2019-10-02T06:39:50.623Z",
+  "updatedAt": "2019-10-02T09:22:55.675Z",
   "devdoc": {
     "details": "Math operations with safety checks that revert on error",
     "methods": {},
