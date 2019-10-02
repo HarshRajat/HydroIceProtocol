@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/local/bin/node /usr/local/Cellar/yarn/1.15.2/libexec/bin/yarn.js add solidity-docgenyarn add solidity-docgen
+  /usr/local/bin/node /usr/local/Cellar/yarn/1.15.2/libexec/bin/yarn.js add doxicity
 
 PATH: 
   /Users/Prodigy/phantomjs-2.1.1-macosx/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/Users/Prodigy/.apportable/SDK/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/StellaSDK/tools/bin:/Users/Prodigy/.gems/bin
@@ -14,7 +14,7 @@ Platform:
   darwin x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/solidity-docgenyarn: Not found
+  Error: https://registry.yarnpkg.com/doxicity: Not found
       at Request.params.callback [as _callback] (/usr/local/Cellar/yarn/1.15.2/libexec/lib/cli.js:66058:18)
       at Request.self.callback (/usr/local/Cellar/yarn/1.15.2/libexec/lib/cli.js:129541:22)
       at Request.emit (events.js:189:13)

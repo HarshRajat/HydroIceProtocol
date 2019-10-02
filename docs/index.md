@@ -424,7 +424,14 @@ This Contract forms File Storage / Stamping / Encryption part of Hydro Protocols
 ### <span id="Ice-getGlobalItems-uint256-uint256-"></span> `getGlobalItems(uint256 _index1, uint256 _index2) → uint256 ownerEIN, uint256 itemRecord, bool isFile, bool isHidden, bool deleted, uint256 sharedToCount` (external)
 
 Function to get global items info from the entire File Management System of Ice
-
+ @param _index1 is the first index of item
+ @param _index2 is the second index of item
+ @return ownerEIN is the EIN of the user who owns the item
+ @return itemRecord is the record of that item in relation to the individual user
+ @return isFile indicates if the item is file or group
+ @return isHidden indicates if the item is hidder or visible
+ @return deleted indicates if the item is already deleted from the individual user perspective
+ @return sharedToCount is the count of sharing the item has
 
 ### <span id="Ice-getGlobalItemsStampingInfo-uint256-uint256-"></span> `getGlobalItemsStampingInfo(uint256 _index1, uint256 _index2) → uint256 stampingRecipient, uint256 stampingRecipientIndex, uint32 stampingInitiated, uint32 stampingCompleted, bool stampingRejected` (external)
 

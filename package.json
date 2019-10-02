@@ -3,6 +3,7 @@
   "version": "v0.8.0-alpha+002",
   "description": "Minimalistic browser-based Solidity IDE",
   "devDependencies": {
+    "@digix/doxity": "^0.5.2",
     "@fortawesome/fontawesome-free": "^5.9.0",
     "@resolver-engine/imports": "^0.3.3",
     "ace-mode-solidity": "^0.1.0",
@@ -64,7 +65,8 @@
     "web3": "1.0.0-beta.27",
     "webworkify": "^1.2.1",
     "yo-yo": "^1.2.2",
-    "yo-yoify": "^3.7.3"
+    "yo-yoify": "^3.7.3",
+    "@digix/doxity-solc": "0.6.0"
   },
   "dependencies": {
     "http-server-legacy": "latest",
