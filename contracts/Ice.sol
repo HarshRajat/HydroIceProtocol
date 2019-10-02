@@ -1234,202 +1234,201 @@ contract Ice {
         emit RemovedFromBlacklist(ein, _nonOwnerEIN);
     }
 
-    // *. GENERAL CONTRACT HELPERS
-    /** 
-     * @dev Private Function to append two strings together
-     * @param a the first string
-     * @param b the second string
-     */
-    function _append(
-        string memory a, 
-        string memory b
-    )
-    internal pure
-    returns (string memory) {
-        return string(abi.encodePacked(a, b));
-    }
+    // // *. FOR DEBUGGING CONTRACT
+    // /** 
+    //  * @dev Private Function to append two strings together
+    //  * @param a the first string
+    //  * @param b the second string
+    //  */
+    // function _append(
+    //     string memory a, 
+    //     string memory b
+    // )
+    // internal pure
+    // returns (string memory) {
+    //     return string(abi.encodePacked(a, b));
+    // }
+    
+    // /** 
+    //  * @dev Function To Build Groups & File System for users
+    //  */
+    // function debugBuildFS()
+    // public {
+    //     createGroup("A.Images");
+    //     createGroup("B.Movies");
+    //     createGroup("C.Crypto");
+    //     createGroup("D.Others");
+    //     createGroup("E.AdobeContract");
 
-    // *. FOR DEBUGGING CONTRACT
-    /** 
-     * @dev Function To Build Groups & File System for users
-     */
-    function debugBuildFS()
-    public {
-        createGroup("A.Images");
-        createGroup("B.Movies");
-        createGroup("C.Crypto");
-        createGroup("D.Others");
-        createGroup("E.AdobeContract");
+    //     // Create Files
+    //     // addFile(_op, _protocol, _protocolMeta, _name, _hash, _hashExtraInfo, _hashFunction, _hashSize, _encrypted, _encryptedHash, _groupIndex)
+    //     addFile(
+    //         0, 
+    //         1, 
+    //         bytes("0x00"), 
+    //         IceFMS.stringToBytes32("index.jpg"), 
+    //         IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), 
+    //         bytes22("0x00"), 
+    //         2, 
+    //         3, 
+    //         false, 
+    //         "", 
+    //         0
+    //     );
+    //     addFile(
+    //         0, 
+    //         1, 
+    //         bytes("0x00"), 
+    //         IceFMS.stringToBytes32("family.pdf"), 
+    //         IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr9iwDnp9q7"), 
+    //         bytes22("0x00"), 
+    //         2, 
+    //         3, 
+    //         false, 
+    //         "", 
+    //         0
+    //     );
+    //     addFile(
+    //         0, 
+    //         1, 
+    //         bytes("0x00"), 
+    //         IceFMS.stringToBytes32("myportrait.jpg"), 
+    //         IceFMS.stringToBytes32("L4ZCr9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), 
+    //         bytes22("0x00"), 
+    //         2, 
+    //         3, 
+    //         false, 
+    //         "", 
+    //         0
+    //     );
+    //     addFile(
+    //         0, 
+    //         1, 
+    //         bytes("0x00"), 
+    //         IceFMS.stringToBytes32("index.html"), 
+    //         IceFMS.stringToBytes32("9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr"), 
+    //         bytes22("0x00"), 
+    //         2, 
+    //         3, 
+    //         false, 
+    //         "", 
+    //         1
+    //     );
+    //     addFile(
+    //         0, 
+    //         1, 
+    //         bytes("0x00"), 
+    //         IceFMS.stringToBytes32("skills.txt"), 
+    //         IceFMS.stringToBytes32("qRj9YgBiAU332sQmTecWfmvvsPdZXuYrLgCT"), 
+    //         bytes22("0x00"), 
+    //         2, 
+    //         3, 
+    //         false, 
+    //         "", 
+    //         2
+    //     );
+    // }
 
-        // Create Files
-        // addFile(_op, _protocol, _protocolMeta, _name, _hash, _hashExtraInfo, _hashFunction, _hashSize, _encrypted, _encryptedHash, _groupIndex)
-        addFile(
-            0, 
-            1, 
-            bytes("0x00"), 
-            IceFMS.stringToBytes32("index.jpg"), 
-            IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), 
-            bytes22("0x00"), 
-            2, 
-            3, 
-            false, 
-            "", 
-            0
-        );
-        addFile(
-            0, 
-            1, 
-            bytes("0x00"), 
-            IceFMS.stringToBytes32("family.pdf"), 
-            IceFMS.stringToBytes32("QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr9iwDnp9q7"), 
-            bytes22("0x00"), 
-            2, 
-            3, 
-            false, 
-            "", 
-            0
-        );
-        addFile(
-            0, 
-            1, 
-            bytes("0x00"), 
-            IceFMS.stringToBytes32("myportrait.jpg"), 
-            IceFMS.stringToBytes32("L4ZCr9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332s"), 
-            bytes22("0x00"), 
-            2, 
-            3, 
-            false, 
-            "", 
-            0
-        );
-        addFile(
-            0, 
-            1, 
-            bytes("0x00"), 
-            IceFMS.stringToBytes32("index.html"), 
-            IceFMS.stringToBytes32("9iwDnp9q7QmTecWfmvvsPdZXuYrLgCTqRj9YgBiAU332sL4ZCr"), 
-            bytes22("0x00"), 
-            2, 
-            3, 
-            false, 
-            "", 
-            1
-        );
-        addFile(
-            0, 
-            1, 
-            bytes("0x00"), 
-            IceFMS.stringToBytes32("skills.txt"), 
-            IceFMS.stringToBytes32("qRj9YgBiAU332sQmTecWfmvvsPdZXuYrLgCT"), 
-            bytes22("0x00"), 
-            2, 
-            3, 
-            false, 
-            "", 
-            2
-        );
-    }
+    // // Get Indexes with Names for EIN
+    // /** 
+    //  * @dev Function to debug indexes and Ice FMS protocol along with names of the items (returns max 20 items)
+    //  * @param _ein is the ein of the intended user
+    //  * @param _groupIndex is the index associated with the group, only applicable when debugging GroupFiles
+    //  * @param _seedPointer indicates from what point the items should be queried
+    //  * @param _limit indicates how many items needs to be returned
+    //  * @param _asc indicates whether to return the items in ascending order or descending from the _seedPointer provided along with _limit
+    //  * @param _for indicates what to debug | 1 is Files, 2 is GroupFiles, 3 is Groups, 4 is shares, 5 is stamping requests, 6 is stampings
+    //  */
+    // function debugIndexesWithNames(
+    //     uint _ein, 
+    //     uint _groupIndex, 
+    //     uint _seedPointer, 
+    //     uint16 _limit, 
+    //     bool _asc, 
+    //     uint8 _for
+    // )
+    // external view
+    // returns (
+    //     uint[20] memory _indexes, 
+    //     string memory _names
+    // ) {
 
-    // Get Indexes with Names for EIN
-    /** 
-     * @dev Function to debug indexes and Ice FMS protocol along with names of the items (returns max 20 items)
-     * @param _ein is the ein of the intended user
-     * @param _groupIndex is the index associated with the group, only applicable when debugging GroupFiles
-     * @param _seedPointer indicates from what point the items should be queried
-     * @param _limit indicates how many items needs to be returned
-     * @param _asc indicates whether to return the items in ascending order or descending from the _seedPointer provided along with _limit
-     * @param _for indicates what to debug | 1 is Files, 2 is GroupFiles, 3 is Groups, 4 is shares, 5 is stamping requests, 6 is stampings
-     */
-    function debugIndexesWithNames(
-        uint _ein, 
-        uint _groupIndex, 
-        uint _seedPointer, 
-        uint16 _limit, 
-        bool _asc, 
-        uint8 _for
-    )
-    external view
-    returns (
-        uint[20] memory _indexes, 
-        string memory _names
-    ) {
+    //     if (_for == 1) {
+    //         _indexes = fileOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+    //     }
+    //     else if (_for == 2) {
+    //         _indexes = groups[_ein][_groupIndex].groupFilesOrder.getIndexes(_seedPointer, _limit, _asc);
+    //     }
+    //     else if (_for == 3) {
+    //         _indexes = groupOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+    //     }
+    //     else if (_for == 4) {
+    //         _indexes = shareOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+    //     }
+    //     else if (_for == 5) {
+    //         _indexes = stampingReqOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+    //     }
+    //     else if (_for == 6) {
+    //         _indexes = stampingOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
+    //     }
 
-        if (_for == 1) {
-            _indexes = fileOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
-        }
-        else if (_for == 2) {
-            _indexes = groups[_ein][_groupIndex].groupFilesOrder.getIndexes(_seedPointer, _limit, _asc);
-        }
-        else if (_for == 3) {
-            _indexes = groupOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
-        }
-        else if (_for == 4) {
-            _indexes = shareOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
-        }
-        else if (_for == 5) {
-            _indexes = stampingReqOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
-        }
-        else if (_for == 6) {
-            _indexes = stampingOrder[_ein].getIndexes(_seedPointer, _limit, _asc);
-        }
+    //     uint16 i = 0;
+    //     bool completed = false;
 
-        uint16 i = 0;
-        bool completed = false;
+    //     while (completed == false) {
+    //         string memory name;
 
-        while (completed == false) {
-            string memory name;
-
-            // Get Name
-            if (_for == 1 || _for == 2) {
-                name = IceFMS.bytes32ToString(files[_ein][_indexes[i]].fileMeta.name);
-            }
-            else if (_for == 3) {
-                name = groups[_ein][_indexes[i]].name;
-            }
-            else if (_for == 4) {
-                IceGlobal.GlobalRecord memory record = shares[_ein][_indexes[i]];
-                IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
+    //         // Get Name
+    //         if (_for == 1 || _for == 2) {
+    //             name = IceFMS.bytes32ToString(files[_ein][_indexes[i]].fileMeta.name);
+    //         }
+    //         else if (_for == 3) {
+    //             name = groups[_ein][_indexes[i]].name;
+    //         }
+    //         else if (_for == 4) {
+    //             IceGlobal.GlobalRecord memory record = shares[_ein][_indexes[i]];
+    //             IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
                 
-                if (globalItems[record.i1][record.i2].isFile == true) {
-                    name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
-                } 
-                else {
-                    name = groups[owner.EIN][owner.index].name;
-                }
-            }
-            else if (_for == 5) {
-                IceGlobal.GlobalRecord memory record = stampingsReq[_ein][_indexes[i]];
-                IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
+    //             if (globalItems[record.i1][record.i2].isFile == true) {
+    //                 name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
+    //             } 
+    //             else {
+    //                 name = groups[owner.EIN][owner.index].name;
+    //             }
+    //         }
+    //         else if (_for == 5) {
+    //             IceGlobal.GlobalRecord memory record = stampingsReq[_ein][_indexes[i]];
+    //             IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
                 
-                if (globalItems[record.i1][record.i2].isFile == true) {
-                    name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
-                } 
-                else {
-                    name = groups[owner.EIN][owner.index].name;
-                }
-            }
-            else if (_for == 6) {
-                IceGlobal.GlobalRecord memory record = stampings[_ein][_indexes[i]];
-                IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
+    //             if (globalItems[record.i1][record.i2].isFile == true) {
+    //                 name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
+    //             } 
+    //             else {
+    //                 name = groups[owner.EIN][owner.index].name;
+    //             }
+    //         }
+    //         else if (_for == 6) {
+    //             IceGlobal.GlobalRecord memory record = stampings[_ein][_indexes[i]];
+    //             IceGlobal.ItemOwner memory owner = globalItems[record.i1][record.i2].ownerInfo;
                 
-                if (globalItems[record.i1][record.i2].isFile == true) {
-                    name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
-                } 
-                else {
-                    name = groups[owner.EIN][owner.index].name;
-                }
-            }
+    //             if (globalItems[record.i1][record.i2].isFile == true) {
+    //                 name = IceFMS.bytes32ToString(files[owner.EIN][owner.index].fileMeta.name);
+    //             } 
+    //             else {
+    //                 name = groups[owner.EIN][owner.index].name;
+    //             }
+    //         }
 
-            // Add To Return Vars
-            name = _append(name, "|");
-            _names = _append(_names, name);
+    //         // Add To Return Vars
+    //         name = _append(name, "|");
+    //         _names = _append(_names, name);
 
-            i++;
+    //         i++;
 
-            // check status
-            if (i == _limit || (_indexes[i-1] == _indexes[i])) {
-                completed = true;
-            }
-        }
-    }
+    //         // check status
+    //         if (i == _limit || (_indexes[i-1] == _indexes[i])) {
+    //             completed = true;
+    //         }
+    //     }
+    // }
 }
